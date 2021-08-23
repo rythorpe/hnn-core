@@ -430,7 +430,7 @@ def plot_spikes_raster(cell_response, ax=None, show=True):
             cell_type_ypos = []
 
         ax.scatter(cell_type_times, cell_type_ypos, label=cell_type,
-                   color=cell_type_colors[cell_type])
+                   color=cell_type_colors[cell_type], s=2)
 
     ax.legend(loc=1)
     ax.set_facecolor('k')
@@ -498,7 +498,8 @@ def plot_cells(net, ax=None, show=True):
 
 def plot_tfr_morlet(dpl, freqs, *, n_cycles=7., tmin=None, tmax=None,
                     layer='agg', decim=None, padding='zeros', ax=None,
-                    colormap='inferno', colorbar=True, show=True):
+                    colormap='inferno',  colorbar=True, power_lim=None,
+                    show=True):
     """Plot Morlet time-frequency representation of dipole time course
 
     Parameters
@@ -531,6 +532,8 @@ def plot_tfr_morlet(dpl, freqs, *, n_cycles=7., tmin=None, tmax=None,
         The name of a matplotlib colormap, e.g., 'viridis'. Default: 'inferno'
     colorbar : bool
         If True (default), adjust figure to include colorbar.
+    power_lim : list | None
+        Power limits of the colorbar.
     show : bool
         If True, show the figure
 
@@ -588,8 +591,13 @@ def plot_tfr_morlet(dpl, freqs, *, n_cycles=7., tmin=None, tmax=None,
         trial_power.append(power)
 
     power = np.mean(trial_power, axis=0)
-    im = ax.pcolormesh(times, freqs, power[0, 0, ...], cmap=colormap,
-                       shading='auto')
+    if power_lim is None:
+        im = ax.pcolormesh(times, freqs, power[0, 0, ...], cmap=colormap,
+                        shading='auto')
+    else:
+        im = ax.pcolormesh(times, freqs, power[0, 0, ...], cmap=colormap,
+                        shading='auto', vmin=power_lim[0],
+                        vmax=power_lim[1])
     ax.set_xlabel('Time (ms)')
     ax.set_ylabel('Frequency (Hz)')
 
