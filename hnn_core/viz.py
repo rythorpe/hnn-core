@@ -498,7 +498,7 @@ def plot_cells(net, ax=None, show=True):
 
 def plot_tfr_morlet(dpl, freqs, *, n_cycles=7., tmin=None, tmax=None,
                     layer='agg', decim=None, padding='zeros', ax=None,
-                    colormap='inferno',  colorbar=True, power_lim=None,
+                    colormap='inferno', colorbar=True, power_lim=None,
                     show=True):
     """Plot Morlet time-frequency representation of dipole time course
 
@@ -593,11 +593,11 @@ def plot_tfr_morlet(dpl, freqs, *, n_cycles=7., tmin=None, tmax=None,
     power = np.mean(trial_power, axis=0)
     if power_lim is None:
         im = ax.pcolormesh(times, freqs, power[0, 0, ...], cmap=colormap,
-                        shading='auto')
+                           shading='auto')
     else:
         im = ax.pcolormesh(times, freqs, power[0, 0, ...], cmap=colormap,
-                        shading='auto', vmin=power_lim[0],
-                        vmax=power_lim[1])
+                           shading='auto', vmin=power_lim[0],
+                           vmax=power_lim[1])
     ax.set_xlabel('Time (ms)')
     ax.set_ylabel('Frequency (Hz)')
 
