@@ -305,6 +305,46 @@ def calcium_model(params=None, add_drives_from_params=False,
     return net
 
 
+def ssa_dd_model(params=None, add_drives_from_params=False,
+                 legacy_mode=True):
+    """Instantiate the Jones 2009 model with mechanisms for SSA and DD.
+
+    Returns
+    -------
+    net : Instance of Network object
+        Network object used to store the modified Jones 2009 model with an
+        impoved calcium channel distribution, layer 6, and other anatomical
+        changes needed to interrogate stimulus specific adaptation (SSA) and
+        deviance detection (DD).
+
+    See Also
+    --------
+    jones_2009_model, calcium_model
+
+    Notes
+    -----
+    This model builds on the updated calcium dynamics model by changing the
+    following:
+    1) adding L6 pyramidal and L6 basket cells plus connections
+    2) adding new L5 interneuron: GABAb connections are now only supplied by
+       this cell type to the distal L5 apical dendrite
+    """
+    hnn_core_root = op.dirname(hnn_core.__file__)
+    params_fname = op.join(hnn_core_root, 'param', 'default.json')
+    if params is None:
+        params = read_params(params_fname)
+
+    net = jones_2009_model(params, add_drives_from_params)
+
+    # Replace L5 pyramidal cell template with updated calcium
+    cell_name = 'L5_pyramidal'
+    pos = net.cell_types[cell_name].pos
+    net.cell_types[cell_name] = pyramidal_ca(
+        cell_name=_short_name(cell_name), pos=pos)
+
+    return net
+
+
 def add_erp_drives_to_jones_model(net, tstart=0.0):
     """Add drives necessary for an event related potential (ERP)
 
