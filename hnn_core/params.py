@@ -104,7 +104,8 @@ def read_params(params_fname):
 
 def _long_name(short_name):
     long_name = dict(L2Basket='L2_basket', L5Basket='L5_basket',
-                     L2Pyr='L2_pyramidal', L5Pyr='L5_pyramidal')
+                     L6Basket='L6_basket', L2Pyr='L2_pyramidal',
+                     L5Pyr='L5_pyramidal', L6Pyr='L6_pyramidal')
     if short_name in long_name:
         return long_name[short_name]
     return short_name
@@ -112,7 +113,8 @@ def _long_name(short_name):
 
 def _short_name(short_name):
     long_name = dict(L2_basket='L2Basket', L5_basket='L5Basket',
-                     L2_pyramidal='L2Pyr', L5_pyramidal='L5Pyr')
+                     L6_basket='L6Basket', L2_pyramidal='L2Pyr',
+                     L5_pyramidal='L5Pyr', L6_pyramidal='L6Pyr')
     if short_name in long_name:
         return long_name[short_name]
     return short_name

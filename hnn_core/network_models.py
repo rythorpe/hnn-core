@@ -7,7 +7,7 @@ import hnn_core
 from hnn_core import read_params
 from .network import Network
 from .params import _short_name
-from .cells_default import pyramidal_ca
+from .cells_default import pyramidal, pyramidal_ca
 from .externals.mne import _validate_type
 
 
@@ -305,9 +305,9 @@ def calcium_model(params=None, add_drives_from_params=False,
     return net
 
 
-def ssa_dd_model(params=None, add_drives_from_params=False,
-                 legacy_mode=True):
-    """Instantiate the Jones 2009 model with mechanisms for SSA and DD.
+def L6_model(params=None, add_drives_from_params=False,
+             legacy_mode=True):
+    """Instantiate the updated calcium model with layer 6 cell types.
 
     Returns
     -------
@@ -325,22 +325,66 @@ def ssa_dd_model(params=None, add_drives_from_params=False,
     -----
     This model builds on the updated calcium dynamics model by changing the
     following:
-    1) adding L6 pyramidal and L6 basket cells plus connections
-    2) adding new L5 interneuron: GABAb connections are now only supplied by
-       this cell type to the distal L5 apical dendrite
+    1) added L6 pyramidal and L6 basket cells plus connections. See Zarrinpar
+       and Callaway 2005 and Thomson 2010 anatomical details.
+    2) adding new L5 interneuron: provides inhibitory GABAb connections to the
+       distal L5 apical dendrite.
+    3) removed L2/3 basket -> L5 Pyramidal connection
     """
     hnn_core_root = op.dirname(hnn_core.__file__)
     params_fname = op.join(hnn_core_root, 'param', 'default.json')
     if params is None:
         params = read_params(params_fname)
 
-    net = jones_2009_model(params, add_drives_from_params)
+    # start with updated calcium model
+    # XXX HACK: L6 pyr and basket cells are added in network.py
+    net = calcium_model(params, add_drives_from_params)
 
-    # Replace L5 pyramidal cell template with updated calcium
-    cell_name = 'L5_pyramidal'
-    pos = net.cell_types[cell_name].pos
-    net.cell_types[cell_name] = pyramidal_ca(
-        cell_name=_short_name(cell_name), pos=pos)
+    # remove the only L2_basket -> L5_pyramidal connection
+    del net.connectivity[10]
+
+    delay = net.delay
+
+    # layer5 Pyr -> layer6 Pyr
+    net.add_connection(src_cell='L5_pyramidal',
+                       target_cell='L6_pyramidal',
+                       loc='distal',
+                       receptor='ampa',
+                       weight=0.00025,
+                       delay=delay,
+                       lamtha=3.)
+    net.add_connection(src_cell='L6_pyramidal',
+                       target_cell='L6_pyramidal',
+                       loc='proximal',
+                       receptor='nmda',
+                       weight=0.0005,
+                       delay=delay,
+                       lamtha=3.)
+
+    # layer6 Pyr -> layer6 Pyr
+    net.add_connection(src_cell='L6_pyramidal',
+                       target_cell='L6_pyramidal',
+                       loc='proximal',
+                       receptor='ampa',
+                       weight=0.0005,
+                       delay=delay,
+                       lamtha=3.)
+    net.add_connection(src_cell='L6_pyramidal',
+                       target_cell='L6_pyramidal',
+                       loc='proximal',
+                       receptor='nmda',
+                       weight=0.0005,
+                       delay=delay,
+                       lamtha=3.)
+
+    # layer6 Bask -> layer6 Pyr
+    net.add_connection(src_cell='L6_pyramidal',
+                       target_cell='L6_pyramidal',
+                       loc='soma',
+                       receptor='gabaa',
+                       weight=0.025,
+                       delay=delay,
+                       lamtha=70.)
 
     return net
 

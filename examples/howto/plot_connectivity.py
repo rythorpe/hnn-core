@@ -17,6 +17,7 @@ import os.path as op
 
 import hnn_core
 from hnn_core import jones_2009_model, simulate_dipole
+from hnn_core.network_models import L6_model
 
 ###############################################################################
 # To explore how to modify network connectivity, we will start with simulating

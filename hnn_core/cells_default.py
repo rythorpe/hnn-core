@@ -315,12 +315,13 @@ def _exp_g_at_dist(x, zero_val, exp_term, offset):
 
 
 def basket(cell_name, pos=(0, 0, 0), gid=None):
-    """Get layer 2 / layer 5 basket cells.
+    """Basket cell for a specific layer.
 
     Parameters
     ----------
     cell_name : str
-        The name of the cell.
+        L2Basket', 'L5Basket', or 'L6Basket'. The basket cell type according to
+        its layer.
     pos : tuple
         Coordinates of cell soma in xyz-space
     gid : int or None (optional)
@@ -336,6 +337,8 @@ def basket(cell_name, pos=(0, 0, 0), gid=None):
     if cell_name == 'L2Basket':
         sect_loc = dict(proximal=['soma'], distal=['soma'])
     elif cell_name == 'L5Basket':
+        sect_loc = dict(proximal=['soma'], distal=[])
+    elif cell_name == 'L6Basket':
         sect_loc = dict(proximal=['soma'], distal=[])
     else:
         raise ValueError(f'Unknown basket cell type: {cell_name}')
@@ -356,12 +359,12 @@ def basket(cell_name, pos=(0, 0, 0), gid=None):
 
 
 def pyramidal(cell_name, pos=(0, 0, 0), override_params=None, gid=None):
-    """Pyramidal neuron.
+    """Pyramidal neuron for a specific layer.
 
     Parameters
     ----------
     cell_name : str
-        'L5Pyr' or 'L2Pyr'. The pyramidal cell type.
+        'L5Pyr' or 'L2Pyr'. The pyramidal cell type according to its layer.
     pos : tuple
         Coordinates of cell soma in xyz-space
     override_params : dict or None (optional)
@@ -375,6 +378,11 @@ def pyramidal(cell_name, pos=(0, 0, 0), override_params=None, gid=None):
         return _cell_L2Pyr(override_params, pos=pos, gid=gid)
     elif cell_name == 'L5Pyr':
         return _cell_L5Pyr(override_params, pos=pos, gid=gid)
+    elif cell_name == 'L6Pyr':
+        # use same template as for L2Pyr
+        L6Pyr = _cell_L2Pyr(override_params, pos=pos, gid=gid)
+        L6Pyr.name = 'L6Pyr'
+        return L6Pyr
     else:
         raise ValueError(f'Unknown pyramidal cell type: {cell_name}')
 
@@ -401,8 +409,8 @@ def _linear_g_at_dist(x, gsoma, gdend, xkink):
     return gsoma + np.min([xkink, x]) * (gdend - gsoma) / xkink
 
 
-def pyramidal_ca(cell_name, pos, override_params=None, gid=None):
-    """Calcium dynamics."""
+def pyramidal_ca(cell_name, pos=(0, 0, 0), override_params=None, gid=None):
+    """Pyramidal neuron with more realistic calcium dynamics."""
 
     if override_params is None:
         override_params = dict()

@@ -49,8 +49,9 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     -------
     pos_dict : dict of list of tuple (x, y, z)
         Dictionary containing coordinate positions.
-        Keys are 'L2_pyramidal', 'L5_pyramidal', 'L2_basket', 'L5_basket',
-        'common', or any of the elements of the list p_unique_keys
+        Keys are 'L2_pyramidal', 'L5_pyramidal', 'L6_pyramidal, 'L2_basket',
+        'L5_basket', 'L6_basket', 'common', or any of the elements of the list
+        p_unique_keys
 
     Notes
     -----
@@ -67,6 +68,9 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
         pos for pos in it.product(xxrange, yyrange, [0])]
     pos_dict['L2_pyramidal'] = [
         pos for pos in it.product(xxrange, yyrange, [zdiff])]
+    # L6 will be placed below L5 at half the distance between L5 and L2/3
+    pos_dict['L6_pyramidal'] = [
+        pos for pos in it.product(xxrange, yyrange, [-zdiff / 2])]
 
     # BASKET CELLS
     xzero = np.arange(0, n_pyr_x, 3) * inplane_distance
@@ -85,6 +89,9 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
                              pos_xy in coords_sorted]
     pos_dict['L2_basket'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff) for
                              pos_xy in coords_sorted]
+    pos_dict['L6_basket'] = [(pos_xy[0], pos_xy[1],
+                             (-zdiff / 2) + (0.2 * zdiff)) for pos_xy in
+                             coords_sorted]
 
     # ORIGIN
     # origin's z component isn't really used in
@@ -367,7 +374,9 @@ class Network(object):
             'L2_basket': basket(cell_name=_short_name('L2_basket')),
             'L2_pyramidal': pyramidal(cell_name=_short_name('L2_pyramidal')),
             'L5_basket': basket(cell_name=_short_name('L5_basket')),
-            'L5_pyramidal': pyramidal(cell_name=_short_name('L5_pyramidal'))
+            'L5_pyramidal': pyramidal(cell_name=_short_name('L5_pyramidal')),
+            'L6_basket': basket(cell_name=_short_name('L6_basket')),
+            'L6_pyramidal': pyramidal(cell_name=_short_name('L6_pyramidal'))
         }
 
         self.cell_response = None
