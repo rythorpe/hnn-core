@@ -378,10 +378,17 @@ def L6_model(params=None, add_drives_from_params=False,
                        lamtha=3.)
 
     # layer6 Bask -> layer6 Pyr
-    net.add_connection(src_cell='L6_pyramidal',
+    net.add_connection(src_cell='L6_basket',
                        target_cell='L6_pyramidal',
                        loc='soma',
                        receptor='gabaa',
+                       weight=0.025,
+                       delay=delay,
+                       lamtha=70.)
+    net.add_connection(src_cell='L6_basket',
+                       target_cell='L6_pyramidal',
+                       loc='soma',
+                       receptor='gabab',
                        weight=0.025,
                        delay=delay,
                        lamtha=70.)
