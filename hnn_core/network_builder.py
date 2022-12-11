@@ -100,11 +100,13 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
             isec_py[gid][sec_name] = {
                 key: isec.to_python() for key, isec in isec.items()}
 
+    dpl_data_agg = np.sum([neuron_net._nrn_dipoles[cell_type].as_numpy() for
+                           cell_type in neuron_net._nrn_dipoles])
     dpl_data = np.c_[
-        neuron_net._nrn_dipoles['L2_pyramidal'].as_numpy() +
-        neuron_net._nrn_dipoles['L5_pyramidal'].as_numpy(),
+        dpl_data_agg,
         neuron_net._nrn_dipoles['L2_pyramidal'].as_numpy(),
-        neuron_net._nrn_dipoles['L5_pyramidal'].as_numpy()
+        neuron_net._nrn_dipoles['L5_pyramidal'].as_numpy(),
+        neuron_net._nrn_dipoles['L6_pyramidal'].as_numpy()
     ]
 
     rec_arr_py = dict()
@@ -320,8 +322,8 @@ class NetworkBuilder(object):
 
         self._clear_last_network_objects()
 
-        self._nrn_dipoles['L5_pyramidal'] = h.Vector()
-        self._nrn_dipoles['L2_pyramidal'] = h.Vector()
+        for cell_type in self.net.cell_types:
+            self._nrn_dipole[cell_type] = h.Vector()
 
         self._gid_assign()
 
@@ -425,7 +427,8 @@ class NetworkBuilder(object):
                 cell.pos = self.net.pos_dict[src_type][gid_idx]
 
                 # instantiate NEURON object
-                if src_type in ('L2_pyramidal', 'L5_pyramidal'):
+                if src_type in ('L2_pyramidal', 'L5_pyramidal',
+                                'L6_pyramidal'):
                     cell.build(sec_name_apical='apical_trunk')
                 else:
                     cell.build()
@@ -600,7 +603,7 @@ class NetworkBuilder(object):
             seclist.wholetree(sec=cell._nrn_sections['soma'])
             for sect in seclist:
                 for seg in sect:
-                    if cell.name == 'L2Pyr':
+                    if cell.name == 'L2Pyr' or cell.name == 'L6Pyr':
                         seg.v = -71.46
                     elif cell.name == 'L5Pyr':
                         if sect.name() == 'L5Pyr_apical_1':
@@ -614,6 +617,8 @@ class NetworkBuilder(object):
                     elif cell.name == 'L2Basket':
                         seg.v = -64.9737
                     elif cell.name == 'L5Basket':
+                        seg.v = -64.9737
+                    elif cell.name == 'L6Basket':
                         seg.v = -64.9737
 
     def _clear_neuron_objects(self):

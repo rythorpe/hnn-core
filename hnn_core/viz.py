@@ -313,7 +313,7 @@ def plot_dipole(dpl, tmin=None, tmax=None, ax=None, layer='agg', decim=None,
                 r'$\times$ {:.0f})'.format(scale_applied)
         ax.set_ylabel(ylabel, multialignment='center')
         if layer == 'agg':
-            title_str = 'Aggregate (L2 + L5)'
+            title_str = 'Aggregate (all layers)'
         else:
             title_str = layer
         ax.set_title(title_str)
@@ -397,7 +397,8 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     unique_types = np.unique(spike_types_data)
     spike_types_mask = {s_type: np.in1d(spike_types_data, s_type)
                         for s_type in unique_types}
-    cell_types = ['L5_pyramidal', 'L5_basket', 'L2_pyramidal', 'L2_basket']
+    cell_types = ['L6_pyramidal', 'L6_basket', 'L5_pyramidal', 'L5_basket',
+                  'L2_pyramidal', 'L2_basket']
     input_types = np.setdiff1d(unique_types, cell_types)
 
     if isinstance(spike_types, str):
@@ -524,9 +525,11 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None, show=True):
         spike_types = np.array([])
         spike_gids = np.array([])
 
-    cell_types = ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal']
+    cell_types = ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal',
+                  'L6_basket', 'L6_pyramidal']
     cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'b',
-                        'L2_pyramidal': 'g', 'L2_basket': 'w'}
+                        'L2_pyramidal': 'g', 'L2_basket': 'w',
+                        'L6_pyramidal': 'c', 'L6_basket': 'm'}
 
     if ax is None:
         _, ax = plt.subplots(1, 1, constrained_layout=True)
@@ -583,17 +586,18 @@ def plot_cells(net, ax=None, show=True):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-    colors = {'L5_pyramidal': 'b', 'L2_pyramidal': 'c',
-              'L5_basket': 'r', 'L2_basket': 'm'}
-    markers = {'L5_pyramidal': '^', 'L2_pyramidal': '^',
-               'L5_basket': 'x', 'L2_basket': 'x'}
+    cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'b',
+                        'L2_pyramidal': 'g', 'L2_basket': 'w',
+                        'L6_pyramidal': 'c', 'L6_basket': 'm'}
+    markers = {'L5_pyramidal': '^', 'L2_pyramidal': '^', 'L6_pyramidal': '^',
+               'L5_basket': 'x', 'L2_basket': 'x', 'L6_basket': 'x'}
 
     for cell_type in net.cell_types:
         x = [pos[0] for pos in net.pos_dict[cell_type]]
         y = [pos[1] for pos in net.pos_dict[cell_type]]
         z = [pos[2] for pos in net.pos_dict[cell_type]]
-        if cell_type in colors:
-            color = colors[cell_type]
+        if cell_type in cell_type_colors:
+            color = cell_type_colors[cell_type]
             marker = markers[cell_type]
             ax.scatter(x, y, z, c=color, s=50, marker=marker, label=cell_type)
 

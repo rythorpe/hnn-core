@@ -346,7 +346,10 @@ class Dipole(object):
         else:
             if data.ndim == 1:
                 data = data[:, None]
-            if data.shape[1] == 3:
+            if data.shape[1] == 4:
+                self.data = {'agg': data[:, 0], 'L2': data[:, 1],
+                             'L5': data[:, 2], 'L6': data[:, 3]}
+            elif data.shape[1] == 3:
                 self.data = {'agg': data[:, 0], 'L2': data[:, 1],
                              'L5': data[:, 2]}
             elif data.shape[1] == 1:
@@ -622,14 +625,16 @@ class Dipole(object):
         dpl_offset = {
             # these values will be subtracted
             'L2': N_pyr * 0.0443,
-            'L5': N_pyr * -49.0502
+            'L5': N_pyr * -49.0502,
+            'L6': N_pyr * 0.0443
             # 'L5': N_pyr * -48.3642,
             # will be calculated next, this is a placeholder
             # 'agg': None,
         }
-        # L2 dipole offset can be roughly baseline shifted over
+        # L2 and L6 dipole offsets can be roughly baseline shifted over
         # the entire range of t
         self.data['L2'] -= dpl_offset['L2']
+        self.data['L6'] -= dpl_offset['L6']
         # L5 dipole offset should be different for interval [50., 500.]
         # and then it can be offset
         # slope (m) and intercept (b) params for L5 dipole offset
