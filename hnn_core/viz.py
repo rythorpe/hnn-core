@@ -586,9 +586,9 @@ def plot_cells(net, ax=None, show=True):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-    cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'b',
-                        'L2_pyramidal': 'g', 'L2_basket': 'w',
-                        'L6_pyramidal': 'c', 'L6_basket': 'm'}
+    cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'orange',
+                        'L2_pyramidal': 'g', 'L2_basket': 'y',
+                        'L6_pyramidal': 'b', 'L6_basket': 'c'}
     markers = {'L5_pyramidal': '^', 'L2_pyramidal': '^', 'L6_pyramidal': '^',
                'L5_basket': 'x', 'L2_basket': 'x', 'L6_basket': 'x'}
 

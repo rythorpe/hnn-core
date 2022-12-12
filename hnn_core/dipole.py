@@ -654,7 +654,7 @@ class Dipole(object):
             (m1 * self.times[self.times >= t1] + b1)
         # recalculate the aggregate dipole based on the baseline
         # normalized ones
-        self.data['agg'] = self.data['L2'] + self.data['L5']
+        self.data['agg'] = self.data['L2'] + self.data['L5'] + self.data['L6']
 
     def _write_txt(self, fname):
         """Write dipole values to a file.

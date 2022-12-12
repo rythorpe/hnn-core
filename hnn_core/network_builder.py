@@ -100,8 +100,8 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
             isec_py[gid][sec_name] = {
                 key: isec.to_python() for key, isec in isec.items()}
 
-    dpl_data_agg = np.sum([neuron_net._nrn_dipoles[cell_type].as_numpy() for
-                           cell_type in neuron_net._nrn_dipoles])
+    dpl_data_agg = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
+                             cell_type in neuron_net._nrn_dipoles]).sum(axis=0)
     dpl_data = np.c_[
         dpl_data_agg,
         neuron_net._nrn_dipoles['L2_pyramidal'].as_numpy(),
@@ -323,7 +323,7 @@ class NetworkBuilder(object):
         self._clear_last_network_objects()
 
         for cell_type in self.net.cell_types:
-            self._nrn_dipole[cell_type] = h.Vector()
+            self._nrn_dipoles[cell_type] = h.Vector()
 
         self._gid_assign()
 
