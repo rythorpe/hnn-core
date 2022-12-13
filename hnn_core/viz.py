@@ -323,7 +323,7 @@ def plot_dipole(dpl, tmin=None, tmax=None, ax=None, layer='agg', decim=None,
 
 
 def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
-                     color=None, show=True):
+                     color=None, n_bins=50, show=True):
     """Plot the histogram of spiking activity across trials.
 
     Parameters
@@ -450,7 +450,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     elif isinstance(color, list):
         color_cycle = cycle(color)
 
-    bins = np.linspace(0, spike_times[-1], 50)
+    bins = np.linspace(0, spike_times[-1], n_bins)
 
     # Create dictionary to aggregate spike times that have the same spike_label
     spike_type_times = {spike_label: list() for
@@ -475,7 +475,6 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         hist_color = spike_color[spike_label]
         ax.hist(plot_data, bins,
                 label=spike_label, color=hist_color)
-
     ax.set_ylabel("Counts")
     ax.legend()
 

@@ -306,7 +306,7 @@ def calcium_model(params=None, add_drives_from_params=False,
 
 
 def L6_model(params=None, add_drives_from_params=False,
-             legacy_mode=True):
+             legacy_mode=True, connect_layer_6=True):
     """Instantiate the updated calcium model with layer 6 cell types.
 
     Returns
@@ -342,101 +342,105 @@ def L6_model(params=None, add_drives_from_params=False,
     # remove the only L2_basket -> L5_pyramidal connection
     #del net.connectivity[10]
 
+    # Modify L5_basket -> L5_pyramidal inhibition
+    net.connectivity[6]['nc_dict']['A_weight'] = 0.025  # gabaa
+    net.connectivity[7]['nc_dict']['A_weight'] = 0.006  # gabab
+
     delay = net.delay
 
-    # layer5 Pyr -> layer6 Pyr
-    net.add_connection(src_gids='L5_pyramidal',
-                       target_gids='L6_pyramidal',
-                       loc='distal',
-                       receptor='ampa',
-                       weight=0.00005,
-                       delay=delay,
-                       lamtha=10.)  # defuse excitatory input from L5
-    net.add_connection(src_gids='L5_pyramidal',
-                       target_gids='L6_pyramidal',
-                       loc='distal',
-                       receptor='nmda',
-                       weight=0.00005,
-                       delay=delay,
-                       lamtha=10.)  # defuse excitatory input from L5
+    if connect_layer_6:
+        # layer5 Pyr -> layer6 Pyr
+        net.add_connection(src_gids='L5_pyramidal',
+                           target_gids='L6_pyramidal',
+                           loc='distal',
+                           receptor='ampa',
+                           weight=0.00005,
+                           delay=delay,
+                           lamtha=10.)  # defuse excitatory input from L5
+        net.add_connection(src_gids='L5_pyramidal',
+                           target_gids='L6_pyramidal',
+                           loc='distal',
+                           receptor='nmda',
+                           weight=0.00005,
+                           delay=delay,
+                           lamtha=10.)  # defuse excitatory input from L5
 
-    # layer6 Pyr -> layer6 Pyr
-    net.add_connection(src_gids='L6_pyramidal',
-                       target_gids='L6_pyramidal',
-                       loc='proximal',
-                       receptor='ampa',
-                       weight=0.0002,
-                       delay=delay,
-                       lamtha=3.)
-    net.add_connection(src_gids='L6_pyramidal',
-                       target_gids='L6_pyramidal',
-                       loc='proximal',
-                       receptor='nmda',
-                       weight=0.0002,
-                       delay=delay,
-                       lamtha=3.)
+        # layer6 Pyr -> layer6 Pyr
+        net.add_connection(src_gids='L6_pyramidal',
+                           target_gids='L6_pyramidal',
+                           loc='proximal',
+                           receptor='ampa',
+                           weight=0.0001,
+                           delay=delay,
+                           lamtha=3.)
+        net.add_connection(src_gids='L6_pyramidal',
+                           target_gids='L6_pyramidal',
+                           loc='proximal',
+                           receptor='nmda',
+                           weight=0.00005,
+                           delay=delay,
+                           lamtha=3.)
 
-    # layer6 Bask -> layer6 Pyr
-    net.add_connection(src_gids='L6_basket',
-                       target_gids='L6_pyramidal',
-                       loc='soma',
-                       receptor='gabaa',
-                       weight=0.005,
-                       delay=delay,
-                       lamtha=50.)
-    net.add_connection(src_gids='L6_basket',
-                       target_gids='L6_pyramidal',
-                       loc='soma',
-                       receptor='gabab',
-                       weight=0.005,
-                       delay=delay,
-                       lamtha=50.)
+        # layer6 Bask -> layer6 Pyr
+        net.add_connection(src_gids='L6_basket',
+                           target_gids='L6_pyramidal',
+                           loc='soma',
+                           receptor='gabaa',
+                           weight=0.005,
+                           delay=delay,
+                           lamtha=50.)
+        net.add_connection(src_gids='L6_basket',
+                           target_gids='L6_pyramidal',
+                           loc='soma',
+                           receptor='gabab',
+                           weight=0.005,
+                           delay=delay,
+                           lamtha=50.)
 
-    # layer6 Pyr -> layer6 Bask
-    net.add_connection(src_gids='L6_pyramidal',
-                       target_gids='L6_basket',
-                       loc='soma',
-                       receptor='ampa',
-                       weight=0.0005,
-                       delay=delay,
-                       lamtha=3.)
+        # layer6 Pyr -> layer6 Bask
+        net.add_connection(src_gids='L6_pyramidal',
+                           target_gids='L6_basket',
+                           loc='soma',
+                           receptor='ampa',
+                           weight=0.0005,
+                           delay=delay,
+                           lamtha=3.)
 
+        # layer6 Bask -> layer2 Pyr
+        net.add_connection(src_gids='L6_basket',
+                           target_gids='L2_pyramidal',
+                           loc='soma',
+                           receptor='gabaa',
+                           weight=0.001,
+                           delay=delay,
+                           lamtha=20.)
 
-    # layer6 Bask -> layer2 Pyr
-    net.add_connection(src_gids='L6_basket',
-                       target_gids='L2_pyramidal',
-                       loc='soma',
-                       receptor='gabaa',
-                       weight=0.001,
-                       delay=delay,
-                       lamtha=20.)
+        # layer6 Bask -> layer2 Bask
+        net.add_connection(src_gids='L6_basket',
+                           target_gids='L2_basket',
+                           loc='soma',
+                           receptor='gabaa',
+                           weight=0.001,
+                           delay=delay,
+                           lamtha=20.)
 
-    # layer6 Bask -> layer2 Bask
-    net.add_connection(src_gids='L6_basket',
-                       target_gids='L2_basket',
-                       loc='soma',
-                       receptor='gabaa',
-                       weight=0.001,
-                       delay=delay,
-                       lamtha=20.)
+        # layer6 Bask -> layer5 Pyr
+        net.add_connection(src_gids='L6_basket',
+                           target_gids='L5_pyramidal',
+                           loc='soma',
+                           receptor='gabaa',
+                           weight=0.0005,
+                           delay=delay,
+                           lamtha=20.)
 
-    # layer6 Bask -> layer5 Pyr
-    net.add_connection(src_gids='L6_basket',
-                       target_gids='L5_pyramidal',
-                       loc='soma',
-                       receptor='gabaa',
-                       weight=0.005,
-                       delay=delay,
-                       lamtha=20.)
-
-    # layer6 Bask -> layer5 Bask
-    net.add_connection(src_gids='L6_basket',
-                       target_gids='L5_basket',
-                       loc='soma',
-                       receptor='gabaa',
-                       weight=0.0025,
-                       delay=delay,
-                       lamtha=20.)
+        # layer6 Bask -> layer5 Bask
+        net.add_connection(src_gids='L6_basket',
+                           target_gids='L5_basket',
+                           loc='soma',
+                           receptor='gabaa',
+                           weight=0.0025,
+                           delay=delay,
+                           lamtha=20.)
 
     return net
 
