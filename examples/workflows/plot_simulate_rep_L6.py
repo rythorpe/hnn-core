@@ -36,7 +36,7 @@ for cell_type_idx, cell_type in enumerate(net.cell_types):
 plt.show()
 
 ###############################################################################
-# Define repetative drive sequence
+# Define hyperparameters of repetitive drive sequence
 reps = 3
 rep_interval = 250.  # in ms; 8 Hz
 rep_duration = 170.
@@ -45,11 +45,14 @@ tstop = reps * max(rep_interval, rep_duration)
 rep_start_times = np.arange(0, tstop, rep_interval)
 
 ###############################################################################
+# Add drives
+# note: first define syn weights associated with proximal drive that will
+# undergo synaptic depletion
 weights_ampa_p1 = {'L2_basket': 0.100, 'L2_pyramidal': 0.200,
                    'L5_basket': 0.030, 'L5_pyramidal': 0.008}
-
 weights_ampa_p2 = {'L2_basket': 0.000003, 'L2_pyramidal': 0.5,
                    'L5_basket': 0.0002, 'L5_pyramidal': 0.4}
+weights_ampa_L6 = {'L6_pyramidal': 0.05}
 
 for rep_idx, rep_time in enumerate(rep_start_times):
 
@@ -61,6 +64,11 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         f'evprox1_rep{rep_idx}', mu=rep_time + 34., sigma=2.47, numspikes=1,
         weights_ampa=weights_ampa_p1, weights_nmda=None, location='proximal',
         synaptic_delays=synaptic_delays_prox, event_seed=544)
+    # Prox 1 should also target the distal projections of L6 Pyr
+    net.add_evoked_drive(
+        f'evprox1_distL6_rep{rep_idx}', mu=rep_time + 34., sigma=2.47, numspikes=1,
+        weights_ampa=weights_ampa_L6, weights_nmda=None, location='distal',
+        synaptic_delays=0.1, probability=1.0, event_seed=544)
 
     # Dist 1
     weights_ampa_d1 = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
@@ -80,12 +88,18 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         f'evprox2_rep{rep_idx}', mu=rep_time + 130, sigma=10., numspikes=1,
         weights_ampa=weights_ampa_p2, location='proximal',
         synaptic_delays=synaptic_delays_prox, event_seed=814)
+    # Prox 2 should also target the distal projections of L6 Pyr
+    net.add_evoked_drive(
+        f'evprox2_distL6_rep{rep_idx}', mu=rep_time + 130, sigma=10., numspikes=1,
+        weights_ampa=weights_ampa_L6, location='distal',
+        synaptic_delays=0.1, probability=1.0, event_seed=814)
 
+    # simulate synaptic depletion
     weights_ampa_p1 = {key: weights_ampa_p1[key] * 0.8 for key in weights_ampa_p1.keys()}
     weights_ampa_p2 = {key: weights_ampa_p2[key] * 0.8 for key in weights_ampa_p2.keys()}
+    weights_ampa_L6 = {key: weights_ampa_L6[key] * 0.8 for key in weights_ampa_L6.keys()}
 ###############################################################################
 # Now let's simulate the dipole
-
 with MPIBackend(n_procs=6):
 #with JoblibBackend(n_jobs=1):
     dpls = simulate_dipole(net, tstop=tstop, n_trials=1)
@@ -106,7 +120,7 @@ for rep_time in rep_start_times:
     axes[1].axvline(rep_time, c='k')
     axes[2].axvline(rep_time, c='w')
 plot_dipole(dpls, ax=axes[1], layer='agg', show=False)
-emp_dpl.plot(ax=axes[1], color='tab:purple')
+emp_dpl.plot(ax=axes[1], color='tab:purple', show=False)
 net.cell_response.plot_spikes_raster(ax=axes[2], show=False)
 #net.cell_response.plot_spikes_hist(ax=axes[3], n_bins=200,
 #                                   spike_types=['L2_basket', 'L2_pyramidal',
