@@ -356,14 +356,16 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='ampa',
                            weight=0.00005,
                            delay=delay,
-                           lamtha=10.)  # defuse excitatory input from L5
+                           lamtha=10.,
+                           probability=0.33)  # defuse excitatory input from L5
         net.add_connection(src_gids='L5_pyramidal',
                            target_gids='L6_pyramidal',
                            loc='distal',
                            receptor='nmda',
                            weight=0.00005,
                            delay=delay,
-                           lamtha=10.)  # defuse excitatory input from L5
+                           lamtha=10.,
+                           probability=0.33)  # defuse excitatory input from L5
 
         # layer6 Pyr -> layer6 Pyr
         net.add_connection(src_gids='L6_pyramidal',
