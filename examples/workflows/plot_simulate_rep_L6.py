@@ -68,7 +68,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     net.add_evoked_drive(
         f'evprox1_distL6_rep{rep_idx}', mu=rep_time + 34., sigma=2.47, numspikes=1,
         weights_ampa=weights_ampa_L6, weights_nmda=None, location='distal',
-        synaptic_delays=0.1, probability=1.0, event_seed=544)
+        synaptic_delays=0.1, probability=0.13, event_seed=544)
 
     # Dist 1
     weights_ampa_d1 = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
@@ -92,7 +92,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     net.add_evoked_drive(
         f'evprox2_distL6_rep{rep_idx}', mu=rep_time + 130, sigma=10., numspikes=1,
         weights_ampa=weights_ampa_L6, location='distal',
-        synaptic_delays=0.1, probability=1.0, event_seed=814)
+        synaptic_delays=0.1, probability=0.13, event_seed=814)
 
     # simulate synaptic depletion
     weights_ampa_p1 = {key: weights_ampa_p1[key] * 0.8 for key in weights_ampa_p1.keys()}
