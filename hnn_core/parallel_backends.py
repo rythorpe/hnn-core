@@ -208,11 +208,11 @@ def run_subprocess(command, obj, timeout, proc_queue=None, *args, **kwargs):
     # wait for the process to terminate. we need use proc.communicate to
     # read any output at its end of life.
     try:
-        outs, errs = proc.communicate(timeout=1)
+        outs, errs = proc.communicate(timeout=3)
     except TimeoutExpired:
         proc.kill()
         # wait for output again after kill signal
-        outs, errs = proc.communicate(timeout=1)
+        outs, errs = proc.communicate(timeout=3)
 
     sys.stdout.write(outs)
     sys.stdout.write(errs)
@@ -284,7 +284,7 @@ def _echo_child_output(out_q):
     out = ''
     while True:
         try:
-            out += out_q.get(timeout=0.01)
+            out += out_q.get(timeout=0.03)
         except Empty:
             break
 
@@ -301,7 +301,7 @@ def _get_data_from_child_err(err_q):
 
     while True:
         try:
-            err += err_q.get(timeout=0.01)
+            err += err_q.get(timeout=0.03)
         except Empty:
             break
 

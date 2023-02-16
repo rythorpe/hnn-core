@@ -26,7 +26,7 @@ emp_dpl = read_dipole(op.join(hnn_core_root, 'yes_trial_S1_ERP_all_avg.txt'))
 ###############################################################################
 # Let us first create our default network and visualize the cells
 # inside it.
-net = L6_model(connect_layer_6=True)
+net = L6_model(connect_layer_6=True, legacy_mode=False)
 net.plot_cells()
 fig = plt.figure(figsize=(6, 6), constrained_layout=True)
 for cell_type_idx, cell_type in enumerate(net.cell_types):

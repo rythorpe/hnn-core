@@ -306,7 +306,7 @@ def calcium_model(params=None, add_drives_from_params=False,
 
 
 def L6_model(params=None, add_drives_from_params=False,
-             legacy_mode=True, connect_layer_6=True):
+             legacy_mode=False, connect_layer_6=True):
     """Instantiate the updated calcium model with layer 6 cell types.
 
     Returns
@@ -341,7 +341,11 @@ def L6_model(params=None, add_drives_from_params=False,
 
     # start with updated calcium model
     # XXX HACK: L6 pyr and basket cells are added in network.py
-    net = calcium_model(params, add_drives_from_params)
+    net = jones_2009_model(params, add_drives_from_params, legacy_mode)
+    cell_name = 'L5_pyramidal'
+    pos = net.cell_types[cell_name].pos
+    net.cell_types[cell_name] = pyramidal_ca(
+        cell_name=_short_name(cell_name), pos=pos)
 
     # remove the only L2_basket -> L5_pyramidal connection
     #del net.connectivity[10]
