@@ -54,7 +54,7 @@ weights_ampa_p1 = {'L2_basket': 0.100, 'L2_pyramidal': 0.200,
                    'L5_basket': 0.030, 'L5_pyramidal': 0.008}
 weights_ampa_p2 = {'L2_basket': 0.000003, 'L2_pyramidal': 0.5,
                    'L5_basket': 0.0002, 'L5_pyramidal': 0.4}
-weights_ampa_L6 = {'L6_pyramidal': 0.05}
+weights_ampa_L6 = {'L6_pyramidal': 0.01}
 
 for rep_idx, rep_time in enumerate(rep_start_times):
 
@@ -79,7 +79,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         f'evprox1_distL6_rep{rep_idx}', mu=rep_time + 34., sigma=2.47,
         numspikes=1, weights_ampa=weights_ampa_L6,
         location='distal', synaptic_delays=0.1,
-        probability=0.13, conn_seed=conn_seed, event_seed=event_seed)
+        probability=0.33, conn_seed=conn_seed, event_seed=event_seed)
 
     # Dist 1
     weights_ampa_d1 = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
@@ -106,7 +106,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         f'evprox2_distL6_rep{rep_idx}', mu=rep_time + 130, sigma=10.,
         numspikes=1, weights_ampa=weights_ampa_L6,
         location='distal', synaptic_delays=0.1,
-        probability=0.13, conn_seed=conn_seed, event_seed=event_seed)
+        probability=0.33, conn_seed=conn_seed, event_seed=event_seed)
 
     # simulate synaptic depletion
     weights_ampa_p1 = {key: weights_ampa_p1[key] * 0.8 for key in
@@ -117,7 +117,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
                        weights_ampa_L6.keys()}
 ###############################################################################
 # Now let's simulate the dipole
-with MPIBackend(n_procs=6):
+with MPIBackend(n_procs=10):
 #with JoblibBackend(n_jobs=1):
     dpls = simulate_dipole(net, tstop=tstop, n_trials=1)
 
