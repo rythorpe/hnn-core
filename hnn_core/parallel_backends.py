@@ -208,11 +208,11 @@ def run_subprocess(command, obj, timeout, proc_queue=None, *args, **kwargs):
     # wait for the process to terminate. we need use proc.communicate to
     # read any output at its end of life.
     try:
-        outs, errs = proc.communicate(timeout=3)
+        outs, errs = proc.communicate(timeout=1)
     except TimeoutExpired:
         proc.kill()
         # wait for output again after kill signal
-        outs, errs = proc.communicate(timeout=3)
+        outs, errs = proc.communicate(timeout=1)
 
     sys.stdout.write(outs)
     sys.stdout.write(errs)
