@@ -1,3 +1,4 @@
+"""Simulate repetition suppression + deviance detection in L6 model."""
 
 # Author: Ryan Thorpe <ryan_thorpe@brown.edu>
 
