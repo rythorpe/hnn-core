@@ -89,7 +89,7 @@ def _cell_L2Pyr(override_params, pos=(0., 0., 0), gid=0.):
         section._end_pts = end_pts[sec_name]
 
         if sec_name == 'soma':
-            section.syns = ['gabaa', 'gabab']
+            section.syns = ['ampa', 'nmda', 'gabaa', 'gabab']
         else:
             section.syns = ['ampa', 'nmda', 'gabaa', 'gabab']
 
@@ -167,7 +167,7 @@ def _cell_L5Pyr(override_params, pos=(0., 0., 0), gid=0.):
         section._end_pts = end_pts[sec_name]
 
         if sec_name == 'soma':
-            section.syns = ['gabaa', 'gabab']
+            section.syns = ['ampa', 'nmda', 'gabaa', 'gabab']
         else:
             section.syns = ['ampa', 'nmda', 'gabaa', 'gabab']
 
