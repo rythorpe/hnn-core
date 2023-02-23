@@ -27,7 +27,7 @@ emp_dpl = read_dipole(op.join(hnn_core_root, 'yes_trial_S1_ERP_all_avg.txt'))
 ###############################################################################
 # Let us first create our default network and visualize the cells
 # inside it.
-net = L6_model(connect_layer_6=True, legacy_mode=False)
+net = L6_model(connect_layer_6=True, legacy_mode=False, grid_shape=(10, 20))
 net.plot_cells()
 fig = plt.figure(figsize=(6, 6), constrained_layout=True)
 for cell_type_idx, cell_type in enumerate(net.cell_types):
@@ -140,16 +140,5 @@ for rep_time in rep_start_times:
 plot_dipole(dpls, ax=axes[1], layer='agg', show=False)
 emp_dpl.plot(ax=axes[1], color='tab:purple', show=False)
 net.cell_response.plot_spikes_raster(ax=axes[2], show=False)
-#net.cell_response.plot_spikes_hist(ax=axes[3], n_bins=200,
-#                                   spike_types=['L2_basket', 'L2_pyramidal',
-#                                                'L5_basket', 'L5_pyramidal',
-#                                                'L6_basket', 'L6_pyramidal'],
-#                                   show=False)
-
-###############################################################################
-# If you want to analyze how the different cortical layers contribute to
-# different net waveform features, then instead of passing ``'agg'`` to
-# ``layer``, you can provide a list of layers to be visualized and optionally
-# a list of axes to ``ax`` to visualize the dipole moments separately.
 plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()
