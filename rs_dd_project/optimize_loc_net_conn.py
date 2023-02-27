@@ -13,8 +13,15 @@ from hnn_core.viz import plot_dipole
 
 ###############################################################################
 # user parameters
-poiss_freq = 1e1  # 1 kHz as in Billeh et al. 2020
-poiss_weight = 5e-4
+# 1 kHz as in Billeh et al. 2020 is too fast for this size of network
+# decreasing to 10 Hz seems to allow for random single-cell events in a
+# disconnected network
+poiss_freq = 1e1
+# note that basket cells and pyramidal cells require different amounts of AMPA
+# excitatory current in order to drive a spike
+poiss_weights = {'L2_basket': 6e-4, 'L2_pyramidal': 8e-4,
+                 'L5_basket': 6e-4, 'L5_pyramidal': 8e-4,
+                 'L6_basket': 6e-4, 'L6_pyramidal': 8e-4}
 poiss_seed_rng = np.random.default_rng(1)
 sim_time = 500  # ms
 burn_in_time = 100  # ms
@@ -99,16 +106,17 @@ def simulate_network(conn_params):
     conn_params_transformed[::2] = 10 ** conn_params_transformed[::2]
     # update local network connections with new params
     set_conn_params(net, conn_params_transformed)
+    # temporary #####
+    net.clear_connectivity()
+    #####################
     # add the same poisson drive as before
-    cell_types = list(net.cell_types.keys())
     seed = int(poiss_seed_rng.random() * 1e3)
     net.add_poisson_drive(name='baseline_drive',
                           rate_constant=poiss_freq,
                           location='soma',
                           n_drive_cells='n_cells',
                           cell_specific=True,
-                          weights_ampa={cell: poiss_weight for cell in
-                                        cell_types},
+                          weights_ampa=poiss_weights,
                           synaptic_delays=0.0,
                           space_constant=1e14,  # near-uniform spatial spread
                           probability=1.0,
