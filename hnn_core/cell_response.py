@@ -34,7 +34,11 @@ class CellResponse(object):
         This includes vsoma and isoma.
     cell_type_names : list
         List of unique cell type names that are explicitly modeled in the
-        network
+        network.
+    gid_ranges : dict of range | None
+        Gid ranges for each cell type (dict keys) in the network. If None,
+        only the gids that spike will be reflected in the raster plot when
+        the CellResponse.plot_spikes_raster() method is called.
 
     Attributes
     ----------
@@ -77,7 +81,7 @@ class CellResponse(object):
     """
 
     def __init__(self, spike_times=None, spike_gids=None, spike_types=None,
-                 times=None, cell_type_names=None):
+                 times=None, cell_type_names=None, gid_ranges=None):
         if spike_times is None:
             spike_times = list()
         if spike_gids is None:
@@ -120,6 +124,7 @@ class CellResponse(object):
                 raise TypeError("'times' is an np.ndarray of simulation times")
         self._times = np.array(times)
         self._cell_type_names = cell_type_names
+        self._gid_ranges = gid_ranges
 
     def __repr__(self):
         class_name = self.__class__.__name__

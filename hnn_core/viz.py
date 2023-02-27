@@ -482,7 +482,8 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     return ax.get_figure()
 
 
-def plot_spikes_raster(cell_response, trial_idx=None, ax=None, show=True):
+def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
+                       show=True):
     """Plot the aggregate spiking activity according to cell type.
 
     Parameters
@@ -534,10 +535,13 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None, show=True):
         _, ax = plt.subplots(1, 1, constrained_layout=True)
 
     ypos = 0
-    events = []
+    events = list()
     for cell_type in cell_types:
-        cell_type_gids = np.unique(spike_gids[spike_types == cell_type])
-        cell_type_times, cell_type_ypos = [], []
+        cell_type_times, cell_type_ypos = list(), list()
+        if cell_response._gid_ranges is None:
+            cell_type_gids = np.unique(spike_gids[spike_types == cell_type])
+        else:
+            cell_type_gids = cell_response._gid_ranges[cell_type]
         for gid in cell_type_gids:
             gid_time = spike_times[spike_gids == gid]
             cell_type_times.append(gid_time)
