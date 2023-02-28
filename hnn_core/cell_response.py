@@ -310,11 +310,15 @@ class CellResponse(object):
             n_trials, n_cells = len(self._spike_times), len(cell_type_gids)
             gid_spike_rate = np.zeros((n_trials, n_cells))
 
-            trial_data = zip(self._spike_types, self._spike_gids)
-            for trial_idx, (spike_types, spike_gids) in enumerate(trial_data):
-                trial_type_mask = np.in1d(spike_types, cell_type)
-                gids, gid_counts = np.unique(np.array(
-                    spike_gids)[trial_type_mask], return_counts=True)
+            for trial_idx in range(n_trials):
+                spike_times = np.array(self._spike_times[trial_idx])
+                spike_gids = np.array(self._spike_gids[trial_idx])
+                spike_types = np.array(self._spike_types[trial_idx])
+                time_type_mask = ((spike_times >= tstart) *
+                                  (spike_times < tstop) *
+                                  (spike_types == cell_type))
+                gids, gid_counts = np.unique(
+                    np.array(spike_gids)[time_type_mask], return_counts=True)
 
                 gid_spike_rate[trial_idx, np.in1d(cell_type_gids, gids)] = (
                     gid_counts / (tstop - tstart)) * 1000
