@@ -97,7 +97,7 @@ def plot_sr_profiles(net, sim_time, burn_in_time):
     return fig
 
 
-def simulate_network(conn_params):
+def simulate_network(conn_params, cost_function=None):
     """Update network with sampled params, simulate, and return error."""
     net = net_original.copy()
     # transform synaptic weight params from log10->R scale
@@ -125,12 +125,27 @@ def simulate_network(conn_params):
     with MPIBackend(n_procs=6):
         dpls = simulate_dipole(net, tstop=sim_time, n_trials=1)
 
-    return net, dpls
+    if cost_function is None:
+        return net, dpls
+    else:
+        return cost_function(net, dpls), net, dpls
+
+
+def cost_func_disconn_sr(net, dpls):
+    """Cost function for matching avg spike rates in a disconnected network."""
+    mean_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
+                                                    tstop=sim_time,
+                                                    gid_ranges=net.gid_ranges)
+    # 10% of cells will fire per second
+    avg_expected_spike_rate = 0.1 / ((sim_time - burn_in_time) * 1e-3)
+    spike_rate_diffs = [sr - avg_expected_spike_rate for sr in
+                        mean_spike_rates.values()]
+
+    return np.linalg.norm(spike_rate_diffs)
 
 
 ###############################################################################
 # get initial params prior to optimization
-
 opt_params = get_conn_params(net_original.connectivity)
 opt_params_bounds = np.tile([[min_weight, max_weight],
                              [min_lamtha, max_lamtha]],
@@ -139,7 +154,8 @@ opt_params_bounds = np.tile([[min_weight, max_weight],
 
 ###############################################################################
 # simulation
-net, dpls = simulate_network(conn_params=opt_params)
+err, net, dpls = simulate_network(conn_params=opt_params,
+                                  cost_function=cost_func_disconn_sr)
 
 
 ###############################################################################
