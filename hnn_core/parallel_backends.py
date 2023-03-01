@@ -31,7 +31,7 @@ def _thread_handler(event, out, queue):
         queue.put(line)
 
 
-def _gather_trial_data(sim_data, net, n_trials, postproc):
+def _gather_trial_data(sim_data, net, n_trials, postproc, baseline_win):
     """Arrange data by trial
 
     To be called after simulate(). Returns list of Dipoles, one for each trial,
@@ -65,9 +65,8 @@ def _gather_trial_data(sim_data, net, n_trials, postproc):
         dpl = Dipole(times=sim_data[idx]['times'],
                      data=sim_data[idx]['dpl_data'])
 
-        N_pyr_x = net._params['N_pyr_x']
-        N_pyr_y = net._params['N_pyr_y']
-        dpl._baseline_renormalize(N_pyr_x, N_pyr_y)  # XXX cf. #270
+        if baseline_win is not None:
+            dpl._baseline_subtract(baseline_win)
         dpl._convert_fAm_to_nAm()  # always applied, cf. #264
         if postproc:
             window_len = net._params['dipole_smooth_win']  # specified in ms
@@ -530,7 +529,8 @@ class JoblibBackend(object):
 
         _BACKEND = self._old_backend
 
-    def simulate(self, net, tstop, dt, n_trials, postproc=False):
+    def simulate(self, net, tstop, dt, n_trials, postproc=False,
+                 baseline_win=None):
         """Simulate the HNN model
 
         Parameters
@@ -546,6 +546,11 @@ class JoblibBackend(object):
             The integration time step of h.CVode (ms)
         postproc : bool
             If False, no postprocessing applied to the dipole
+        baseline_win : None | array-like, shape (2,)
+            Time window in which to calculate the baseline, defined here as
+            the mean amplitude over time, that will be subtracted from the
+            current dipole moment. If None, no baseline subtraction or
+            normalization will be applied to the simulated data.
 
         Returns
         -------
@@ -559,8 +564,9 @@ class JoblibBackend(object):
         sim_data = parallel(myfunc(net, tstop, dt, trial_idx) for
                             trial_idx in range(n_trials))
 
-        dpls = _gather_trial_data(sim_data, net=net, n_trials=n_trials,
-                                  postproc=postproc)
+        dpls = _gather_trial_data(sim_data=sim_data, net=net,
+                                  n_trials=n_trials,
+                                  postproc=postproc, baseline_win=baseline_win)
 
         return dpls
 
@@ -671,7 +677,8 @@ class MPIBackend(object):
         if self.n_procs > 1:
             kill_proc_name('nrniv')
 
-    def simulate(self, net, tstop, dt, n_trials, postproc=False):
+    def simulate(self, net, tstop, dt, n_trials, postproc=False,
+                 baseline_win=None):
         """Simulate the HNN model in parallel on all cores
 
         Parameters
@@ -687,6 +694,11 @@ class MPIBackend(object):
             Number of trials to simulate.
         postproc : bool
             If False, no postprocessing applied to the dipole
+        baseline_win : None | array-like, shape (2,)
+            Time window in which to calculate the baseline, defined here as
+            the mean amplitude over time, that will be subtracted from the
+            current dipole moment. If None, no baseline subtraction or
+            normalization will be applied to the simulated data.
 
         Returns
         -------
@@ -720,7 +732,9 @@ class MPIBackend(object):
             proc_queue=self.proc_queue, env=env, cwd=os.getcwd(),
             universal_newlines=True)
 
-        dpls = _gather_trial_data(sim_data, net, n_trials, postproc)
+        dpls = _gather_trial_data(sim_data=sim_data, net=net,
+                                  n_trials=n_trials, postproc=postproc,
+                                  baseline_win=baseline_win)
         return dpls
 
     def terminate(self):

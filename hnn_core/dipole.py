@@ -16,7 +16,7 @@ from .viz import plot_dipole, plot_psd, plot_tfr_morlet
 
 
 def simulate_dipole(net, tstop, dt=0.025, n_trials=None, record_vsec=False,
-                    record_isec=False, postproc=False):
+                    record_isec=False, postproc=False, baseline_win=[10, 15]):
     """Simulate a dipole given the experiment parameters.
 
     Parameters
@@ -45,6 +45,11 @@ def simulate_dipole(net, tstop, dt=0.025, n_trials=None, record_vsec=False,
         extracellular recordings etc. The preferred way is to use the
         :meth:`~hnn_core.dipole.Dipole.smooth` and
         :meth:`~hnn_core.dipole.Dipole.scale` methods instead. Default: False.
+    baseline_win : None | array-like, shape (2,)
+        Time window (ms) in which to calculate the baseline, defined here as
+        the mean amplitude over time, that will be subtracted from the current
+        dipole moment. If None, no baseline subtraction or normalization will
+        be applied to the simulated data.
 
     Returns
     -------
@@ -101,7 +106,7 @@ def simulate_dipole(net, tstop, dt=0.025, n_trials=None, record_vsec=False,
                       ' in a future release of hnn-core. Please define '
                       'smoothing and scaling explicitly using Dipole methods.',
                       DeprecationWarning)
-    dpls = _BACKEND.simulate(net, tstop, dt, n_trials, postproc)
+    dpls = _BACKEND.simulate(net, tstop, dt, n_trials, postproc, baseline_win)
 
     return dpls
 
@@ -385,10 +390,7 @@ class Dipole(object):
             self.smooth(window_len)
 
     def _convert_fAm_to_nAm(self):
-        """The NEURON simulator output is in fAm, convert to nAm
-
-        NB! Must be run `after` :meth:`Dipole.baseline_renormalization`
-        """
+        """The NEURON simulator output is in fAm, convert to nAm."""
         for key in self.data.keys():
             self.data[key] *= 1e-6
 
@@ -602,59 +604,23 @@ class Dipole(object):
             colormap=colormap, colorbar=colorbar,
             colorbar_inside=colorbar_inside, show=show)
 
-    def _baseline_renormalize(self, N_pyr_x, N_pyr_y):
-        """Only baseline renormalize if the units are fAm.
+    def _baseline_subtract(self, t_win):
+        """Subtract baseline from the current dipole time course.
 
         Parameters
         ----------
-        N_pyr_x : int
-            Nr of cells (x)
-        N_pyr_y : int
-            Nr of cells (y)
+        t_win : array-like, shape (2,)
+            Time window in which to calculate the baseline, defined here as
+            the mean amplitude over time.
+
+        Notes
+        -----
+        Modifies Dipole.data in-place.
         """
-        # N_pyr cells in grid. This is PER LAYER
-        N_pyr = N_pyr_x * N_pyr_y
-        # dipole offset calculation: increasing number of pyr
-        # cells (L2 and L5, simultaneously)
-        # with no inputs resulted in an aggregate dipole over the
-        # interval [50., 1000.] ms that
-        # eventually plateaus at -48 fAm. The range over this interval
-        # is something like 3 fAm
-        # so the resultant correction is here, per dipole
-        # dpl_offset = N_pyr * 50.207
-        dpl_offset = {
-            # these values will be subtracted
-            'L2': N_pyr * 0.0443,
-            'L5': N_pyr * -49.0502,
-            'L6': N_pyr * 0.0443
-            # 'L5': N_pyr * -48.3642,
-            # will be calculated next, this is a placeholder
-            # 'agg': None,
-        }
-        # L2 and L6 dipole offsets can be roughly baseline shifted over
-        # the entire range of t
-        self.data['L2'] -= dpl_offset['L2']
-        self.data['L6'] -= dpl_offset['L6']
-        # L5 dipole offset should be different for interval [50., 500.]
-        # and then it can be offset
-        # slope (m) and intercept (b) params for L5 dipole offset
-        # uncorrected for N_cells
-        # these values were fit over the range [37., 750.)
-        m = 3.4770508e-3
-        b = -51.231085
-        # these values were fit over the range [750., 5000]
-        t1 = 750.
-        m1 = 1.01e-4
-        b1 = -48.412078
-        # piecewise normalization
-        self.data['L5'][self.times <= 37.] -= dpl_offset['L5']
-        self.data['L5'][(self.times > 37.) & (self.times < t1)] -= N_pyr * \
-            (m * self.times[(self.times > 37.) & (self.times < t1)] + b)
-        self.data['L5'][self.times >= t1] -= N_pyr * \
-            (m1 * self.times[self.times >= t1] + b1)
-        # recalculate the aggregate dipole based on the baseline
-        # normalized ones
-        self.data['agg'] = self.data['L2'] + self.data['L5'] + self.data['L6']
+        window_mask = np.logical_and(self.times >= t_win[0],
+                                     self.times < t_win[1])
+        for component_dpl in self.data.values():
+            component_dpl -= component_dpl[window_mask].mean()
 
     def _write_txt(self, fname):
         """Write dipole values to a file.
