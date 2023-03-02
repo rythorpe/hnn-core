@@ -25,19 +25,9 @@ emp_dpl = read_dipole(op.join(hnn_core_root, 'yes_trial_S1_ERP_all_avg.txt'))
 #emp_dpl = read_dipole('S1_SupraT.txt')
 
 ###############################################################################
-# Let us first create our default network and visualize the cells
-# inside it.
-net = L6_model(connect_layer_6=True, legacy_mode=False, grid_shape=(10, 20))
-net.plot_cells()
-fig = plt.figure(figsize=(6, 6), constrained_layout=True)
-for cell_type_idx, cell_type in enumerate(net.cell_types):
-    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
-                         projection='3d')
-    net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
-plt.show()
-
-###############################################################################
-# Define hyperparameters of repetitive drive sequence
+# Define user parameters
+model_grid_shape = (10, 20)
+# Hyperparameters of repetitive drive sequence
 reps = 4
 rep_interval = 250.  # in ms; 8 Hz
 rep_duration = 170.
@@ -46,6 +36,19 @@ tstop = reps * max(rep_interval, rep_duration)
 rep_start_times = np.arange(0, tstop, rep_interval)
 
 event_seed = 1
+
+###############################################################################
+# Let us first create our default network and visualize the cells
+# inside it.
+net = L6_model(connect_layer_6=True, legacy_mode=False,
+               grid_shape=model_grid_shape)
+net.plot_cells()
+fig = plt.figure(figsize=(6, 6), constrained_layout=True)
+for cell_type_idx, cell_type in enumerate(net.cell_types):
+    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
+                         projection='3d')
+    net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
+plt.show()
 
 ###############################################################################
 # Add drives

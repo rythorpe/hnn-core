@@ -6,6 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from skopt import gp_minimize
+from skopt.plots import plot_gaussian_process, plot_convergence
+
 from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.network_models import L6_model
 from hnn_core.viz import plot_dipole
@@ -16,21 +19,25 @@ from hnn_core.viz import plot_dipole
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
-poiss_freq = 1e1
+poiss_rate = 1e1
 # note that basket cells and pyramidal cells require different amounts of AMPA
 # excitatory current in order to drive a spike
-poiss_weights = {'L2_basket': 6e-4, 'L2_pyramidal': 8e-4,
-                 'L5_basket': 6e-4, 'L5_pyramidal': 8e-4,
-                 'L6_basket': 6e-4, 'L6_pyramidal': 8e-4}
-poiss_seed_rng = np.random.default_rng(1)
+poiss_weight = 8e-4
+#poiss_weights = {'L2_basket': 6e-4, 'L2_pyramidal': 8e-4,
+#                 'L5_basket': 6e-4, 'L5_pyramidal': 8e-4,
+#                 'L6_basket': 6e-4, 'L6_pyramidal': 8e-4}
 sim_time = 500  # ms
 burn_in_time = 100  # ms
 
-min_weight, max_weight = -5., -1.  # log_10 scale
-min_lamtha, max_lamtha = 1., 100.  # real number scale
+# log_10 scale
+min_weight, max_weight = -5., -1.
+# real number scale; also applies to poisson rate
+min_lamtha, max_lamtha = 1., 100.
 
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
+
+np.random.seed(1)
 
 
 ###############################################################################
@@ -41,7 +48,7 @@ def get_conn_params(loc_net_connections):
     for conn in loc_net_connections:
         conn_params.append(np.log10(conn['nc_dict']['A_weight']))
         conn_params.append(conn['nc_dict']['lamtha'])
-    return np.array(conn_params)
+    return conn_params
 
 
 def set_conn_params(net, conn_params):
@@ -57,20 +64,21 @@ def set_conn_params(net, conn_params):
 
 
 def plot_net_response(dpls, net):
-    fig, axes = plt.subplots(3, 1, sharex=True, figsize=(6, 6),
+    fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 6),
                              constrained_layout=True)
 
-    window_len, scaling_factor = 30, 2000
-    for dpl in dpls:
-        dpl.smooth(window_len).scale(scaling_factor)
+    #window_len, scaling_factor = 30, 2000
+    #for dpl in dpls:
+    #    dpl.smooth(window_len).scale(scaling_factor)
 
     net.cell_response.plot_spikes_hist(ax=axes[0], n_bins=sim_time, show=False)
-    plot_dipole(dpls, ax=axes[1], layer='agg', show=False)
-    net.cell_response.plot_spikes_raster(ax=axes[2], show=False)
+    plot_dipole(dpls, ax=axes[1:5], layer=['L2', 'L5', 'L6', 'agg'],
+                show=False)
+    net.cell_response.plot_spikes_raster(ax=axes[5], show=False)
     return fig
 
 
-def plot_sr_profiles(net, sim_time, burn_in_time):
+def plot_spiking_profiles(net, sim_time, burn_in_time):
     fig, axes = plt.subplots(3, 2, sharex=True, figsize=(6, 6),
                              constrained_layout=True)
 
@@ -97,8 +105,8 @@ def plot_sr_profiles(net, sim_time, burn_in_time):
     return fig
 
 
-def simulate_network(conn_params, cost_function=None):
-    """Update network with sampled params, simulate, and return error."""
+def simulate_network(conn_params, poiss_params, clear_conn=False):
+    """Update network with sampled params and run simulation."""
     net = net_original.copy()
     # transform synaptic weight params from log10->R scale
     conn_params_transformed = np.array(conn_params.copy())
@@ -106,13 +114,22 @@ def simulate_network(conn_params, cost_function=None):
     conn_params_transformed[::2] = 10 ** conn_params_transformed[::2]
     # update local network connections with new params
     set_conn_params(net, conn_params_transformed)
-    # temporary #####
-    net.clear_connectivity()
-    #####################
+
+    # when optimizing cell excitability under poisson drive, it's nice to use
+    # a disconnected network
+    if clear_conn is True:
+        print("simulating disconnected network")
+        net.clear_connectivity()
+    else:
+        print("simulating fully-connected network")
+
     # add the same poisson drive as before
-    seed = int(poiss_seed_rng.random() * 1e3)
-    net.add_poisson_drive(name='baseline_drive',
-                          rate_constant=poiss_freq,
+    seed = int(np.random.random() * 1e3)
+    poiss_weight = poiss_params[0]
+    poiss_weights = {cell_type: poiss_weight for cell_type in net.cell_types}
+    poiss_rate = poiss_params[1]
+    net.add_poisson_drive(name='poisson_drive',
+                          rate_constant=poiss_rate,
                           location='soma',
                           n_drive_cells='n_cells',
                           cell_specific=True,
@@ -123,44 +140,111 @@ def simulate_network(conn_params, cost_function=None):
                           event_seed=seed)
 
     with MPIBackend(n_procs=6):
-        dpls = simulate_dipole(net, tstop=sim_time, n_trials=1)
+        dpls = simulate_dipole(net, tstop=sim_time, n_trials=1,
+                               baseline_win=[burn_in_time, sim_time])
 
-    if cost_function is None:
-        return net, dpls
-    else:
-        return cost_function(net, dpls), net, dpls
+    return net, dpls
 
 
-def cost_func_disconn_sr(net, dpls):
-    """Cost function for matching avg spike rates in a disconnected network."""
-    mean_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
-                                                    tstop=sim_time,
-                                                    gid_ranges=net.gid_ranges)
-    # 10% of cells will fire per second
-    avg_expected_spike_rate = 0.1 / ((sim_time - burn_in_time) * 1e-3)
-    spike_rate_diffs = [sr - avg_expected_spike_rate for sr in
-                        mean_spike_rates.values()]
+def err_disconn_spike_rate(net, avg_expected_spike_rates,
+                           burn_in_time, sim_time):
+    """Cost function for matching simulated vs expected avg spike rates.
+
+    Used for optimizing cell excitability under poisson drive.
+    """
+    avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
+                                                   tstop=sim_time,
+                                                   gid_ranges=net.gid_ranges)
+
+    spike_rate_diffs = list()
+    for cell_type in avg_expected_spike_rates.keys():
+        spike_rate_diffs.append(avg_expected_spike_rates[cell_type] -
+                                avg_spike_rates[cell_type])
 
     return np.linalg.norm(spike_rate_diffs)
 
 
+def opt_min_func(opt_params):
+    """Function to minimize during optimization: err in baseline spikerates."""
+
+    # parse opt_params
+    conn_params = opt_params[:-2]  # all but last two configure local net conn
+    poiss_params = opt_params[-2:]  # last two are configure poisson drive
+
+    # taken from Reyes-Puerta 2015 and De Kock 2007
+    # see Constantinople and Bruno 2013 for laminar difference in E-cell
+    # excitability and proportion of connected pairs
+    target_avg_spike_rates = {'L2_basket': 0.8,
+                              'L2_pyramidal': 0.3,
+                              'L5_basket': 2.4,  # L5A + L5B avg
+                              'L5_pyramidal': 1.4,  # L5A + L5B avg
+                              'L6_basket': 1.2,  # estimated; Reyes-Puerta 2015
+                              'L6_pyramidal': 0.5}  # from De Kock 2007
+
+    net, dpls = simulate_network(conn_params, poiss_params, clear_conn=False)
+    err = err_disconn_spike_rate(net,
+                                 target_avg_spike_rates,
+                                 burn_in_time=burn_in_time,
+                                 sim_time=sim_time)
+
+    # avg rates in unconn network should be a bit less
+    # for now we'll make them uniform: 10% of cells will fire per second
+    target_avg_spike_rates_unconn = {'L2_basket': 0.1,
+                                     'L2_pyramidal': 0.1,
+                                     'L5_basket': 0.1,
+                                     'L5_pyramidal': 0.1,
+                                     'L6_basket': 0.1,
+                                     'L6_pyramidal': 0.1}
+
+    net_disconn, dpls_disconn = simulate_network(conn_params, poiss_params,
+                                                 clear_conn=True)
+    # note: pass in global variables "burn_in_time" and "sim_time"
+    err_disconn = err_disconn_spike_rate(net_disconn,
+                                         target_avg_spike_rates_unconn,
+                                         burn_in_time=burn_in_time,
+                                         sim_time=sim_time)
+    print(f"conn err: {err}, disconn err: {err_disconn}")
+
+    return err + err_disconn
+
+
 ###############################################################################
 # get initial params prior to optimization
-opt_params = get_conn_params(net_original.connectivity)
+opt_params_0 = get_conn_params(net_original.connectivity)
+# add poisson drive params to end
+opt_params_0.extend([np.log10(poiss_weight), poiss_rate])
 opt_params_bounds = np.tile([[min_weight, max_weight],
                              [min_lamtha, max_lamtha]],
-                            (opt_params.shape[0] // 2, 1))
+                            (len(opt_params_0) // 2, 1))
 
 
 ###############################################################################
-# simulation
-err, net, dpls = simulate_network(conn_params=opt_params,
-                                  cost_function=cost_func_disconn_sr)
-
+# optimize
+opt_results = gp_minimize(func=opt_min_func,
+                          dimensions=opt_params_bounds,
+                          x0=opt_params_0,
+                          n_calls=250,  # 100
+                          n_initial_points=125,  # 25
+                          initial_point_generator='random',  # sobol; params<40
+                          acq_optimizer='sampling',
+                          verbose=True,
+                          random_state=1234)
+opt_params_1 = opt_results.x
 
 ###############################################################################
 # plot results
-net_response_fig = plot_net_response(dpls, net)
-sr_profiles_fig = plot_sr_profiles(net, sim_time, burn_in_time)
+plot_convergence(opt_results)
+
+# pre-optimization
+net_0, dpls_0 = simulate_network(conn_params=opt_params_0[:-2],
+                                 poiss_params=opt_params_0[-2:])
+net_response_fig = plot_net_response(dpls_0, net_0)
+sr_profiles_fig = plot_spiking_profiles(net_0, sim_time, burn_in_time)
+# post-optimization
+net_1, dpls_1 = simulate_network(conn_params=opt_params_1[:-2],
+                                 poiss_params=opt_params_1[-2:])
+net_response_fig = plot_net_response(dpls_1, net_1)
+sr_profiles_fig = plot_spiking_profiles(net_1, sim_time, burn_in_time)
+
 
 plt.show()
