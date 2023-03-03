@@ -34,6 +34,10 @@ min_weight, max_weight = -5., -1.
 # real number scale; also applies to poisson rate
 min_lamtha, max_lamtha = 1., 100.
 
+# opt parameters
+opt_n_total_calls = 50
+opt_n_init_points = 25
+
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
@@ -105,15 +109,18 @@ def plot_spiking_profiles(net, sim_time, burn_in_time):
     return fig
 
 
-def simulate_network(conn_params, poiss_params, clear_conn=False):
+def simulate_network(poiss_params, conn_params=None, clear_conn=False):
     """Update network with sampled params and run simulation."""
     net = net_original.copy()
-    # transform synaptic weight params from log10->R scale
-    conn_params_transformed = np.array(conn_params.copy())
-    # every other element is a synaptic weight param
-    conn_params_transformed[::2] = 10 ** conn_params_transformed[::2]
-    # update local network connections with new params
-    set_conn_params(net, conn_params_transformed)
+
+    if conn_params is not None:
+        print('resetting network connectivity')
+        # transform synaptic weight params from log10->R scale
+        conn_params_transformed = np.array(conn_params.copy())
+        # every other element is a synaptic weight param
+        conn_params_transformed[::2] = 10 ** conn_params_transformed[::2]
+        # update local network connections with new params
+        set_conn_params(net, conn_params_transformed)
 
     # when optimizing cell excitability under poisson drive, it's nice to use
     # a disconnected network
@@ -167,10 +174,6 @@ def err_disconn_spike_rate(net, avg_expected_spike_rates,
 def opt_min_func(opt_params):
     """Function to minimize during optimization: err in baseline spikerates."""
 
-    # parse opt_params
-    conn_params = opt_params[:-2]  # all but last two configure local net conn
-    poiss_params = opt_params[-2:]  # last two are configure poisson drive
-
     # taken from Reyes-Puerta 2015 and De Kock 2007
     # see Constantinople and Bruno 2013 for laminar difference in E-cell
     # excitability and proportion of connected pairs
@@ -178,54 +181,52 @@ def opt_min_func(opt_params):
                               'L2_pyramidal': 0.3,
                               'L5_basket': 2.4,  # L5A + L5B avg
                               'L5_pyramidal': 1.4,  # L5A + L5B avg
-                              'L6_basket': 1.2,  # estimated; Reyes-Puerta 2015
+                              'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
                               'L6_pyramidal': 0.5}  # from De Kock 2007
 
-    net, dpls = simulate_network(conn_params, poiss_params, clear_conn=False)
-    err = err_disconn_spike_rate(net,
-                                 target_avg_spike_rates,
-                                 burn_in_time=burn_in_time,
-                                 sim_time=sim_time)
+    #net, dpls = simulate_network(conn_params, poiss_params, clear_conn=False)
+    #err = err_disconn_spike_rate(net,
+    #                             target_avg_spike_rates,
+    #                             burn_in_time=burn_in_time,
+    #                             sim_time=sim_time)
 
     # avg rates in unconn network should be a bit less
+    # try 20% of the avg rates in a fully connected network
+    target_avg_spike_rates_unconn = {cell: rate * 0.2 for cell, rate in
+                                     target_avg_spike_rates.items()}
     # for now we'll make them uniform: 10% of cells will fire per second
-    target_avg_spike_rates_unconn = {'L2_basket': 0.1,
-                                     'L2_pyramidal': 0.1,
-                                     'L5_basket': 0.1,
-                                     'L5_pyramidal': 0.1,
-                                     'L6_basket': 0.1,
-                                     'L6_pyramidal': 0.1}
+    #target_avg_spike_rates_unconn = {cell: 0.1 for cell in
+    #                                 target_avg_spike_rates.keys()}
 
-    net_disconn, dpls_disconn = simulate_network(conn_params, poiss_params,
-                                                 clear_conn=True)
+    net_disconn, dpls_disconn = simulate_network(poiss_params=opt_params,
+                                                 conn_params=None,
+                                                 clear_conn=True,)
     # note: pass in global variables "burn_in_time" and "sim_time"
-    err_disconn = err_disconn_spike_rate(net_disconn,
-                                         target_avg_spike_rates_unconn,
-                                         burn_in_time=burn_in_time,
-                                         sim_time=sim_time)
-    print(f"conn err: {err}, disconn err: {err_disconn}")
+    err = err_disconn_spike_rate(net_disconn,
+                                 target_avg_spike_rates_unconn,
+                                 burn_in_time=burn_in_time,
+                                 sim_time=sim_time)
+    print(f"disconn err: {err}")
 
-    return err + err_disconn
+    return err
 
 
 ###############################################################################
 # get initial params prior to optimization
-opt_params_0 = get_conn_params(net_original.connectivity)
-# add poisson drive params to end
-opt_params_0.extend([np.log10(poiss_weight), poiss_rate])
+#opt_params_0 = get_conn_params(net_original.connectivity)
+opt_params_0 = [np.log10(poiss_weight), poiss_rate]
 opt_params_bounds = np.tile([[min_weight, max_weight],
                              [min_lamtha, max_lamtha]],
                             (len(opt_params_0) // 2, 1))
-
 
 ###############################################################################
 # optimize
 opt_results = gp_minimize(func=opt_min_func,
                           dimensions=opt_params_bounds,
                           x0=opt_params_0,
-                          n_calls=250,  # 100
-                          n_initial_points=125,  # 25
-                          initial_point_generator='random',  # sobol; params<40
+                          n_calls=opt_n_total_calls,  # >5**n_params
+                          n_initial_points=opt_n_init_points,  # 5**n_params
+                          initial_point_generator='sobol',  # sobol; params<40
                           acq_optimizer='sampling',
                           verbose=True,
                           random_state=1234)
