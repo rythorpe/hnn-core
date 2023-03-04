@@ -16,13 +16,13 @@ from hnn_core.viz import plot_dipole
 
 ###############################################################################
 # user parameters
+poiss_weight = 7e-4
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
 poiss_rate = 1e1
 # note that basket cells and pyramidal cells require different amounts of AMPA
 # excitatory current in order to drive a spike
-poiss_weight = 7e-4
 #poiss_weights = {'L2_basket': 6e-4, 'L2_pyramidal': 8e-4,
 #                 'L5_basket': 6e-4, 'L5_pyramidal': 8e-4,
 #                 'L6_basket': 6e-4, 'L6_pyramidal': 8e-4}
@@ -132,7 +132,7 @@ def simulate_network(poiss_params, conn_params=None, clear_conn=False):
 
     # add the same poisson drive as before
     seed = int(np.random.random() * 1e3)
-    poiss_weight = poiss_params[0]
+    poiss_weight = 10 ** poiss_params[0]
     poiss_weights = {cell_type: poiss_weight for cell_type in net.cell_types}
     poiss_rate = poiss_params[1]
     net.add_poisson_drive(name='poisson_drive',
@@ -228,19 +228,23 @@ opt_results = gp_minimize(func=opt_min_func,
                           acq_optimizer='sampling',
                           verbose=True,
                           random_state=1234)
-opt_params_1 = opt_results.x
+opt_params = opt_results.x
+print(f'poiss_weight: {10 ** opt_params[0]}')
+print(f'poiss_rate: {opt_params[1]}')
 
 ###############################################################################
 # plot results
 plot_convergence(opt_results, ax=None)
+#plot_gaussian_process(opt_results)
 
 # pre-optimization
+# note: poiss_params expects a weight param in log_10 scale
 net_0, dpls_0 = simulate_network(poiss_params=opt_params_0, clear_conn=True)
 net_response_fig = plot_net_response(dpls_0, net_0)
 sr_profiles_fig = plot_spiking_profiles(net_0, sim_time, burn_in_time)
 # post-optimization
-net_1, dpls_1 = simulate_network(poiss_params=opt_params_1, clear_conn=True)
-net_response_fig = plot_net_response(dpls_1, net_1)
-sr_profiles_fig = plot_spiking_profiles(net_1, sim_time, burn_in_time)
+net, dpls = simulate_network(poiss_params=opt_params, clear_conn=True)
+net_response_fig = plot_net_response(dpls, net)
+sr_profiles_fig = plot_spiking_profiles(net, sim_time, burn_in_time)
 
 plt.show()
