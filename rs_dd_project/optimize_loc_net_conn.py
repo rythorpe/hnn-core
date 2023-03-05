@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from skopt import gp_minimize
-from skopt.plots import plot_gaussian_process, plot_convergence
+from skopt.plots import plot_gaussian_process, plot_convergence, plot_objective
 
 from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.network_models import L6_model
@@ -192,7 +192,7 @@ def opt_min_func(opt_params):
 
     # avg rates in unconn network should be a bit less
     # try 20% of the avg rates in a fully connected network
-    target_avg_spike_rates_unconn = {cell: rate * 0.2 for cell, rate in
+    target_avg_spike_rates_unconn = {cell: rate * 0.3 for cell, rate in
                                      target_avg_spike_rates.items()}
     # for now we'll make them uniform: 10% of cells will fire per second
     #target_avg_spike_rates_unconn = {cell: 0.1 for cell in
@@ -236,6 +236,7 @@ print(f'poiss_rate: {opt_params[1]}')
 # plot results
 plot_convergence(opt_results, ax=None)
 #plot_gaussian_process(opt_results)
+ax_obj = plot_objective(opt_results)
 
 # pre-optimization
 # note: poiss_params expects a weight param in log_10 scale
