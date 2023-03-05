@@ -16,7 +16,7 @@ from hnn_core.viz import plot_dipole
 
 ###############################################################################
 # user parameters
-poiss_weight = 7e-4
+poiss_weight = 1e-3
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
@@ -192,7 +192,7 @@ def opt_min_func(opt_params):
 
     # avg rates in unconn network should be a bit less
     # try 20% of the avg rates in a fully connected network
-    target_avg_spike_rates_unconn = {cell: rate * 0.3 for cell, rate in
+    target_avg_spike_rates_unconn = {cell: rate * 0.33 for cell, rate in
                                      target_avg_spike_rates.items()}
     # for now we'll make them uniform: 10% of cells will fire per second
     #target_avg_spike_rates_unconn = {cell: 0.1 for cell in
