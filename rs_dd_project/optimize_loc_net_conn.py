@@ -21,9 +21,9 @@ from hnn_core.viz import plot_dipole
 
 # note that basket cells and pyramidal cells require different amounts of AMPA
 # excitatory current in order to drive a spike
-poiss_weights_0 = OrderedDict(L2_basket=8e-4, L2_pyramidal=1e-3,
-                              L5_basket=8e-4, L5_pyramidal=1e-3,
-                              L6_basket=8e-4, L6_pyramidal=1e-3)
+poiss_weights_0 = OrderedDict(L2_basket=1e-3, L2_pyramidal=2e-3,
+                              L5_basket=1e-3, L5_pyramidal=2e-3,
+                              L6_basket=1e-3, L6_pyramidal=2e-3)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
@@ -255,12 +255,14 @@ ax_obj = plot_objective(opt_results)
 
 # pre-optimization
 # first convert first param back from log_10 scale
-opt_params_init = [10 ** opt_params_0[:-1], opt_params_0[-1]]
+opt_params_init = [10 ** weight for weight in opt_params_0[:-1]]
+opt_params_init.append(opt_params_0[-1])
 net_0, dpls_0 = simulate_network(poiss_params=opt_params_init, clear_conn=True)
 net_response_fig = plot_net_response(dpls_0, net_0)
 sr_profiles_fig = plot_spiking_profiles(net_0, sim_time, burn_in_time)
 # post-optimization
-opt_params_final = [10 ** opt_params[:-1], opt_params[-1]]
+opt_params_final = [10 ** weight for weight in opt_params[:-1]]
+opt_params_final.append(opt_params[-1])
 net, dpls = simulate_network(poiss_params=opt_params_final, clear_conn=True)
 net_response_fig = plot_net_response(dpls, net)
 sr_profiles_fig = plot_spiking_profiles(net, sim_time, burn_in_time)
