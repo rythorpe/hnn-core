@@ -2,12 +2,14 @@
 
 # Author: Ryan Thorpe <ryan_thorpe@brown.edu>
 
+from collections import OrderedDict
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from skopt import gp_minimize
-from skopt.plots import plot_gaussian_process, plot_convergence, plot_objective
+from skopt.plots import plot_convergence, plot_objective
 
 from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.network_models import L6_model
@@ -16,23 +18,25 @@ from hnn_core.viz import plot_dipole
 
 ###############################################################################
 # user parameters
-poiss_weight = 1e-3
+
+# note that basket cells and pyramidal cells require different amounts of AMPA
+# excitatory current in order to drive a spike
+poiss_weights_0 = OrderedDict(L2_basket=8e-4, L2_pyramidal=1e-3,
+                              L5_basket=8e-4, L5_pyramidal=1e-3,
+                              L6_basket=8e-4, L6_pyramidal=1e-3)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
-poiss_rate = 1e1
-# note that basket cells and pyramidal cells require different amounts of AMPA
-# excitatory current in order to drive a spike
-#poiss_weights = {'L2_basket': 6e-4, 'L2_pyramidal': 8e-4,
-#                 'L5_basket': 6e-4, 'L5_pyramidal': 8e-4,
-#                 'L6_basket': 6e-4, 'L6_pyramidal': 8e-4}
+poiss_rate_0 = 1e1
+
 sim_time = 600  # ms
 burn_in_time = 200  # ms
 
 # log_10 scale
 min_weight, max_weight = -5., -1.
-# real number scale; also applies to poisson rate
+# real number scale
 min_lamtha, max_lamtha = 1., 100.
+min_rate, max_rate = 1., 100.
 
 # opt parameters
 opt_n_total_calls = 50
@@ -131,10 +135,14 @@ def simulate_network(poiss_params, conn_params=None, clear_conn=False):
         print("simulating fully-connected network")
 
     # add the same poisson drive as before
+    cell_types = ['L2_basket', 'L2_pyramidal',
+                  'L5_basket', 'L5_pyramidal',
+                  'L6_basket', 'L6_pyramidal']
+    poiss_weights = {cell_type: weight for cell_type, weight in
+                     zip(cell_types, poiss_params[:-1])}
+    poiss_rate = poiss_params[-1]
+    #poiss_weights = {cell_type: poiss_weight for cell_type in net.cell_types}
     seed = int(np.random.random() * 1e3)
-    poiss_weight = 10 ** poiss_params[0]
-    poiss_weights = {cell_type: poiss_weight for cell_type in net.cell_types}
-    poiss_rate = poiss_params[1]
     net.add_poisson_drive(name='poisson_drive',
                           rate_constant=poiss_rate,
                           location='soma',
@@ -173,6 +181,7 @@ def err_disconn_spike_rate(net, avg_expected_spike_rates,
 
 def opt_min_func(opt_params):
     """Function to minimize during optimization: err in baseline spikerates."""
+    opt_params = np.array(opt_params)
 
     # taken from Reyes-Puerta 2015 and De Kock 2007
     # see Constantinople and Bruno 2013 for laminar difference in E-cell
@@ -198,7 +207,9 @@ def opt_min_func(opt_params):
     #target_avg_spike_rates_unconn = {cell: 0.1 for cell in
     #                                 target_avg_spike_rates.keys()}
 
-    net_disconn, dpls_disconn = simulate_network(poiss_params=opt_params,
+    # convert weight param from back from log_10 scale
+    poiss_params = np.append(10 ** opt_params[:-1], opt_params[-1])
+    net_disconn, dpls_disconn = simulate_network(poiss_params=poiss_params,
                                                  conn_params=None,
                                                  clear_conn=True,)
     # note: pass in global variables "burn_in_time" and "sim_time"
@@ -212,10 +223,15 @@ def opt_min_func(opt_params):
 ###############################################################################
 # get initial params prior to optimization
 #opt_params_0 = get_conn_params(net_original.connectivity)
-opt_params_0 = [np.log10(poiss_weight), poiss_rate]
-opt_params_bounds = np.tile([[min_weight, max_weight],
-                             [min_lamtha, max_lamtha]],
-                            (len(opt_params_0) // 2, 1))
+# poisson drive synaptic weight initial conditions
+opt_params_0 = [np.log10(weight) for weight in poiss_weights_0.values()]
+# poisson drive rate constant initial conditions
+opt_params_0.append(poiss_rate_0)
+# poisson drive synaptic weight bounds
+opt_params_bounds = np.tile([min_weight, max_weight],
+                            (len(poiss_weights_0), 1)).tolist()
+# poisson drive rate constant bounds
+opt_params_bounds.append([min_rate, max_rate])
 
 ###############################################################################
 # optimize
@@ -229,22 +245,23 @@ opt_results = gp_minimize(func=opt_min_func,
                           verbose=True,
                           random_state=1234)
 opt_params = opt_results.x
-print(f'poiss_weight: {10 ** opt_params[0]}')
-print(f'poiss_rate: {opt_params[1]}')
+print(f'poiss_weights: {[10 ** param for param in opt_params[:-1]]}')
+print(f'poiss_rate: {opt_params[-1]}')
 
 ###############################################################################
 # plot results
 plot_convergence(opt_results, ax=None)
-#plot_gaussian_process(opt_results)
 ax_obj = plot_objective(opt_results)
 
 # pre-optimization
-# note: poiss_params expects a weight param in log_10 scale
-net_0, dpls_0 = simulate_network(poiss_params=opt_params_0, clear_conn=True)
+# first convert first param back from log_10 scale
+opt_params_init = [10 ** opt_params_0[:-1], opt_params_0[-1]]
+net_0, dpls_0 = simulate_network(poiss_params=opt_params_init, clear_conn=True)
 net_response_fig = plot_net_response(dpls_0, net_0)
 sr_profiles_fig = plot_spiking_profiles(net_0, sim_time, burn_in_time)
 # post-optimization
-net, dpls = simulate_network(poiss_params=opt_params, clear_conn=True)
+opt_params_final = [10 ** opt_params[:-1], opt_params[-1]]
+net, dpls = simulate_network(poiss_params=opt_params_final, clear_conn=True)
 net_response_fig = plot_net_response(dpls, net)
 sr_profiles_fig = plot_spiking_profiles(net, sim_time, burn_in_time)
 
