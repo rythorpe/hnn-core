@@ -39,7 +39,7 @@ min_lamtha, max_lamtha = 1., 100.
 min_rate, max_rate = 1., 100.
 
 # opt parameters
-opt_n_total_calls = 50
+opt_n_total_calls = 150
 opt_n_init_points = 100
 
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
