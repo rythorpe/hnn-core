@@ -32,8 +32,7 @@ def set_conn_params(net, conn_params):
 
 
 def plot_net_response(dpls, net, sim_time):
-    fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 6),
-                             constrained_layout=True)
+    fig, axes = plt.subplots(6, 1, sharexy=True, figsize=(6, 6))
 
     #window_len, scaling_factor = 30, 2000
     #for dpl in dpls:
@@ -63,8 +62,9 @@ def plot_spiking_profiles(net, sim_time, burn_in_time):
                                     ((sim_time - burn_in_time) * 1e-3))
         sns.histplot(data=spike_rates,
                      ax=axes[cell_type_idx // 2, cell_type_idx % 2],
-                     stat='probability')
+                     stat='probability', bins=20, binrange=[0, 10])
         axes[cell_type_idx // 2, cell_type_idx % 2].set_ylim([0, 1])
+        axes[cell_type_idx // 2, cell_type_idx % 2].set_xlim([0, 10])
         axes[cell_type_idx // 2, cell_type_idx % 2].set_yticks([0, 0.5, 1])
         axes[cell_type_idx // 2, cell_type_idx % 2].set_ylabel('')
         axes[cell_type_idx // 2, cell_type_idx % 2].set_title(cell_type)
