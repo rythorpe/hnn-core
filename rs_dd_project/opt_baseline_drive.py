@@ -43,7 +43,7 @@ min_lamtha, max_lamtha = 1., 100.
 min_rate, max_rate = 1., 100.
 
 # simulation parameters
-n_procs = 6  # parallelize simulation
+n_procs = 24  # parallelize simulation
 sim_time = 600  # ms
 burn_in_time = 200  # ms
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
