@@ -10,8 +10,11 @@ from collections import OrderedDict
 from functools import partial
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
+sns.set()
 
 from skopt import gp_minimize
 from skopt.plots import plot_convergence, plot_objective
@@ -19,8 +22,6 @@ from skopt.plots import plot_convergence, plot_objective
 from hnn_core.network_models import L6_model
 from optimization import (plot_net_response, plot_spiking_profiles,
                           simulate_network, opt_baseline_spike_rates)
-
-sns.set()
 
 ###############################################################################
 # set parameters
@@ -50,8 +51,8 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_total_calls = 20
-opt_n_init_points = 10
+opt_n_total_calls = 128 + 20  # should converge rather quickly...
+opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
 
 ###############################################################################
 # get initial params prior to optimization
