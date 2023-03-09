@@ -75,10 +75,8 @@ def plot_spiking_profiles(net, sim_time, burn_in_time):
 
 def simulate_network(net, sim_time, burn_in_time, n_procs=6,
                      poiss_params=None, conn_params=None, clear_conn=False):
-    """Update network with sampled params and run simulation.
-
-    Warning: this will modify net in-place.
-    """
+    """Update network with sampled params and run simulation."""
+    net = net.copy()
 
     if conn_params is not None:
         print('resetting network connectivity')
@@ -97,7 +95,7 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
     else:
         print("simulating fully-connected network")
 
-    if poiss_params is True:
+    if poiss_params is not None:
         # add the same poisson drive as before
         cell_types = ['L2_basket', 'L2_pyramidal',
                       'L5_basket', 'L5_pyramidal',
