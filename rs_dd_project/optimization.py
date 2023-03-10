@@ -132,7 +132,7 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
                               cell_specific=True,
                               weights_ampa=poiss_weights,
                               synaptic_delays=0.0,
-                              space_constant=1e14,
+                              space_constant=1e50,
                               probability=1.0,
                               event_seed=seed)
 
@@ -157,7 +157,8 @@ def err_disconn_spike_rate(net, sim_time, burn_in_time,
     for cell_type in avg_expected_spike_rates.keys():
         spike_rate_diffs.append(avg_expected_spike_rates[cell_type] -
                                 avg_spike_rates[cell_type])
-
+    print(avg_spike_rates)
+    print(spike_rate_diffs)
     return np.linalg.norm(spike_rate_diffs)
 
 
@@ -185,7 +186,7 @@ def opt_baseline_spike_rates(opt_params, net, sim_params):
     #                             sim_time=sim_time)
 
     # avg rates in unconn network should be a bit less
-    # try 30% of the avg rates in a fully connected network
+    # try 33% of the avg rates in a fully connected network
     target_avg_spike_rates_unconn = {cell: rate * 0.33 for cell, rate in
                                      target_avg_spike_rates.items()}
     # for now we'll make them uniform: 10% of cells will fire per second

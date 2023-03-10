@@ -14,7 +14,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set()
 
 from skopt import gp_minimize
 from skopt.plots import plot_convergence, plot_objective
