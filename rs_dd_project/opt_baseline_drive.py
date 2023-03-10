@@ -90,6 +90,23 @@ print(f'poiss_weights: {[10 ** param for param in opt_params[:-1]]}')
 print(f'poiss_rate: {opt_params[-1]}')
 
 ###############################################################################
+# define target spike rates for plotting
+
+# taken from Reyes-Puerta 2015 and De Kock 2007
+# see Constantinople and Bruno 2013 for laminar difference in E-cell
+# excitability and proportion of connected pairs
+target_avg_spike_rates = {'L2_basket': 0.8,
+                          'L2_pyramidal': 0.3,
+                          'L5_basket': 2.4,  # L5A + L5B avg
+                          'L5_pyramidal': 1.4,  # L5A + L5B avg
+                          'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
+                          'L6_pyramidal': 0.5}  # from De Kock 2007
+# avg rates in unconn network should be a bit less
+# try 33% of the avg rates in a fully connected network
+target_spike_rates = {cell: rate * 0.33 for cell, rate in
+                      target_avg_spike_rates.items()}
+
+###############################################################################
 # plot results
 
 ax_converg = plot_convergence(opt_results, ax=None)
@@ -98,7 +115,7 @@ plt.tight_layout()
 fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
 ax_objective = plot_objective(opt_results)
-fig_objective = ax_objective.get_figure()
+fig_objective = ax_objective[0, 0].get_figure()
 plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
@@ -113,7 +130,8 @@ fig_net_response = plot_net_response(dpls_0, net_0, sim_time)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'pre_opt_sim.png'))
 
-fig_sr_profiles = plot_spiking_profiles(net_0, sim_time, burn_in_time)
+fig_sr_profiles = plot_spiking_profiles(net_0, sim_time, burn_in_time,
+                                        target_spike_rates=target_spike_rates)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
@@ -127,6 +145,7 @@ fig_net_response = plot_net_response(dpls, net, sim_time)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'post_opt_sim.png'))
 
-fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time)
+fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time,
+                                        target_spike_rates=target_spike_rates)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'post_opt_spikerate_profile.png'))

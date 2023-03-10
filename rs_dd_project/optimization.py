@@ -32,7 +32,7 @@ def set_conn_params(net, conn_params):
 
 
 def plot_net_response(dpls, net, sim_time):
-    fig, axes = plt.subplots(6, 1, sharexy=True, figsize=(6, 6))
+    fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 6))
 
     #window_len, scaling_factor = 30, 2000
     #for dpl in dpls:
@@ -45,11 +45,20 @@ def plot_net_response(dpls, net, sim_time):
     return fig
 
 
-def plot_spiking_profiles(net, sim_time, burn_in_time):
-    fig, axes = plt.subplots(3, 2, sharex=True, figsize=(6, 6),
-                             constrained_layout=True)
+def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates,
+                          bin_width=None):
+    custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+    sns.set_theme(style="ticks", rc=custom_params)
+
+    fig, axes = plt.subplots(3, 1, sharex=True, sharey=True, figsize=(3, 6))
+    layers = ['L2/3', 'L5', 'L6']
 
     for cell_type_idx, cell_type in enumerate(net.cell_types):
+        if 'basket' in cell_type:
+            color = sns.color_palette('bright')[8]
+        else:
+            color = sns.color_palette('bright')[7]
+
         spike_gids = np.array(net.cell_response.spike_gids[0])  # only 1 trial
         spike_times = np.array(net.cell_response.spike_times[0])  # same
         n_cells = len(net.gid_ranges[cell_type])
@@ -60,16 +69,27 @@ def plot_spiking_profiles(net, sim_time, burn_in_time):
             n_spikes = np.sum(gids_after_burn_in == gid)
             spike_rates[gid_idx] = (n_spikes /
                                     ((sim_time - burn_in_time) * 1e-3))
-        sns.histplot(data=spike_rates,
-                     ax=axes[cell_type_idx // 2, cell_type_idx % 2],
-                     stat='probability', bins=20, binrange=[0, 10])
-        axes[cell_type_idx // 2, cell_type_idx % 2].set_ylim([0, 1])
-        axes[cell_type_idx // 2, cell_type_idx % 2].set_xlim([0, 10])
-        axes[cell_type_idx // 2, cell_type_idx % 2].set_yticks([0, 0.5, 1])
-        axes[cell_type_idx // 2, cell_type_idx % 2].set_ylabel('')
-        axes[cell_type_idx // 2, cell_type_idx % 2].set_title(cell_type)
-    axes[0, 0].set_ylabel('probability')
-    axes[-1, 0].set_xlabel('spike rate (Hz)')
+        layer_idx = cell_type_idx // 2
+        if bin_width is None:
+            sns.kdeplot(data=spike_rates, ax=axes[layer_idx], color=color,
+                        fill=True)
+        elif isinstance(bin_width, float):
+            sns.kdeplot(data=spike_rates, bw_method=bin_width, color=color,
+                        ax=axes[layer_idx], fill=True)
+        else:
+            raise ValueError('expected bin_width to be of type float, got '
+                             f'{type(bin_width)}.')
+
+        axes[layer_idx].axvline(target_spike_rates[cell_type], linestyle=':',
+                                color=color)
+        axes[layer_idx].set_ylim([0, 1])
+        axes[layer_idx].set_xlim([0, 10])
+        axes[layer_idx].set_yticks([0, 1])
+        axes[layer_idx].set_ylabel('')
+        axes[layer_idx].set_title(layers[layer_idx])
+    axes[0].set_ylabel('probability')
+    axes[-1].set_xlabel('spike rate (Hz)')
+    #fig.suptitle('cell population\nspike rates')
     return fig
 
 
@@ -165,7 +185,7 @@ def opt_baseline_spike_rates(opt_params, net, sim_params):
     #                             sim_time=sim_time)
 
     # avg rates in unconn network should be a bit less
-    # try 20% of the avg rates in a fully connected network
+    # try 30% of the avg rates in a fully connected network
     target_avg_spike_rates_unconn = {cell: rate * 0.33 for cell, rate in
                                      target_avg_spike_rates.items()}
     # for now we'll make them uniform: 10% of cells will fire per second
