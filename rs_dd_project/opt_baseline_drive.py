@@ -94,12 +94,12 @@ print(f'poiss_rate: {opt_params[-1]}')
 
 ax_converg = plot_convergence(opt_results, ax=None)
 fig_converge = ax_converg.get_figure()
-fig_converge.set_tight_layout()
+plt.tight_layout()
 fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
 ax_objective = plot_objective(opt_results)
 fig_objective = ax_objective.get_figure()
-fig_objective.set_tight_layout()
+plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
@@ -110,11 +110,11 @@ net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
                                  poiss_params=opt_params_init, clear_conn=True)
 
 fig_net_response = plot_net_response(dpls_0, net_0, sim_time)
-fig_net_response.set_tight_layout()
+plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'pre_opt_sim.png'))
 
 fig_sr_profiles = plot_spiking_profiles(net_0, sim_time, burn_in_time)
-fig_sr_profiles.set_tight_layout()
+plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
 # post-optimization
@@ -124,9 +124,9 @@ net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
                              poiss_params=opt_params_final, clear_conn=True)
 
 fig_net_response = plot_net_response(dpls, net, sim_time)
-fig_net_response.set_tight_layout()
+plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'post_opt_sim.png'))
 
 fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time)
-fig_sr_profiles.set_tight_layout()
+plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'post_opt_spikerate_profile.png'))
