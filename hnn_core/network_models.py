@@ -7,7 +7,7 @@ import hnn_core
 from hnn_core import read_params
 from .network import Network
 from .params import _short_name
-from .cells_default import pyramidal, pyramidal_ca
+from .cells_default import pyramidal_ca
 from .externals.mne import _validate_type
 
 
@@ -348,7 +348,7 @@ def L6_model(params=None, add_drives_from_params=False,
         cell_name=_short_name(cell_name), pos=pos)
 
     # remove the only L2_basket -> L5_pyramidal connection
-    #del net.connectivity[10]
+    # del net.connectivity[10]
 
     # Modify L5_basket -> L5_pyramidal inhibition
     net.connectivity[6]['nc_dict']['A_weight'] = 0.025  # gabaa
