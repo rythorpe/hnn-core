@@ -44,14 +44,14 @@ min_rate, max_rate = 1., 100.
 
 # simulation parameters
 n_procs = 24  # parallelize simulation
-sim_time = 600  # ms
+sim_time = 700  # ms
 burn_in_time = 200  # ms
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_total_calls = 128 + 100  # should converge rather quickly...
-opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 128  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_init_points = 35  # 5 * n_params, 5 samples per dimension
 
 ###############################################################################
 # get initial params prior to optimization
@@ -61,10 +61,13 @@ opt_params_0 = [np.log10(weight) for weight in poiss_weights_0.values()]
 # poisson drive rate constant initial conditions
 opt_params_0.append(poiss_rate_0)
 # poisson drive synaptic weight bounds
-opt_params_bounds = np.tile([min_weight, max_weight],
-                            (len(poiss_weights_0), 1)).tolist()
+#opt_params_bounds = np.tile([min_weight, max_weight],
+#                            (len(poiss_weights_0), 1)).tolist()
+# use initial poisson drive weights as upper bounds
+opt_params_bounds = [(min_weight, np.log10(val)) for val in
+                     poiss_weights_0.values()]
 # poisson drive rate constant bounds
-opt_params_bounds.append([min_rate, max_rate])
+opt_params_bounds.append((min_rate, max_rate))
 
 ###############################################################################
 # prepare cost function
