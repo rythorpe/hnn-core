@@ -2,7 +2,7 @@
 
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=24
+#SBATCH --tasks-per-node=32
 #SBATCH --mem=8G
 #SBATCH --exclusive  # might be needed to prevent freezing - investigate further
 #SBATCH -A carney-sjones-condo
