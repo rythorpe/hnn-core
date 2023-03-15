@@ -474,7 +474,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     for spike_label, plot_data in spike_type_times.items():
         hist_color = spike_color[spike_label]
         ax.hist(plot_data, bins,
-                label=spike_label, color=hist_color)
+                label=spike_label, color=hist_color, linewidth=0.)
     ax.set_ylabel("Counts")
     ax.legend()
 
@@ -535,6 +535,7 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
         _, ax = plt.subplots(1, 1, constrained_layout=True)
 
     ypos = 0
+    linelength = 5
     events = list()
     for cell_type in cell_types:
         cell_type_times, cell_type_ypos = list(), list()
@@ -546,19 +547,20 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
             gid_time = spike_times[spike_gids == gid]
             cell_type_times.append(gid_time)
             cell_type_ypos.append(ypos)
-            ypos = ypos - 1
+            ypos -= 1
 
         if cell_type_times:
             events.append(
                 ax.eventplot(cell_type_times, lineoffsets=cell_type_ypos,
                              color=cell_type_colors[cell_type],
-                             label=cell_type, linelengths=5))
+                             label=cell_type, linelengths=linelength))
 
     ax.legend(handles=[e[0] for e in events], loc=1)
     ax.set_facecolor('k')
     ax.set_xlabel('Time (ms)')
     ax.get_yaxis().set_visible(False)
     ax.set_xlim(left=0)
+    ax.set_ylim([(ypos + 1 - (linelength / 2)), linelength / 2])
 
     plt_show(show)
     return ax.get_figure()
