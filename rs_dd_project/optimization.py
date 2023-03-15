@@ -32,7 +32,7 @@ def set_conn_params(net, conn_params):
 
 
 def plot_net_response(dpls, net, sim_time):
-    fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 6))
+    fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 12))
 
     #window_len, scaling_factor = 30, 2000
     #for dpl in dpls:
