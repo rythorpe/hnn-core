@@ -144,7 +144,7 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
 
 
 def err_disconn_spike_rate(net, sim_time, burn_in_time,
-                           avg_expected_spike_rates):
+                           target_avg_spike_rates):
     """Cost function for matching simulated vs expected avg spike rates.
 
     Used for optimizing cell excitability under poisson drive.
@@ -154,46 +154,26 @@ def err_disconn_spike_rate(net, sim_time, burn_in_time,
                                                    gid_ranges=net.gid_ranges)
 
     spike_rate_diffs = list()
-    for cell_type in avg_expected_spike_rates.keys():
-        spike_rate_diffs.append(avg_expected_spike_rates[cell_type] -
+    for cell_type in target_avg_spike_rates.keys():
+        spike_rate_diffs.append(target_avg_spike_rates[cell_type] -
                                 avg_spike_rates[cell_type])
     print(avg_spike_rates)
     print(spike_rate_diffs)
     return np.linalg.norm(spike_rate_diffs)
 
 
-def opt_baseline_spike_rates(opt_params, net, sim_params):
-    """Function to minimize during optimization: err in baseline spikerates."""
+def opt_baseline_spike_rates(opt_params, net, sim_params,
+                             target_avg_spike_rates):
+    """Function to minimize during optimization: err in baseline spikerates.
+    
+    Note: assumes all but the last element in opt_params is in log_10 scale.
+    """
     opt_params = np.array(opt_params)
     sim_time = sim_params['sim_time']
     burn_in_time = sim_params['burn_in_time']
     n_procs = sim_params['n_procs']
 
-    # taken from Reyes-Puerta 2015 and De Kock 2007
-    # see Constantinople and Bruno 2013 for laminar difference in E-cell
-    # excitability and proportion of connected pairs
-    target_avg_spike_rates = {'L2_basket': 0.8,
-                              'L2_pyramidal': 0.3,
-                              'L5_basket': 2.4,  # L5A + L5B avg
-                              'L5_pyramidal': 1.4,  # L5A + L5B avg
-                              'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
-                              'L6_pyramidal': 0.5}  # from De Kock 2007
-
-    #net, dpls = simulate_network(conn_params, poiss_params, clear_conn=False)
-    #err = err_disconn_spike_rate(net,
-    #                             target_avg_spike_rates,
-    #                             burn_in_time=burn_in_time,
-    #                             sim_time=sim_time)
-
-    # avg rates in unconn network should be a bit less
-    # try 33% of the avg rates in a fully connected network
-    target_avg_spike_rates_unconn = {cell: rate * 0.33 for cell, rate in
-                                     target_avg_spike_rates.items()}
-    # for now we'll make them uniform: 10% of cells will fire per second
-    #target_avg_spike_rates_unconn = {cell: 0.1 for cell in
-    #                                 target_avg_spike_rates.keys()}
-
-    # convert weight param from back from log_10 scale
+    # convert weight param back from log_10 scale
     poiss_params = np.append(10 ** opt_params[:-1], opt_params[-1])
     net_disconn, dpls_disconn = simulate_network(net, sim_time, burn_in_time,
                                                  n_procs,
@@ -202,5 +182,5 @@ def opt_baseline_spike_rates(opt_params, net, sim_params):
                                                  clear_conn=True,)
     # note: pass in global variables "burn_in_time" and "sim_time"
     err = err_disconn_spike_rate(net_disconn, sim_time, burn_in_time,
-                                 target_avg_spike_rates_unconn)
+                                 target_avg_spike_rates)
     return err

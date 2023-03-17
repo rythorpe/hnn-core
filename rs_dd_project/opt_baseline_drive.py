@@ -36,11 +36,23 @@ poiss_weights_0 = OrderedDict(L2_basket=1e-3, L2_pyramidal=5e-3,
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
 poiss_rate_0 = 1e1
-# log_10 scale
-min_weight, max_weight = -5., -1.
-# real number scale
+min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
 min_lamtha, max_lamtha = 1., 100.
 min_rate, max_rate = 1., 100.
+
+# taken from Reyes-Puerta 2015 and De Kock 2007
+# see Constantinople and Bruno 2013 for laminar difference in E-cell
+# excitability and proportion of connected pairs
+target_avg_spike_rates = {'L2_basket': 0.8,
+                          'L2_pyramidal': 0.3,
+                          'L5_basket': 2.4,  # L5A + L5B avg
+                          'L5_pyramidal': 1.4,  # L5A + L5B avg
+                          'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
+                          'L6_pyramidal': 0.5}  # from De Kock 2007
+# avg rates in unconn network should be a bit less
+# try 33% of the avg rates in a fully connected network
+target_sr_unconn = {cell: rate * 0.33 for cell, rate in
+                    target_avg_spike_rates.items()}
 
 # simulation parameters
 n_procs = 32  # parallelize simulation
@@ -50,8 +62,8 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_total_calls = 128  # 2 ** n_params, 2 samples per dimension in hypercube
 opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 2 * 128  # >opt_n_init_points
 
 ###############################################################################
 # get initial params prior to optimization
@@ -63,8 +75,8 @@ opt_params_0.append(poiss_rate_0)
 # poisson drive synaptic weight bounds
 #opt_params_bounds = np.tile([min_weight, max_weight],
 #                            (len(poiss_weights_0), 1)).tolist()
-# use initial poisson drive weights as upper bounds
-opt_params_bounds = [(min_weight, np.log10(val)) for val in
+# use initial poisson drive weights as upper bounds; log_10 scale
+opt_params_bounds = [(np.log10(min_weight), np.log10(val)) for val in
                      poiss_weights_0.values()]
 # poisson drive rate constant bounds
 opt_params_bounds.append((min_rate, max_rate))
@@ -74,7 +86,8 @@ opt_params_bounds.append((min_rate, max_rate))
 sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
               'n_procs': n_procs}
 opt_min_func = partial(opt_baseline_spike_rates, net=net_original.copy(),
-                       sim_params=sim_params)
+                       sim_params=sim_params,
+                       target_avg_spike_rates=target_sr_unconn)
 
 ###############################################################################
 # optimize
@@ -92,25 +105,7 @@ print(f'poiss_weights: {[10 ** param for param in opt_params[:-1]]}')
 print(f'poiss_rate: {opt_params[-1]}')
 
 ###############################################################################
-# define target spike rates for plotting
-
-# taken from Reyes-Puerta 2015 and De Kock 2007
-# see Constantinople and Bruno 2013 for laminar difference in E-cell
-# excitability and proportion of connected pairs
-target_avg_spike_rates = {'L2_basket': 0.8,
-                          'L2_pyramidal': 0.3,
-                          'L5_basket': 2.4,  # L5A + L5B avg
-                          'L5_pyramidal': 1.4,  # L5A + L5B avg
-                          'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
-                          'L6_pyramidal': 0.5}  # from De Kock 2007
-# avg rates in unconn network should be a bit less
-# try 33% of the avg rates in a fully connected network
-target_spike_rates = {cell: rate * 0.33 for cell, rate in
-                      target_avg_spike_rates.items()}
-
-###############################################################################
 # plot results
-
 ax_converg = plot_convergence(opt_results, ax=None)
 fig_converge = ax_converg.get_figure()
 plt.tight_layout()
@@ -133,7 +128,7 @@ plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'pre_opt_sim.png'))
 
 fig_sr_profiles = plot_spiking_profiles(net_0, sim_time, burn_in_time,
-                                        target_spike_rates=target_spike_rates)
+                                        target_spike_rates=target_sr_unconn)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
@@ -148,7 +143,7 @@ plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'post_opt_sim.png'))
 
 fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time,
-                                        target_spike_rates=target_spike_rates)
+                                        target_spike_rates=target_sr_unconn)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'post_opt_spikerate_profile.png'))
 
