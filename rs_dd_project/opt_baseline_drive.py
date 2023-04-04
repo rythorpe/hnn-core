@@ -5,6 +5,7 @@ Designed to be run in a batch script.
 
 # Author: Ryan Thorpe <ryan_thorpe@brown.edu>
 
+# %% import modules
 import os.path as op
 from collections import OrderedDict
 from functools import partial
@@ -23,7 +24,7 @@ from optimization import (plot_net_response, plot_spiking_profiles,
                           simulate_network, opt_baseline_spike_rates)
 
 ###############################################################################
-# set parameters
+# %% set parameters
 output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
 
 # drive parameters
@@ -66,7 +67,7 @@ opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
 opt_n_total_calls = 3 * 128  # >opt_n_init_points
 
 ###############################################################################
-# get initial params prior to optimization
+# %% get initial params prior to optimization
 #opt_params_0 = get_conn_params(net_original.connectivity)
 # poisson drive synaptic weight initial conditions
 opt_params_0 = [np.log10(weight) for weight in poiss_weights_0.values()]
@@ -82,7 +83,7 @@ opt_params_bounds = [(np.log10(min_weight), np.log10(val)) for val in
 opt_params_bounds.append((min_rate, max_rate))
 
 ###############################################################################
-# prepare cost function
+# %% prepare cost function
 sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
               'n_procs': n_procs}
 opt_min_func = partial(opt_baseline_spike_rates, net=net_original.copy(),
@@ -90,7 +91,7 @@ opt_min_func = partial(opt_baseline_spike_rates, net=net_original.copy(),
                        target_avg_spike_rates=target_sr_unconn)
 
 ###############################################################################
-# optimize
+# %% optimize
 opt_results = gp_minimize(func=opt_min_func,
                           dimensions=opt_params_bounds,
                           x0=None,  # opt_params_0
@@ -105,7 +106,7 @@ print(f'poiss_weights: {[10 ** param for param in opt_params[:-1]]}')
 print(f'poiss_rate: {opt_params[-1]}')
 
 ###############################################################################
-# plot results
+# %% plot results
 ax_converg = plot_convergence(opt_results, ax=None)
 fig_converge = ax_converg.get_figure()
 plt.tight_layout()

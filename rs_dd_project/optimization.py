@@ -93,6 +93,54 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates,
     return fig
 
 
+def plot_spiking_profiles_02(net, sim_time, burn_in_time, target_spike_rates,
+                             bin_width=None):
+    custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+    sns.set_theme(style="ticks", rc=custom_params)
+
+    fig, axes = plt.subplots(3, 1, sharex=True, sharey=True, figsize=(3, 6))
+    layers = ['L2/3', 'L5', 'L6']
+
+    for cell_type_idx, cell_type in enumerate(net.cell_types):
+        if 'basket' in cell_type:
+            color = sns.color_palette('bright')[8]
+        else:
+            color = sns.color_palette('bright')[7]
+
+        spike_gids = np.array(net.cell_response.spike_gids[0])  # only 1 trial
+        spike_times = np.array(net.cell_response.spike_times[0])  # same
+        n_cells = len(net.gid_ranges[cell_type])
+        spike_rates = np.zeros((n_cells,))
+        for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
+            gids_after_burn_in = np.array(spike_gids)[spike_times >
+                                                      burn_in_time]
+            n_spikes = np.sum(gids_after_burn_in == gid)
+            spike_rates[gid_idx] = (n_spikes /
+                                    ((sim_time - burn_in_time) * 1e-3))
+        layer_idx = cell_type_idx // 2
+        if bin_width is None:
+            sns.kdeplot(data=spike_rates, ax=axes[layer_idx], color=color,
+                        fill=True)
+        elif isinstance(bin_width, float):
+            sns.kdeplot(data=spike_rates, bw_method=bin_width, color=color,
+                        ax=axes[layer_idx], fill=True)
+        else:
+            raise ValueError('expected bin_width to be of type float, got '
+                             f'{type(bin_width)}.')
+
+        axes[layer_idx].axvline(target_spike_rates[cell_type], linestyle=':',
+                                color=color)
+        axes[layer_idx].set_ylim([0, 1])
+        axes[layer_idx].set_xlim([0, 10])
+        axes[layer_idx].set_yticks([0, 1])
+        axes[layer_idx].set_ylabel('')
+        axes[layer_idx].set_title(layers[layer_idx])
+    axes[0].set_ylabel('probability')
+    axes[-1].set_xlabel('spike rate (Hz)')
+    #fig.suptitle('cell population\nspike rates')
+    return fig
+
+
 def simulate_network(net, sim_time, burn_in_time, n_procs=6,
                      poiss_params=None, conn_params=None, clear_conn=False):
     """Update network with sampled params and run simulation."""
