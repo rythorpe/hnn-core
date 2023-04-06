@@ -63,8 +63,8 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 4 * 128  # >opt_n_init_points
+opt_n_init_points = 5 # 128  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 10 # 4 * 128  # >opt_n_init_points
 
 ###############################################################################
 # %% get initial params prior to optimization
@@ -102,6 +102,11 @@ opt_results = gp_minimize(func=opt_min_func,
                           verbose=True,
                           random_state=1234)
 opt_params = opt_results.x
+# convert param back from log_10 scale
+opt_params[:-1] = [10 ** weight for weight in opt_params[:-1]]
+header = [weight + '_weight' for weight in poiss_weights_0] + 'poiss_rate'
+np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
+           X=opt_params, delimiter=',', header=header)
 print(f'poiss_weights: {[10 ** param for param in opt_params[:-1]]}')
 print(f'poiss_rate: {opt_params[-1]}')
 
@@ -118,7 +123,7 @@ plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
-# first convert first param back from log_10 scale
+# first convert weight params back from log_10 scale
 opt_params_init = [10 ** weight for weight in opt_params_0[:-1]]
 opt_params_init.append(opt_params_0[-1])
 net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
@@ -134,10 +139,8 @@ plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
 # post-optimization
-opt_params_final = [10 ** weight for weight in opt_params[:-1]]
-opt_params_final.append(opt_params[-1])
 net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
-                             poiss_params=opt_params_final, clear_conn=True)
+                             poiss_params=opt_params, clear_conn=True)
 
 fig_net_response = plot_net_response(dpls, net, sim_time)
 plt.tight_layout()
