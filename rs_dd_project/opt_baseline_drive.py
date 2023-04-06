@@ -104,7 +104,7 @@ opt_results = gp_minimize(func=opt_min_func,
 opt_params = opt_results.x
 # convert param back from log_10 scale
 opt_params[:-1] = [10 ** weight for weight in opt_params[:-1]]
-header = [weight + '_weight' for weight in poiss_weights_0] + 'poiss_rate'
+header = [weight + '_weight' for weight in poiss_weights_0] + ['poiss_rate']
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
            X=opt_params, delimiter=',', header=header)
 print(f'poiss_weights: {[10 ** param for param in opt_params[:-1]]}')
