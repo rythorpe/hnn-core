@@ -3,6 +3,7 @@
 # Author: Ryan Thorpe <ryan_thorpe@brown.edu>
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -45,56 +46,62 @@ def plot_net_response(dpls, net, sim_time):
     return fig
 
 
-def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates,
-                          bin_width=None):
-    custom_params = {"axes.spines.right": False, "axes.spines.top": False}
-    sns.set_theme(style="ticks", rc=custom_params)
+def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
+    #custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+    #sns.set_theme(style="ticks", rc=custom_params)
 
-    fig, axes = plt.subplots(3, 1, sharex=True, sharey=True, figsize=(3, 6))
-    layers = ['L2/3', 'L5', 'L6']
+    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
-    for cell_type_idx, cell_type in enumerate(net.cell_types):
+    layer_by_cell_type = {'L2_basket': 'L2/3',
+                          'L2_pyramidal': 'L2/3',
+                          'L5_basket': 'L5',
+                          'L5_pyramidal': 'L5',
+                          'L6_basket': 'L6',
+                          'L6_pyramidal': 'L6'}
+
+    pop_layer = list()
+    pop_cell_type = list()
+    pop_spike_rates = list()
+    pop_targets = list()
+    for cell_type in net.cell_types:
         if 'basket' in cell_type:
-            color = sns.color_palette('bright')[8]
+            cell_type_ei = 'I'
         else:
-            color = sns.color_palette('bright')[7]
-
+            cell_type_ei = 'E'
         spike_gids = np.array(net.cell_response.spike_gids[0])  # only 1 trial
         spike_times = np.array(net.cell_response.spike_times[0])  # same
-        n_cells = len(net.gid_ranges[cell_type])
-        spike_rates = np.zeros((n_cells,))
+
         for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
             gids_after_burn_in = np.array(spike_gids)[spike_times >
                                                       burn_in_time]
             n_spikes = np.sum(gids_after_burn_in == gid)
-            spike_rates[gid_idx] = (n_spikes /
-                                    ((sim_time - burn_in_time) * 1e-3))
-        layer_idx = cell_type_idx // 2
-        if bin_width is None:
-            sns.kdeplot(data=spike_rates, ax=axes[layer_idx], color=color,
-                        fill=True)
-        elif isinstance(bin_width, float):
-            sns.kdeplot(data=spike_rates, bw_method=bin_width, color=color,
-                        ax=axes[layer_idx], fill=True)
-        else:
-            raise ValueError('expected bin_width to be of type float, got '
-                             f'{type(bin_width)}.')
+            pop_layer.append(layer_by_cell_type[cell_type])
+            pop_cell_type.append(cell_type_ei)
+            pop_spike_rates.append((n_spikes /
+                                    ((sim_time - burn_in_time) * 1e-3)))
+            pop_targets.append(target_spike_rates[cell_type])
 
-        axes[layer_idx].axvline(target_spike_rates[cell_type], linestyle=':',
-                                color=color)
-        axes[layer_idx].set_ylim([0, 1])
-        axes[layer_idx].set_xlim([0, 10])
-        axes[layer_idx].set_yticks([0, 1])
-        axes[layer_idx].set_ylabel('')
-        axes[layer_idx].set_title(layers[layer_idx])
-    axes[0].set_ylabel('probability')
-    axes[-1].set_xlabel('spike rate (Hz)')
-    #fig.suptitle('cell population\nspike rates')
+    spiking_df = pd.DataFrame({'layer': pop_layer, 'cell type': pop_cell_type,
+                               'spike rate': pop_spike_rates,
+                               'target rate': pop_targets})
+    ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
+                     hue='cell type', palette='Greys', ax=ax)
+     # note: eyeball dodge value; setting legend='_nolegend_' doesn't work when
+     # hue is set
+    ax = sns.pointplot(data=spiking_df, x='target rate', y='layer',
+                       hue='cell type', join=False, dodge=0.4, color='k',
+                       markers='D', ax=ax)
+
+    ax.set_ylabel('cell population')
+    ax.set_xlabel('mean single-unit spike rate (Hz)')
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles=handles[2:], labels=labels[1:])
+
     return fig
 
 
-def plot_spiking_profiles_02(net, sim_time, burn_in_time, target_spike_rates,
-                             bin_width=None):
+def plot_spiking_profiles_old(net, sim_time, burn_in_time, target_spike_rates,
+                              bin_width=None):
     custom_params = {"axes.spines.right": False, "axes.spines.top": False}
     sns.set_theme(style="ticks", rc=custom_params)
 
