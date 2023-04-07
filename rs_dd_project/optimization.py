@@ -86,13 +86,13 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
                                'target rate': pop_targets})
     ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
                      hue='cell type', palette='Greys', ax=ax)
-     # note: eyeball dodge value; setting legend='_nolegend_' doesn't work when
-     # hue is set
+     # note: eyeball dodge value
+     # also, setting legend='_nolegend_' doesn't work when hue is set
     ax = sns.pointplot(data=spiking_df, x='target rate', y='layer',
                        hue='cell type', join=False, dodge=0.4, color='k',
                        markers='D', ax=ax)
 
-    ax.set_ylabel('cell population')
+    ax.set_ylabel('cell type')
     ax.set_xlabel('mean single-unit spike rate (Hz)')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles=handles[2:], labels=labels[1:])
@@ -212,22 +212,21 @@ def err_disconn_spike_rate(net, sim_time, burn_in_time,
     for cell_type in target_avg_spike_rates.keys():
         spike_rate_diffs.append(target_avg_spike_rates[cell_type] -
                                 avg_spike_rates[cell_type])
-    print(avg_spike_rates)
-    print(spike_rate_diffs)
+
     return np.linalg.norm(spike_rate_diffs)
 
 
 def opt_baseline_spike_rates(opt_params, net, sim_params,
                              target_avg_spike_rates):
     """Function to minimize during optimization: err in baseline spikerates.
-    
+
     Note: assumes all but the last element in opt_params is in log_10 scale.
     """
-    opt_params = np.array(opt_params)
     sim_time = sim_params['sim_time']
     burn_in_time = sim_params['burn_in_time']
     n_procs = sim_params['n_procs']
 
+    opt_params = np.array(opt_params)
     # convert weight param back from log_10 scale
     poiss_params = np.append(10 ** opt_params[:-1], opt_params[-1])
     net_disconn, dpls_disconn = simulate_network(net, sim_time, burn_in_time,
