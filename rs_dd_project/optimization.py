@@ -155,12 +155,7 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
 
     if conn_params is not None:
         print('resetting network connectivity')
-        # transform synaptic weight params from log10->R scale
-        conn_params_transformed = np.array(conn_params.copy())
-        # every other element is a synaptic weight param
-        conn_params_transformed[::2] = 10 ** conn_params_transformed[::2]
-        # update local network connections with new params
-        set_conn_params(net, conn_params_transformed)
+        set_conn_params(net, conn_params)
 
     # when optimizing cell excitability under poisson drive, it's nice to use
     # a disconnected network
@@ -171,7 +166,6 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
         print("simulating fully-connected network")
 
     if poiss_params is not None:
-        # add the same poisson drive as before
         cell_types = ['L2_basket', 'L2_pyramidal',
                       'L5_basket', 'L5_pyramidal',
                       'L6_basket', 'L6_pyramidal']
@@ -226,10 +220,10 @@ def opt_baseline_spike_rates(opt_params, net, sim_params,
     sim_time = sim_params['sim_time']
     burn_in_time = sim_params['burn_in_time']
     n_procs = sim_params['n_procs']
+    poiss_rate = sim_params['poiss_rate_constant']
 
-    opt_params = np.array(opt_params)
     # convert weight param back from log_10 scale
-    poiss_params = np.append(10 ** opt_params[:-1], opt_params[-1])
+    poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
     net_disconn, dpls_disconn = simulate_network(net, sim_time, burn_in_time,
                                                  n_procs,
                                                  poiss_params=poiss_params,

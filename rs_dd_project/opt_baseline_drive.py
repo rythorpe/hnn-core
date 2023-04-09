@@ -30,13 +30,13 @@ output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
 # drive parameters
 # note that basket cells and pyramidal cells require different amounts of AMPA
 # excitatory current in order to drive a spike
-poiss_weights_0 = OrderedDict(L2_basket=1e-3, L2_pyramidal=5e-3,
-                              L5_basket=1e-3, L5_pyramidal=5e-3,
-                              L6_basket=1e-3, L6_pyramidal=5e-3)
+poiss_weights_ub = OrderedDict(L2_basket=1e-3, L2_pyramidal=5e-3,
+                               L5_basket=1e-3, L5_pyramidal=5e-3,
+                               L6_basket=1e-3, L6_pyramidal=5e-3)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
-poiss_rate_0 = 1e1
+poiss_rate = 1e1
 min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
 min_lamtha, max_lamtha = 1., 100.
 min_rate, max_rate = 1., 100.
@@ -63,30 +63,25 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_init_points = 5  # 128  # 2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 10  # 3 * 128  # >opt_n_init_points
+opt_n_init_points = 64  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 3 * 64  # >opt_n_init_points
 
 ###############################################################################
-# %% get initial params prior to optimization
+# %% set initial parameters and parameter bounds prior
 #opt_params_0 = get_conn_params(net_original.connectivity)
-# poisson drive synaptic weight initial conditions
-opt_params_0 = [np.log10(weight) for weight in poiss_weights_0.values()]
-# poisson drive rate constant initial conditions
-opt_params_0.append(poiss_rate_0)
+# poisson drive synaptic weight initial conditions; log_10 scale
+opt_params_0 = [np.log10(weight) for weight in poiss_weights_ub.values()]
 # poisson drive synaptic weight bounds
 #opt_params_bounds = np.tile([min_weight, max_weight],
 #                            (len(poiss_weights_0), 1)).tolist()
-# use initial poisson drive weights as upper bounds; log_10 scale
+# log_10 scale
 opt_params_bounds = [(np.log10(min_weight), np.log10(val)) for val in
-                     poiss_weights_0.values()]
-# poisson drive rate constant bounds
-# opt_params_bounds.append((min_rate, max_rate))
-opt_params_bounds.append((poiss_rate_0, poiss_rate_0))  # fixed
+                     poiss_weights_ub.values()]
 
 ###############################################################################
 # %% prepare cost function
 sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
-              'n_procs': n_procs}
+              'n_procs': n_procs, 'poiss_rate_constant': poiss_rate}
 opt_min_func = partial(opt_baseline_spike_rates, net=net_original.copy(),
                        sim_params=sim_params,
                        target_avg_spike_rates=target_sr_unconn)
@@ -113,13 +108,12 @@ opt_results = gp_minimize(func=opt_min_func,
                           random_state=1234)
 opt_params = opt_results.x
 # convert param back from log_10 scale
-opt_params[:-1] = [10 ** weight for weight in opt_params[:-1]]
-header = [weight + '_weight' for weight in poiss_weights_0] + ['poiss_rate']
+opt_params = [10 ** weight for weight in opt_params]
+header = [weight + '_weight' for weight in poiss_weights_ub]
 header = ','.join(header)
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
            X=[opt_params], delimiter=',', header=header)
-print(f'poiss_weights: {opt_params[:-1]}')
-print(f'poiss_rate: {opt_params[-1]}')
+print(f'poiss_weights: {opt_params}')
 
 ###############################################################################
 # %% plot results
