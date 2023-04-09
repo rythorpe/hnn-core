@@ -63,8 +63,8 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_init_points = 5  # 128  # 2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 10  # 4 * 128  # >opt_n_init_points
+opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 2 * 128  # >opt_n_init_points
 
 ###############################################################################
 # %% get initial params prior to optimization
@@ -137,7 +137,8 @@ fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 opt_params_init = [10 ** weight for weight in opt_params_0[:-1]]
 opt_params_init.append(opt_params_0[-1])
 net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
-                                 poiss_params=opt_params_init, clear_conn=True)
+                                 n_procs=n_procs, poiss_params=opt_params_init,
+                                 clear_conn=True)
 
 fig_net_response = plot_net_response(dpls_0, net_0, sim_time)
 plt.tight_layout()
@@ -150,7 +151,8 @@ fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
 # post-optimization
 net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
-                             poiss_params=opt_params, clear_conn=True)
+                             n_procs=n_procs, poiss_params=opt_params,
+                             clear_conn=True)
 
 fig_net_response = plot_net_response(dpls, net, sim_time)
 plt.tight_layout()
