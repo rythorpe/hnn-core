@@ -63,8 +63,8 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 3 * 128  # >opt_n_init_points
+opt_n_init_points = 5  # 128  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 10  # 3 * 128  # >opt_n_init_points
 
 ###############################################################################
 # %% get initial params prior to optimization
@@ -80,7 +80,8 @@ opt_params_0.append(poiss_rate_0)
 opt_params_bounds = [(np.log10(min_weight), np.log10(val)) for val in
                      poiss_weights_0.values()]
 # poisson drive rate constant bounds
-opt_params_bounds.append((min_rate, max_rate))
+# opt_params_bounds.append((min_rate, max_rate))
+opt_params_bounds.append((poiss_rate_0, poiss_rate_0))  # fixed
 
 ###############################################################################
 # %% prepare cost function
