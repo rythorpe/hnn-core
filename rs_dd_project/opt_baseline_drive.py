@@ -16,7 +16,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from skopt import gp_minimize
+from skopt import gp_minimize, gbrt_minimize
 from skopt.plots import plot_convergence, plot_objective
 
 from hnn_core.network_models import L6_model
@@ -63,8 +63,8 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_init_points = 128  # 2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 4 * 128  # >opt_n_init_points
+opt_n_init_points = 5  # 128  # 2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 10  # 4 * 128  # >opt_n_init_points
 
 ###############################################################################
 # %% get initial params prior to optimization
@@ -92,15 +92,24 @@ opt_min_func = partial(opt_baseline_spike_rates, net=net_original.copy(),
 
 ###############################################################################
 # %% optimize
-opt_results = gp_minimize(func=opt_min_func,
-                          dimensions=opt_params_bounds,
-                          x0=None,  # opt_params_0
-                          n_calls=opt_n_total_calls,  # >5**n_params
-                          n_initial_points=opt_n_init_points,  # 5**n_params
-                          initial_point_generator='lhs',  # sobol; params<40
-                          acq_optimizer='lbfgs',
-                          verbose=True,
-                          random_state=1234)
+
+opt_results = gbrt_minimize(func=opt_min_func,
+                            dimensions=opt_params_bounds,
+                            x0=None,  # opt_params_0
+                            n_calls=opt_n_total_calls,
+                            n_initial_points=opt_n_init_points,
+                            initial_point_generator='lhs',  # sobol, params<40
+                            verbose=True,
+                            random_state=1234)
+#opt_results = gp_minimize(func=opt_min_func,
+#                          dimensions=opt_params_bounds,
+#                          x0=None,  # opt_params_0
+#                          n_calls=opt_n_total_calls,  # >5**n_params
+#                          n_initial_points=opt_n_init_points,  # 5**n_params
+#                          initial_point_generator='lhs',  # sobol; params<40
+#                          acq_optimizer='lbfgs',
+#                          verbose=True,
+#                          random_state=1234)
 opt_params = opt_results.x
 # convert param back from log_10 scale
 opt_params[:-1] = [10 ** weight for weight in opt_params[:-1]]
