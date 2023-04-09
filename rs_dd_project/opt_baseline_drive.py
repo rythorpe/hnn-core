@@ -129,10 +129,10 @@ fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
 # first convert weight params back from log_10 scale
-opt_params_init = [10 ** weight for weight in opt_params_0[:-1]]
-opt_params_init.append(opt_params_0[-1])
+poiss_params_init = [10 ** weight for weight in opt_params_0] + [poiss_rate]
 net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
-                                 n_procs=n_procs, poiss_params=opt_params_init,
+                                 n_procs=n_procs,
+                                 poiss_params=poiss_params_init,
                                  clear_conn=True)
 
 fig_net_response = plot_net_response(dpls_0, net_0, sim_time)
@@ -145,8 +145,9 @@ plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
 # post-optimization
+poiss_params = opt_params + [poiss_rate]
 net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
-                             n_procs=n_procs, poiss_params=opt_params,
+                             n_procs=n_procs, poiss_params=poiss_params,
                              clear_conn=True)
 
 fig_net_response = plot_net_response(dpls, net, sim_time)
