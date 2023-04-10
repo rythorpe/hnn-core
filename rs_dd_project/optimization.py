@@ -205,8 +205,8 @@ def err_disconn_spike_rate(net, sim_time, burn_in_time,
 
     spike_rate_diffs = list()
     for cell_type in target_avg_spike_rates.keys():
-        spike_rate_diffs.append(target_avg_spike_rates[cell_type] -
-                                avg_spike_rates[cell_type])
+        spike_rate_diffs.append(np.log10(target_avg_spike_rates[cell_type]) -
+                                np.log10(avg_spike_rates[cell_type]))
 
     return np.linalg.norm(spike_rate_diffs)
 
