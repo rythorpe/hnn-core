@@ -80,7 +80,7 @@ opt_params_0 = [np.log10(weight) for weight in poiss_weights_ub.values()]
 #                            (len(poiss_weights_0), 1)).tolist()
 # log_10 scale
 opt_params_bounds = [(np.log10(lb), np.log10(ub)) for lb, ub in
-                     zip(poiss_weights_ub.values(), poiss_weights_ub.values())]
+                     zip(poiss_weights_lb.values(), poiss_weights_ub.values())]
 
 ###############################################################################
 # %% prepare cost function
