@@ -107,8 +107,6 @@ opt_results = gp_minimize(func=opt_min_func,
                           n_calls=opt_n_total_calls,  # >5**n_params
                           n_initial_points=opt_n_init_points,  # 5**n_params
                           initial_point_generator='lhs',  # sobol; params<40
-                          acq_func='EI',
-                          xi=0.01,
                           acq_optimizer='lbfgs',
                           verbose=True,
                           random_state=1234)
