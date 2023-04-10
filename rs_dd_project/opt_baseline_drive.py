@@ -33,6 +33,10 @@ output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
 poiss_weights_ub = OrderedDict(L2_basket=1e-3, L2_pyramidal=4e-3,
                                L5_basket=1e-3, L5_pyramidal=4e-3,
                                L6_basket=1e-3, L6_pyramidal=4e-3)
+
+poiss_weights_lb = OrderedDict(L2_basket=5.0e-4, L2_pyramidal=8.8e-4,
+                               L5_basket=5.0e-4, L5_pyramidal=25.5e-4,
+                               L6_basket=5.0e-4, L6_pyramidal=8.8e-4)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
@@ -75,8 +79,8 @@ opt_params_0 = [np.log10(weight) for weight in poiss_weights_ub.values()]
 #opt_params_bounds = np.tile([min_weight, max_weight],
 #                            (len(poiss_weights_0), 1)).tolist()
 # log_10 scale
-opt_params_bounds = [(np.log10(min_weight), np.log10(val)) for val in
-                     poiss_weights_ub.values()]
+opt_params_bounds = [(np.log10(lb), np.log10(ub)) for lb, ub in
+                     zip(poiss_weights_ub.values(), poiss_weights_ub.values())]
 
 ###############################################################################
 # %% prepare cost function
