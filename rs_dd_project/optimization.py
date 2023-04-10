@@ -172,8 +172,8 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
         poiss_weights = {cell_type: weight for cell_type, weight in
                          zip(cell_types, poiss_params[:-1])}
         poiss_rate = poiss_params[-1]
-        seed = 1234  # use with gbrt_minimize
-        #seed = int(np.random.random() * 1e3)  # use with gp_minimize
+        # seed = 1234  # use with gbrt_minimize
+        seed = int(np.random.random() * 1e3)  # use with gp_minimize
         # add poisson drive with near-uniform spatial spread
         net.add_poisson_drive(name='poisson_drive',
                               rate_constant=poiss_rate,
