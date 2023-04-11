@@ -205,10 +205,13 @@ def err_disconn_spike_rate(net, sim_time, burn_in_time,
 
     spike_rate_diffs = list()
     for cell_type in target_avg_spike_rates.keys():
-        spike_rate_diffs.append(target_avg_spike_rates[cell_type] -
-                                avg_spike_rates[cell_type])
+        # convert to log_10 scale to amplify distances close to zero
+        # add distance to a number close to 0 to avoid instability as diff -> 0
+        log_diff = np.log10(1e-5 + (target_avg_spike_rates[cell_type] -
+                            avg_spike_rates[cell_type]) ** 2)
+        spike_rate_diffs.append(log_diff)
 
-    return np.linalg.norm(spike_rate_diffs)
+    return np.sum(spike_rate_diffs)
 
 
 def opt_baseline_spike_rates(opt_params, net, sim_params,
