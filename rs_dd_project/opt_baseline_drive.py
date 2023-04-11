@@ -61,14 +61,14 @@ target_sr_unconn = {cell: rate * 0.33 for cell, rate in
 
 # simulation parameters
 n_procs = 32  # parallelize simulation
-sim_time = 1200  # ms
+sim_time = 1700  # ms
 burn_in_time = 200  # ms
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
 opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 300  # >opt_n_init_points
+opt_n_total_calls = 400  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
