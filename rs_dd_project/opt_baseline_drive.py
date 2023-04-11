@@ -34,9 +34,9 @@ poiss_weights_ub = OrderedDict(L2_basket=1e-3, L2_pyramidal=4e-3,
                                L5_basket=1e-3, L5_pyramidal=4e-3,
                                L6_basket=1e-3, L6_pyramidal=4e-3)
 
-poiss_weights_lb = OrderedDict(L2_basket=5.0e-4, L2_pyramidal=8.8e-4,
-                               L5_basket=5.0e-4, L5_pyramidal=25.5e-4,
-                               L6_basket=5.0e-4, L6_pyramidal=8.8e-4)
+poiss_weights_lb = OrderedDict(L2_basket=4.8e-4, L2_pyramidal=6.2e-4,
+                               L5_basket=4.8e-4, L5_pyramidal=20.5e-4,
+                               L6_basket=4.8e-4, L6_pyramidal=6.2e-4)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
