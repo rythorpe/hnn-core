@@ -61,7 +61,7 @@ target_sr_unconn = {cell: rate * 0.33 for cell, rate in
 
 # simulation parameters
 n_procs = 32  # parallelize simulation
-sim_time = 1700  # ms
+sim_time = 2200  # ms
 burn_in_time = 200  # ms
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))

@@ -85,7 +85,7 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
                                'spike rate': pop_spike_rates,
                                'target rate': pop_targets})
     ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
-                     hue='cell type', palette='Greys', ax=ax)
+                     hue='cell type', palette='Greys', errorbar='se', ax=ax)
      # note: eyeball dodge value
      # also, setting legend='_nolegend_' doesn't work when hue is set
     ax = sns.pointplot(data=spiking_df, x='target rate', y='layer',
