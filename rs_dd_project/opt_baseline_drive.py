@@ -61,7 +61,7 @@ target_sr_unconn = {cell: rate * 0.33 for cell, rate in
 
 # simulation parameters
 n_procs = 32  # parallelize simulation
-sim_time = 1200  # ms
+sim_time = 2200  # ms
 burn_in_time = 200  # ms
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
@@ -108,6 +108,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           n_initial_points=opt_n_init_points,  # 5**n_params
                           initial_point_generator='lhs',  # sobol; params<40
                           acq_optimizer='sampling',
+                          xi=0.001,  # smaller than default; only for EI/PI
                           verbose=True,
                           random_state=1234)
 opt_params = opt_results.x
