@@ -11,6 +11,6 @@
 #SBATCH -e slurm.err
 
 module load python/3.9.0 mpi/openmpi_4.0.7_gcc_10.2_slurm22 gcc/10.2 cuda/11.7.1
-source ~/envs/hnn_core_mpi_root/bin/activate
+source ~/envs/hnn_core_env/bin/activate
 python ~/hnn-core/rs_dd_project/opt_baseline_drive.py
 deactivate

@@ -165,6 +165,8 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
     else:
         print("simulating fully-connected network")
 
+    print(f'poisson params real: {poiss_params}')
+
     if poiss_params is not None:
         cell_types = ['L2_basket', 'L2_pyramidal',
                       'L5_basket', 'L5_pyramidal',
@@ -226,6 +228,7 @@ def opt_baseline_spike_rates(opt_params, net, sim_params,
     poiss_rate = sim_params['poiss_rate_constant']
 
     # convert weight param back from log_10 scale
+    print(f'poisson params log10: {opt_params + [poiss_rate]}')
     poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
     net_disconn, dpls_disconn = simulate_network(net, sim_time, burn_in_time,
                                                  n_procs,
