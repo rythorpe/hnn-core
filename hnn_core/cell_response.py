@@ -317,8 +317,8 @@ class CellResponse(object):
                 time_type_mask = ((spike_times >= tstart) *
                                   (spike_times < tstop) *
                                   (spike_types == cell_type))
-                gids, gid_counts = np.unique(
-                    np.array(spike_gids)[time_type_mask], return_counts=True)
+                gids, gid_counts = np.unique(spike_gids[time_type_mask],
+                                             return_counts=True)
 
                 gid_spike_rate[trial_idx, np.in1d(cell_type_gids, gids)] = (
                     gid_counts / (tstop - tstart)) * 1000
