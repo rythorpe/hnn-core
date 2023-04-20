@@ -474,7 +474,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     for spike_label, plot_data in spike_type_times.items():
         hist_color = spike_color[spike_label]
         ax.hist(plot_data, bins,
-                label=spike_label, color=hist_color, linewidth=0.)
+                label=spike_label, color=hist_color, histtype='step')
     ax.set_ylabel("Counts")
     ax.legend()
 
@@ -527,7 +527,7 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
 
     cell_types = ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal',
                   'L6_basket', 'L6_pyramidal']
-    cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'b',
+    cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'y',
                         'L2_pyramidal': 'g', 'L2_basket': 'w',
                         'L6_pyramidal': 'c', 'L6_basket': 'm'}
 
