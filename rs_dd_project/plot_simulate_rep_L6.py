@@ -20,22 +20,22 @@ from hnn_core.viz import plot_dipole
 data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
             'data/MEG_detection_data/S1_SupraT.txt')
 #urlretrieve(data_url, 'S1_SupraT.txt')
-hnn_core_root = op.join(op.dirname(hnn_core.__file__))
-emp_dpl = read_dipole(op.join(hnn_core_root, 'yes_trial_S1_ERP_all_avg.txt'))
+#hnn_core_root = op.join(op.dirname(hnn_core.__file__))
+emp_dpl = read_dipole('yes_trial_S1_ERP_all_avg.txt')
 #emp_dpl = read_dipole('S1_SupraT.txt')
 
 ###############################################################################
 # Define user parameters
-model_grid_shape = (10, 20)
+model_grid_shape = (10, 10)
 # Hyperparameters of repetitive drive sequence
 reps = 4
-rep_interval = 250.  # in ms; 8 Hz
-rep_duration = 170.
+rep_interval = 100.  # in ms; 10 Hz
+rep_duration = 100.  # 170 ms for human M/EEG
 
-tstop = reps * max(rep_interval, rep_duration)
-rep_start_times = np.arange(0, tstop, rep_interval)
+syn_depletion_factor = 0.8  # used to simulate successive synaptic depression
 
 event_seed = 1
+conn_seed = 1
 
 ###############################################################################
 # Let us first create our default network and visualize the cells
@@ -54,71 +54,57 @@ plt.show()
 # Add drives
 # note: first define syn weights associated with proximal drive that will
 # undergo synaptic depletion
-weights_ampa_p1 = {'L2_basket': 0.100, 'L2_pyramidal': 0.200,
-                   'L5_basket': 0.030, 'L5_pyramidal': 0.008}
-weights_ampa_p2 = {'L2_basket': 0.000003, 'L2_pyramidal': 0.5,
-                   'L5_basket': 0.0002, 'L5_pyramidal': 0.4}
+weights_ampa_prox = {'L2_basket': 0.100, 'L2_pyramidal': 0.200,
+                     'L5_basket': 0.030, 'L5_pyramidal': 0.008}
 weights_ampa_L6 = {'L6_pyramidal': 0.01}
+
+# set drive rep start times from user-defined parameters
+tstop = reps * max(rep_interval, rep_duration)
+rep_start_times = np.arange(0, tstop, rep_interval)
 
 for rep_idx, rep_time in enumerate(rep_start_times):
 
+    # downscale syn weights for each successive prox drive, except on last rep
     if rep_idx == reps - 1:  # last rep
-        depletion_factor = 0.8 ** -(reps - 1)  # return values to original
-        conn_seed = 2
+        # no depression
+        depression_factor = 1
     else:
-        depletion_factor = 0.8  # attenuate values on this rep
-        conn_seed = 1
+        # attenuate syn weight values as a function of # of reps
+        depression_factor = syn_depletion_factor ** (rep_idx + 1)
+    weights_ampa_prox_depr = {key: val * depression_factor
+                              for key, val in weights_ampa_prox.items()}
+    weights_ampa_L6_depr = {key: val * depression_factor
+                            for key, val in weights_ampa_L6.items()}
 
     # Prox 1: attenuate syn weight at each repetition
     synaptic_delays_prox = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
                             'L5_basket': 1., 'L5_pyramidal': 1.}
     # note that all NMDA weights are zero
     net.add_evoked_drive(
-        f'evprox1_rep{rep_idx}', mu=rep_time + 34., sigma=2.47,
-        numspikes=1, weights_ampa=weights_ampa_p1,
+        f'evprox_rep{rep_idx}', mu=rep_time + 34., sigma=2.47, numspikes=1,
+        weights_ampa=weights_ampa_prox_depr, weights_nmda=None,
         location='proximal', synaptic_delays=synaptic_delays_prox,
         probability=1.0, conn_seed=conn_seed, event_seed=event_seed)
-    # Prox 1 should also target the distal projections of L6 Pyr
+    # Hack: prox_1 should also target the distal projections of L6 Pyr
     net.add_evoked_drive(
-        f'evprox1_distL6_rep{rep_idx}', mu=rep_time + 34., sigma=2.47,
-        numspikes=1, weights_ampa=weights_ampa_L6,
+        f'evprox_rep{rep_idx}_L6', mu=rep_time + 34., sigma=2.47,
+        numspikes=1, weights_ampa=weights_ampa_L6_depr,
         location='distal', synaptic_delays=0.1,
         probability=0.33, conn_seed=conn_seed, event_seed=event_seed)
 
     # Dist 1
-    weights_ampa_d1 = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
-                       'L5_pyramidal': 0.100}
-    weights_nmda_d1 = {'L2_basket': 0.004, 'L2_pyramidal': 0.003,
-                       'L5_pyramidal': 0.080}
-    synaptic_delays_d1 = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
-                          'L5_pyramidal': 0.1}
+    weights_ampa_dist = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
+                         'L5_pyramidal': 0.100}
+    weights_nmda_dist = {'L2_basket': 0.004, 'L2_pyramidal': 0.003,
+                         'L5_pyramidal': 0.080}
+    synaptic_delays_dist = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
+                            'L5_pyramidal': 0.1}
     net.add_evoked_drive(
-        f'evdist1_rep{rep_idx}', mu=rep_time + 65, sigma=3.85, numspikes=1,
-        weights_ampa=weights_ampa_d1, weights_nmda=weights_nmda_d1,
-        location='distal', synaptic_delays=synaptic_delays_d1,
+        f'evdist_rep{rep_idx}', mu=rep_time + 65, sigma=3.85, numspikes=1,
+        weights_ampa=weights_ampa_dist, weights_nmda=weights_nmda_dist,
+        location='distal', synaptic_delays=synaptic_delays_dist,
         probability=1.0, conn_seed=conn_seed, event_seed=event_seed)
 
-    # Prox 2 NB: only AMPA weights differ from first
-    # all NMDA weights are zero; omit weights_nmda (defaults to None)
-    net.add_evoked_drive(
-        f'evprox2_rep{rep_idx}', mu=rep_time + 130, sigma=10.,
-        numspikes=1, weights_ampa=weights_ampa_p2,
-        location='proximal', synaptic_delays=synaptic_delays_prox,
-        probability=1.0, conn_seed=conn_seed, event_seed=event_seed)
-    # Prox 2 should also target the distal projections of L6 Pyr
-    net.add_evoked_drive(
-        f'evprox2_distL6_rep{rep_idx}', mu=rep_time + 130, sigma=10.,
-        numspikes=1, weights_ampa=weights_ampa_L6,
-        location='distal', synaptic_delays=0.1,
-        probability=0.33, conn_seed=conn_seed, event_seed=event_seed)
-
-    # simulate synaptic depletion
-    weights_ampa_p1 = {key: weights_ampa_p1[key] * 0.8 for key in
-                       weights_ampa_p1.keys()}
-    weights_ampa_p2 = {key: weights_ampa_p2[key] * 0.8 for key in
-                       weights_ampa_p2.keys()}
-    weights_ampa_L6 = {key: weights_ampa_L6[key] * 0.8 for key in
-                       weights_ampa_L6.keys()}
 ###############################################################################
 # Now let's simulate the dipole
 with MPIBackend(n_procs=10):
