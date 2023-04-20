@@ -155,6 +155,57 @@ def plot_spiking_profiles_old(net, sim_time, burn_in_time, target_spike_rates,
     return fig
 
 
+def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
+    # custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+    # sns.set_theme(style="ticks", rc=custom_params)
+
+    layer_by_cell_type = {'L2_basket': 'L2/3',
+                          'L2_pyramidal': 'L2/3',
+                          'L5_basket': 'L5',
+                          'L5_pyramidal': 'L5',
+                          'L6_basket': 'L6',
+                          'L6_pyramidal': 'L6'}
+
+    pop_layer = list()
+    pop_cell_type = list()
+    pop_spike_rates = list()
+    for cell_type in net.cell_types:
+        if 'basket' in cell_type:
+            cell_type_ei = 'I'
+        else:
+            cell_type_ei = 'E'
+        spike_gids = np.array(net.cell_response.spike_gids[0])  # only 1 trial
+        spike_times = np.array(net.cell_response.spike_times[0])  # same
+
+        for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
+            gids_after_burn_in = np.array(spike_gids)[spike_times >
+                                                      burn_in_time]
+            n_spikes = np.sum(gids_after_burn_in == gid)
+            pop_layer.append(layer_by_cell_type[cell_type])
+            pop_cell_type.append(cell_type_ei)
+            pop_spike_rates.append((n_spikes /
+                                    ((sim_time - burn_in_time) * 1e-3)))
+
+    spiking_df = pd.DataFrame({'layer': pop_layer, 'cell type': pop_cell_type,
+                               'spike rate': pop_spike_rates})
+    ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
+                     hue='cell type', palette='Greys', errorbar='se', ax=ax)
+
+    ax.set_ylabel('layer')
+    ax.set_xlabel('mean single-unit spike rate (Hz)')
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles=handles[2:], labels=labels[2:])
+
+    # make sure calcuation above is consistent with mean_rates method
+    # avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
+    #                                                tstop=sim_time,
+    #                                                gid_ranges=net.gid_ranges)
+    # print(avg_spike_rates)
+    # print(spiking_df.groupby(['layer', 'cell type'])['spike rate'].mean())
+
+    return ax.get_figure()
+
+
 def simulate_network(net, sim_time, burn_in_time, n_procs=6,
                      poiss_params=None, conn_params=None, clear_conn=False):
     """Update network with sampled params and run simulation."""

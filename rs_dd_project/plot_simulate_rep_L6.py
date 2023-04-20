@@ -15,6 +15,7 @@ import hnn_core
 from hnn_core import simulate_dipole, MPIBackend, JoblibBackend, read_dipole
 from hnn_core.network_models import L6_model
 from hnn_core.viz import plot_dipole
+from optimization_lib import plot_spikerate_hist
 
 ###############################################################################
 # Read in empirical data to compare to simulated data
@@ -111,7 +112,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 
 ###############################################################################
 # Now let's simulate the dipole
-with MPIBackend(n_procs=2):
+with MPIBackend(n_procs=10):
 #with JoblibBackend(n_jobs=1):
     dpls = simulate_dipole(net, tstop=tstop, n_trials=1)
 
@@ -126,7 +127,8 @@ sns.set_theme(style="ticks", rc=custom_params)
 gridspec = {'width_ratios': [1], 'height_ratios': [1, 3, 3]}
 fig, axes = plt.subplots(3, 1, sharex=True, figsize=(6, 6),
                          gridspec_kw=gridspec, constrained_layout=True)
-#### plot arrow for each drive
+
+# plot arrow for each drive
 arrow_height = 1.0
 head_length = 0.2
 head_width = 10.0
@@ -144,7 +146,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
                   head_length=head_length, length_includes_head=True)
 axes[0].set_yticks([0, 1])
 axes[0].set_ylabel('drive\nstrength')
-###
+
 for rep_time in rep_start_times:
     axes[0].axvline(rep_time, c='k')
     axes[1].axvline(rep_time, c='k')

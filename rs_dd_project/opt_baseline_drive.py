@@ -20,8 +20,8 @@ from skopt import gp_minimize, gbrt_minimize
 from skopt.plots import plot_convergence, plot_objective
 
 from hnn_core.network_models import L6_model
-from optimization import (plot_net_response, plot_spiking_profiles,
-                          simulate_network, opt_baseline_spike_rates)
+from optimization_lib import (plot_net_response, plot_spiking_profiles,
+                              simulate_network, opt_baseline_spike_rates)
 
 ###############################################################################
 # %% set parameters
