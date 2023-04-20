@@ -21,7 +21,7 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
             'data/MEG_detection_data/S1_SupraT.txt')
 #urlretrieve(data_url, 'S1_SupraT.txt')
 #hnn_core_root = op.join(op.dirname(hnn_core.__file__))
-emp_dpl = read_dipole('yes_trial_S1_ERP_all_avg.txt')
+#emp_dpl = read_dipole('yes_trial_S1_ERP_all_avg.txt')
 #emp_dpl = read_dipole('S1_SupraT.txt')
 
 ###############################################################################
