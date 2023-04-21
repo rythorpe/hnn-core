@@ -124,8 +124,8 @@ for dpl in dpls:
 # Plot the amplitudes of the simulated aggregate dipole moments over time
 custom_params = {"axes.spines.right": False, "axes.spines.top": False}
 sns.set_theme(style="ticks", rc=custom_params)
-gridspec = {'width_ratios': [1], 'height_ratios': [1, 3, 3]}
-fig, axes = plt.subplots(3, 1, sharex=True, figsize=(6, 6),
+gridspec = {'width_ratios': [1], 'height_ratios': [1, 1, 1, 1, 3]}
+fig, axes = plt.subplots(5, 1, sharex=True, figsize=(6, 6),
                          gridspec_kw=gridspec, constrained_layout=True)
 
 # plot arrow for each drive
@@ -152,20 +152,31 @@ for rep_time in rep_start_times:
     axes[1].axvline(rep_time, c='k')
     axes[2].axvline(rep_time, c='w')
 net.cell_response.plot_spikes_hist(ax=axes[1], n_bins=40,
-                                   spike_types=['L2_basket', 'L2_pyramidal',
-                                                'L5_basket', 'L5_pyramidal',
-                                                'L6_basket', 'L6_pyramidal'],
-                                   show=False)
-axes[1].legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, 1.0),
+                                   spike_types=['L2_basket', 'L2_pyramidal'],
+                                   rate=True, show=False)
+net.cell_response.plot_spikes_hist(ax=axes[2], n_bins=40,
+                                   spike_types=['L5_basket', 'L5_pyramidal'],
+                                   rate=True, show=False)
+net.cell_response.plot_spikes_hist(ax=axes[3], n_bins=40,
+                                   spike_types=['L6_basket', 'L6_pyramidal'],
+                                   rate=True, show=False)
+axes[1].set_ylabel('mean spike\nrate (Hz)')
+axes[1].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
                frameon=False, columnspacing=1, handlelength=0.75,
                borderaxespad=0.0)
-net.cell_response.plot_spikes_raster(ax=axes[2], show=False)
-axes[2].get_legend().remove()
-axes[2].set_xlim([0, tstop])
+axes[2].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
+               frameon=False, columnspacing=1, handlelength=0.75,
+               borderaxespad=0.0)
+axes[3].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
+               frameon=False, columnspacing=1, handlelength=0.75,
+               borderaxespad=0.0)
+net.cell_response.plot_spikes_raster(ax=axes[4], show=False)
+axes[4].get_legend().remove()
+axes[4].set_xlim([0, tstop])
 xticks = np.arange(0, tstop + 1, 50)
 xticks_labels = (rep_start_times[-1] - xticks).astype(int).astype(str)
-axes[2].set_xticks(xticks)
-axes[2].set_xticklabels(xticks_labels)
-axes[2].set_xlabel('time (ms)')
+axes[4].set_xticks(xticks)
+axes[4].set_xticklabels(xticks_labels)
+axes[4].set_xlabel('time (ms)')
 plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()
