@@ -47,13 +47,13 @@ conn_seed = 1
 # inside it.
 net = L6_model(connect_layer_6=True, legacy_mode=False,
                grid_shape=model_grid_shape)
-net.plot_cells()
-fig = plt.figure(figsize=(6, 6), constrained_layout=True)
-for cell_type_idx, cell_type in enumerate(net.cell_types):
-    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
-                         projection='3d')
-    net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
-plt.show()
+#net.plot_cells()
+#fig = plt.figure(figsize=(6, 6), constrained_layout=True)
+#for cell_type_idx, cell_type in enumerate(net.cell_types):
+#    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
+#                         projection='3d')
+    #net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
+#plt.show()
 
 ###############################################################################
 # Add drives
@@ -144,13 +144,16 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     axes[0].arrow(rep_time + t_dist, 1, 0, -arrow_height, fc='k', ec=None,
                   alpha=1., width=2, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
-axes[0].set_yticks([0, 1])
+axes[0].set_ylim([0, arrow_height])
+axes[0].set_yticks([0, arrow_height])
 axes[0].set_ylabel('drive\nstrength')
 
 for rep_time in rep_start_times:
     axes[0].axvline(rep_time, c='k')
     axes[1].axvline(rep_time, c='k')
-    axes[2].axvline(rep_time, c='w')
+    axes[2].axvline(rep_time, c='k')
+    axes[3].axvline(rep_time, c='k')
+    axes[4].axvline(rep_time, c='w')
 net.cell_response.plot_spikes_hist(ax=axes[1], n_bins=40,
                                    spike_types=['L2_basket', 'L2_pyramidal'],
                                    rate=True, show=False)
@@ -161,22 +164,29 @@ net.cell_response.plot_spikes_hist(ax=axes[3], n_bins=40,
                                    spike_types=['L6_basket', 'L6_pyramidal'],
                                    rate=True, show=False)
 axes[1].set_ylabel('mean spike\nrate (Hz)')
+axes[1].set_ylim([0, 110])
 axes[1].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
                frameon=False, columnspacing=1, handlelength=0.75,
                borderaxespad=0.0)
+axes[2].set_ylabel('')
+axes[2].set_ylim([0, 110])
 axes[2].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
                frameon=False, columnspacing=1, handlelength=0.75,
                borderaxespad=0.0)
+axes[3].set_ylabel('')
+axes[3].set_ylim([0, 110])
 axes[3].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
                frameon=False, columnspacing=1, handlelength=0.75,
                borderaxespad=0.0)
+
 net.cell_response.plot_spikes_raster(ax=axes[4], show=False)
+axes[4].spines[['right', 'top']].set_visible(True)
 axes[4].get_legend().remove()
 axes[4].set_xlim([0, tstop])
 xticks = np.arange(0, tstop + 1, 50)
-xticks_labels = (rep_start_times[-1] - xticks).astype(int).astype(str)
+xticks_labels = (xticks - rep_start_times[-1]).astype(int).astype(str)
 axes[4].set_xticks(xticks)
 axes[4].set_xticklabels(xticks_labels)
 axes[4].set_xlabel('time (ms)')
-plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
+#plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()
