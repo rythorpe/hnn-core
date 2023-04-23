@@ -397,6 +397,8 @@ class CellResponse(object):
             | Ex: ``{'evdist': 'g', 'evprox': 'r'}``, ``{'Tonic': 'b'}``
 
             If None, default color cycle used.
+        n_bins : int
+            Number of equal-width bins in which to count spike times.
         rate : bool
             If true, histogram is normalized by the population size and bin
             width in order to plot the histogram in units of spike rate.

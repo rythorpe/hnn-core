@@ -367,6 +367,8 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         | Ex: ``{'evdist': 'g', 'evprox': 'r'}``, ``{'Tonic': 'b'}``
 
         If None, default color cycle used.
+    n_bins : int
+        Number of equal-width bins in which to count spike times.
     rate : bool
         If true, histogram is normalized by the population size and bin width
         in order to plot the histogram in units of spike rate.
@@ -454,7 +456,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     elif isinstance(color, list):
         color_cycle = cycle(color)
 
-    bins, bin_width = np.linspace(0, spike_times[-1], n_bins, retstep=True)
+    bins, bin_width = np.linspace(0, spike_times[-1], n_bins + 1, retstep=True)
 
     # Create dictionary to aggregate spike times that have the same spike_label
     spike_type_times = {spike_label: list() for
