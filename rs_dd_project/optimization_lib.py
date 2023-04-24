@@ -32,14 +32,14 @@ def set_conn_params(net, conn_params):
         conn['nc_dict']['lamtha'] = conn_params[conn_idx * 2 + 1]
 
 
-def plot_net_response(dpls, net, sim_time):
+def plot_net_response(dpls, net):
     fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 12))
 
     # window_len, scaling_factor = 30, 2000
     # for dpl in dpls:
     #     dpl.smooth(window_len).scale(scaling_factor)
 
-    net.cell_response.plot_spikes_hist(ax=axes[0], n_bins=sim_time, show=False)
+    net.cell_response.plot_spikes_hist(ax=axes[0], bin_width=1.0, show=False)
     plot_dipole(dpls, ax=axes[1:5], layer=['L2', 'L5', 'L6', 'agg'],
                 show=False)
     net.cell_response.plot_spikes_raster(ax=axes[5], show=False)

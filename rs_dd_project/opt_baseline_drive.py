@@ -140,7 +140,7 @@ net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
                                  poiss_params=poiss_params_init,
                                  clear_conn=True)
 
-fig_net_response = plot_net_response(dpls_0, net_0, sim_time)
+fig_net_response = plot_net_response(dpls_0, net_0)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'pre_opt_sim.png'))
 
@@ -155,7 +155,7 @@ net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
                              n_procs=n_procs, poiss_params=poiss_params,
                              clear_conn=True)
 
-fig_net_response = plot_net_response(dpls, net, sim_time)
+fig_net_response = plot_net_response(dpls, net)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'post_opt_sim.png'))
 
