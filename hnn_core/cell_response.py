@@ -356,7 +356,7 @@ class CellResponse(object):
             cell_response=self, trial_idx=trial_idx, ax=ax, show=show)
 
     def plot_spikes_hist(self, trial_idx=None, ax=None, spike_types=None,
-                         color=None, n_bins=50, rate=False, show=True):
+                         color=None, bin_width=5, rate=None, show=True):
         """Plot the histogram of spiking activity across trials.
 
         Parameters
@@ -397,11 +397,12 @@ class CellResponse(object):
             | Ex: ``{'evdist': 'g', 'evprox': 'r'}``, ``{'Tonic': 'b'}``
 
             If None, default color cycle used.
-        n_bins : int
-            Number of equal-width bins in which to count spike times.
-        rate : bool
-            If true, histogram is normalized by the population size and bin
-            width in order to plot the histogram in units of spike rate.
+        bin_width : float
+            Width of bins (ms) in which to count spike times.
+        rate : float | None
+            If not None, bin counts are calculated per unit time and normalized
+            by multiplying by the provided scaling factor. This is useful for
+            plotting instantaneous multi-unit or mean single-unit spike rate.
         show : bool
             If True, show the figure.
 
@@ -412,7 +413,7 @@ class CellResponse(object):
         """
         return plot_spikes_hist(self, trial_idx=trial_idx, ax=ax,
                                 spike_types=spike_types, color=color,
-                                rate=rate, n_bins=n_bins, show=show)
+                                bin_width=bin_width, rate=rate, show=show)
 
     def to_dict(self):
         """Return cell response as a dict object.

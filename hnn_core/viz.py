@@ -323,7 +323,7 @@ def plot_dipole(dpl, tmin=None, tmax=None, ax=None, layer='agg', decim=None,
 
 
 def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
-                     color=None, n_bins=50, rate=False, show=True):
+                     color=None, bin_width=5, rate=None, show=True):
     """Plot the histogram of spiking activity across trials.
 
     Parameters
@@ -367,11 +367,12 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         | Ex: ``{'evdist': 'g', 'evprox': 'r'}``, ``{'Tonic': 'b'}``
 
         If None, default color cycle used.
-    n_bins : int
-        Number of equal-width bins in which to count spike times.
-    rate : bool
-        If true, histogram is normalized by the population size and bin width
-        in order to plot the histogram in units of spike rate.
+    bin_width : float
+        Width of bins (ms) in which to count spike times.
+    rate : float | None
+        If not None, bin counts are calculated per unit time and normalized
+        by multiplying by the provided scaling factor. This is useful for
+        plotting instantaneous multi-unit or mean single-unit spike rate.
     show : bool
         If True, show the figure.
 
@@ -427,18 +428,21 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     if not isinstance(spike_types, dict):
         raise TypeError('spike_types should be str, list, dict, or None')
 
-    spike_labels = dict()
+    spike_types_valid = list()
+    spike_times_by_label = {label: list() for label in spike_types.keys()}
     for spike_label, spike_type_list in spike_types.items():
         for spike_type in spike_type_list:
             n_found = 0
             for unique_type in unique_types:
                 if unique_type.startswith(spike_type):
-                    if unique_type in spike_labels:
+                    if unique_type in spike_types_valid:
                         raise ValueError(f'Elements of spike_types must map to'
                                          f' mutually exclusive input types.'
                                          f' {unique_type} is found more than'
                                          f' once.')
-                    spike_labels[unique_type] = spike_label
+                    spike_types_valid.append(unique_type)
+                    spike_times_by_label[spike_label].extend(
+                        spike_times[spike_types_mask[unique_type]])
                     n_found += 1
             if n_found == 0:
                 raise ValueError(f'No input types found for {spike_type}')
@@ -456,13 +460,15 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     elif isinstance(color, list):
         color_cycle = cycle(color)
 
-    bins, bin_width = np.linspace(0, spike_times[-1], n_bins + 1, retstep=True)
+    #bins, bin_width = np.linspace(0, spike_times[-1], n_bins + 1, retstep=True)  # noqa
+    # make sure final spike times are included despite not dividing into a
+    # clean number of bins
+    post_spiking_buffer = spike_times[-1] % bin_width + 1
+    bins = np.arange(0, spike_times[-1] + post_spiking_buffer, bin_width)
 
     # Create dictionary to aggregate spike times that have the same spike_label
     spike_type_times = {spike_label: list() for
                         spike_label in np.unique(list(spike_labels.values()))}
-    n_cells_of_type = {spike_label: 0 for
-                       spike_label in np.unique(list(spike_labels.values()))}
     spike_color = dict()  # Store colors specified for each spike_label
     for spike_type, spike_label in spike_labels.items():
         if spike_label not in spike_color:
@@ -477,8 +483,6 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
                 spike_color[spike_label] = next(color_cycle)
         spike_type_times[spike_label].extend(
             spike_times[spike_types_mask[spike_type]])
-        n_cells_of_type[spike_label] += len(
-            cell_response._gid_ranges[spike_type])
 
     # Plot aggregated spike_times
     for spike_label, plot_data in spike_type_times.items():
@@ -486,7 +490,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         # set weights uniformly across bins; used for calculating spike rates
         weights = np.ones(len(plot_data))
         if rate:
-            weights *= 1 / (bin_width * 1e-3) / n_cells_of_type
+            weights *= rate / (bin_width * 1e-3)
         ax.hist(plot_data, bins=bins, weights=weights, label=spike_label,
                 color=hist_color, histtype='step')
     ax.set_ylabel("Counts")
@@ -542,7 +546,7 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
     cell_types = ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal',
                   'L6_basket', 'L6_pyramidal']
     cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'y',
-                        'L2_pyramidal': 'g', 'L2_basket': 'w',
+                        'L2_pyramidal': 'g', 'L2_basket': 'orange',
                         'L6_pyramidal': 'c', 'L6_basket': 'm'}
 
     if ax is None:
