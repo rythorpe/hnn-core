@@ -124,8 +124,8 @@ for dpl in dpls:
 # Plot the amplitudes of the simulated aggregate dipole moments over time
 custom_params = {"axes.spines.right": False, "axes.spines.top": False}
 sns.set_theme(style="ticks", rc=custom_params)
-gridspec = {'width_ratios': [1], 'height_ratios': [1, 1, 1, 1, 3]}
-fig, axes = plt.subplots(5, 1, sharex=True, figsize=(6, 6),
+gridspec = {'width_ratios': [1], 'height_ratios': [1, 1, 1, 1, 1, 3]}
+fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 6),
                          gridspec_kw=gridspec, constrained_layout=True)
 
 # plot arrow for each drive
@@ -153,40 +153,66 @@ for rep_time in rep_start_times:
     axes[1].axvline(rep_time, c='k')
     axes[2].axvline(rep_time, c='k')
     axes[3].axvline(rep_time, c='k')
-    axes[4].axvline(rep_time, c='w')
-net.cell_response.plot_spikes_hist(ax=axes[1], n_bins=40,
-                                   spike_types=['L2_basket', 'L2_pyramidal'],
-                                   rate=True, show=False)
-net.cell_response.plot_spikes_hist(ax=axes[2], n_bins=40,
-                                   spike_types=['L5_basket', 'L5_pyramidal'],
-                                   rate=True, show=False)
-net.cell_response.plot_spikes_hist(ax=axes[3], n_bins=40,
-                                   spike_types=['L6_basket', 'L6_pyramidal'],
-                                   rate=True, show=False)
+    axes[4].axvline(rep_time, c='k')
+    axes[5].axvline(rep_time, c='w')
+
+spike_types = [['L2_basket', 'L2_pyramidal'],
+               [{'L4E': ['evprox']}],
+               ['L5_basket', 'L5_pyramidal'],
+               ['L6_basket', 'L6_pyramidal']]
+for layer_idx, layer_spike_types in enumerate(spike_types):
+    for spike_type in layer_spike_types:
+        if 'L4E' in spike_type:
+            # this is spiking activity of the proximal drives
+            # count artifical drive cells from only one rep
+            # (note that each drive has it's own set of artificial cell gids,
+            # so the total artifical cell count is inflated compared to the
+            # number of L4 stellate cells they represent)
+            n_cells_of_type = (
+                net.external_drives['evprox_rep0']['n_drive_cells'] +
+                net.external_drives['evprox_rep0_L6']['n_drive_cells']
+            )
+        else:
+            n_cells_of_type = len(net.gid_ranges[spike_type])
+        rate_factor = 1 / n_cells_of_type
+        net.cell_response.plot_spikes_hist(ax=axes[layer_idx + 1],
+                                           bin_width=10,
+                                           spike_types=spike_type,
+                                           rate=rate_factor, show=False)
+
 axes[1].set_ylabel('mean spike\nrate (Hz)')
 axes[1].set_ylim([0, 110])
-axes[1].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
-               frameon=False, columnspacing=1, handlelength=0.75,
-               borderaxespad=0.0)
+handles, _ = axes[1].get_legend_handles_labels()
+axes[1].legend(handles, ['L2/3I', 'L2/3E'], ncol=2, loc='lower center',
+               bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
+               handlelength=0.75, borderaxespad=0.0)
 axes[2].set_ylabel('')
 axes[2].set_ylim([0, 110])
-axes[2].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
-               frameon=False, columnspacing=1, handlelength=0.75,
-               borderaxespad=0.0)
+handles, _ = axes[2].get_legend_handles_labels()
+axes[2].legend(handles, ['L4E (proximal drive)'], ncol=2, loc='lower center',
+               bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
+               handlelength=0.75, borderaxespad=0.0)
 axes[3].set_ylabel('')
 axes[3].set_ylim([0, 110])
-axes[3].legend(ncol=2, loc='lower center', bbox_to_anchor=(0.5, 1.0),
-               frameon=False, columnspacing=1, handlelength=0.75,
-               borderaxespad=0.0)
+handles, _ = axes[3].get_legend_handles_labels()
+axes[3].legend(handles, ['L5I', 'L5E'], ncol=2, loc='lower center',
+               bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
+               handlelength=0.75, borderaxespad=0.0)
+axes[4].set_ylabel('')
+axes[4].set_ylim([0, 110])
+handles, _ = axes[4].get_legend_handles_labels()
+axes[4].legend(handles, ['L6I', 'L6E'], ncol=2, loc='lower center',
+               bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
+               handlelength=0.75, borderaxespad=0.0)
 
-net.cell_response.plot_spikes_raster(ax=axes[4], show=False)
-axes[4].spines[['right', 'top']].set_visible(True)
-axes[4].get_legend().remove()
-axes[4].set_xlim([0, tstop])
+net.cell_response.plot_spikes_raster(ax=axes[5], show=False)
+axes[5].spines[['right', 'top']].set_visible(True)
+axes[5].get_legend().remove()
+axes[5].set_xlim([0, tstop])
 xticks = np.arange(0, tstop + 1, 50)
 xticks_labels = (xticks - rep_start_times[-1]).astype(int).astype(str)
-axes[4].set_xticks(xticks)
-axes[4].set_xticklabels(xticks_labels)
-axes[4].set_xlabel('time (ms)')
+axes[5].set_xticks(xticks)
+axes[5].set_xticklabels(xticks_labels)
+axes[5].set_xlabel('time (ms)')
 #plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()
