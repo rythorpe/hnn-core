@@ -31,13 +31,16 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 model_grid_shape = (10, 10)
 # Hyperparameters of repetitive drive sequence
 reps = 4
-rep_interval = 100.  # in ms; 10 Hz
+stim_interval = 100.  # in ms; 10 Hz
 rep_duration = 100.  # 170 ms for human M/EEG
 
-syn_depletion_factor = 0.8  # used to simulate successive synaptic depression
+syn_depletion_factor = 0.85  # used to simulate successive synaptic depression
 
 t_prox = 34.  # time (ms) of the proximal drive relative to stimulus rep
 t_dist = 65.  # time (ms) of the distal drive relative to stimulus rep
+
+prox_conn_prob = 1.
+dist_conn_prob = 1.
 
 event_seed = 1
 conn_seed = 1
@@ -59,13 +62,25 @@ net = L6_model(connect_layer_6=True, legacy_mode=False,
 # Add drives
 # note: first define syn weights associated with proximal drive that will
 # undergo synaptic depletion
+
+# prox drive weights and delays
 weights_ampa_prox = {'L2_basket': 0.100, 'L2_pyramidal': 0.200,
                      'L5_basket': 0.030, 'L5_pyramidal': 0.008}
-weights_ampa_L6 = {'L6_pyramidal': 0.01}
+synaptic_delays_prox = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
+                        'L5_basket': 1., 'L5_pyramidal': 1.}
+weights_ampa_prox_L6 = {'L6_pyramidal': 0.01}
+synaptic_delays_prox_L6 = 0.1
+# dist drive weights and delays
+weights_ampa_dist = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
+                     'L5_pyramidal': 0.100}
+weights_nmda_dist = {'L2_basket': 0.004, 'L2_pyramidal': 0.003,
+                     'L5_pyramidal': 0.080}
+synaptic_delays_dist = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
+                        'L5_pyramidal': 0.1}
 
 # set drive rep start times from user-defined parameters
-tstop = reps * max(rep_interval, rep_duration)
-rep_start_times = np.arange(0, tstop, rep_interval)
+tstop = reps * max(stim_interval, rep_duration)
+rep_start_times = np.arange(0, tstop, stim_interval)
 
 for rep_idx, rep_time in enumerate(rep_start_times):
 
@@ -76,39 +91,34 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     else:
         # attenuate syn weight values as a function of # of reps
         depression_factor = syn_depletion_factor ** rep_idx
-    weights_ampa_prox_depr = {key: val * depression_factor
-                              for key, val in weights_ampa_prox.items()}
-    weights_ampa_L6_depr = {key: val * depression_factor
-                            for key, val in weights_ampa_L6.items()}
+    #weights_ampa_prox_depr = {key: val * depression_factor
+    #                          for key, val in weights_ampa_prox.items()}
+    #weights_ampa_L6_depr = {key: val * depression_factor
+    #                        for key, val in weights_ampa_L6.items()}
 
-    # Prox 1: attenuate syn weight at each repetition
-    synaptic_delays_prox = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
-                            'L5_basket': 1., 'L5_pyramidal': 1.}
+    # prox drive: attenuate conn probability at each repetition
     # note that all NMDA weights are zero
     net.add_evoked_drive(
         f'evprox_rep{rep_idx}', mu=rep_time + t_prox, sigma=2.47, numspikes=1,
-        weights_ampa=weights_ampa_prox_depr, weights_nmda=None,
+        weights_ampa=weights_ampa_prox, weights_nmda=None,
         location='proximal', synaptic_delays=synaptic_delays_prox,
-        probability=1.0, conn_seed=conn_seed, event_seed=event_seed)
-    # Hack: prox_1 should also target the distal projections of L6 Pyr
+        probability=prox_conn_prob * depression_factor,
+        conn_seed=conn_seed, event_seed=event_seed)
+    # Hack: prox drive should also target the distal projections of L6 Pyr
     net.add_evoked_drive(
         f'evprox_rep{rep_idx}_L6', mu=rep_time + t_prox, sigma=2.47,
-        numspikes=1, weights_ampa=weights_ampa_L6_depr,
-        location='distal', synaptic_delays=0.1,
-        probability=0.33, conn_seed=conn_seed, event_seed=event_seed)
+        numspikes=1, weights_ampa=weights_ampa_prox_L6,
+        location='distal', synaptic_delays=synaptic_delays_prox_L6,
+        probability=prox_conn_prob * depression_factor,
+        conn_seed=conn_seed, event_seed=event_seed)
 
-    # Dist 1
-    weights_ampa_dist = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
-                         'L5_pyramidal': 0.100}
-    weights_nmda_dist = {'L2_basket': 0.004, 'L2_pyramidal': 0.003,
-                         'L5_pyramidal': 0.080}
-    synaptic_delays_dist = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
-                            'L5_pyramidal': 0.1}
+    # dist drive
     net.add_evoked_drive(
         f'evdist_rep{rep_idx}', mu=rep_time + t_dist, sigma=3.85, numspikes=1,
         weights_ampa=weights_ampa_dist, weights_nmda=weights_nmda_dist,
         location='distal', synaptic_delays=synaptic_delays_dist,
-        probability=1.0, conn_seed=conn_seed, event_seed=event_seed)
+        probability=dist_conn_prob,
+        conn_seed=conn_seed, event_seed=event_seed)
 
 ###############################################################################
 # Now let's simulate the dipole
@@ -181,25 +191,25 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
                                            rate=rate_factor, show=False)
 
 axes[1].set_ylabel('mean\nspikes/s')
-axes[1].set_ylim([0, 200])
+axes[1].set_ylim([0, 150])
 handles, _ = axes[1].get_legend_handles_labels()
 axes[1].legend(handles, ['L2/3I', 'L2/3E'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[2].set_ylabel('')
-axes[2].set_ylim([0, 200])
+axes[2].set_ylim([0, 150])
 handles, _ = axes[2].get_legend_handles_labels()
 axes[2].legend(handles, ['L4E (proximal drive)'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[3].set_ylabel('')
-axes[3].set_ylim([0, 200])
+axes[3].set_ylim([0, 150])
 handles, _ = axes[3].get_legend_handles_labels()
 axes[3].legend(handles, ['L5I', 'L5E'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[4].set_ylabel('')
-axes[4].set_ylim([0, 200])
+axes[4].set_ylim([0, 150])
 handles, _ = axes[4].get_legend_handles_labels()
 axes[4].legend(handles, ['L6I', 'L6E'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
