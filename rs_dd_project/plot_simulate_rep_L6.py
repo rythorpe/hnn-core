@@ -176,30 +176,30 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
             n_cells_of_type = len(net.gid_ranges[spike_type])
         rate_factor = 1 / n_cells_of_type
         net.cell_response.plot_spikes_hist(ax=axes[layer_idx + 1],
-                                           bin_width=10,
+                                           bin_width=5,
                                            spike_types=spike_type,
                                            rate=rate_factor, show=False)
 
-axes[1].set_ylabel('mean spike\nrate (Hz)')
-axes[1].set_ylim([0, 110])
+axes[1].set_ylabel('mean\nspikes/s')
+axes[1].set_ylim([0, 200])
 handles, _ = axes[1].get_legend_handles_labels()
 axes[1].legend(handles, ['L2/3I', 'L2/3E'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[2].set_ylabel('')
-axes[2].set_ylim([0, 110])
+axes[2].set_ylim([0, 200])
 handles, _ = axes[2].get_legend_handles_labels()
 axes[2].legend(handles, ['L4E (proximal drive)'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[3].set_ylabel('')
-axes[3].set_ylim([0, 110])
+axes[3].set_ylim([0, 200])
 handles, _ = axes[3].get_legend_handles_labels()
 axes[3].legend(handles, ['L5I', 'L5E'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[4].set_ylabel('')
-axes[4].set_ylim([0, 110])
+axes[4].set_ylim([0, 200])
 handles, _ = axes[4].get_legend_handles_labels()
 axes[4].legend(handles, ['L6I', 'L6E'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
