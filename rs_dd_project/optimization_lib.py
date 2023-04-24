@@ -68,8 +68,10 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
             cell_type_ei = 'I'
         else:
             cell_type_ei = 'E'
-        spike_gids = np.array(net.cell_response.spike_gids[0])  # only 1 trial
-        spike_times = np.array(net.cell_response.spike_times[0])  # same
+        # collapse across trials
+        n_trials = len(net.cell_response.spike_gids)
+        spike_gids = np.concatenate(net.cell_response.spike_gids).flatten()
+        spike_times = np.concatenate(net.cell_response.spike_times).flatten()
 
         for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
             gids_after_burn_in = np.array(spike_gids)[spike_times >
@@ -77,7 +79,7 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
             n_spikes = np.sum(gids_after_burn_in == gid)
             pop_layer.append(layer_by_cell_type[cell_type])
             pop_cell_type.append(cell_type_ei)
-            pop_spike_rates.append((n_spikes /
+            pop_spike_rates.append((n_spikes / n_trials /
                                     ((sim_time - burn_in_time) * 1e-3)))
             pop_targets.append(target_spike_rates[cell_type])
 
@@ -206,7 +208,7 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
     return ax.get_figure()
 
 
-def simulate_network(net, sim_time, burn_in_time, n_procs=6,
+def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
                      poiss_params=None, conn_params=None, clear_conn=False):
     """Update network with sampled params and run simulation."""
     net = net.copy()
@@ -245,14 +247,13 @@ def simulate_network(net, sim_time, burn_in_time, n_procs=6,
                               event_seed=seed)
 
     with MPIBackend(n_procs=n_procs):
-        dpls = simulate_dipole(net, tstop=sim_time, n_trials=1,
+        dpls = simulate_dipole(net, tstop=sim_time, n_trials=n_trials,
                                baseline_win=[burn_in_time, sim_time])
 
     return net, dpls
 
 
-def err_disconn_spike_rate(net, sim_time, burn_in_time,
-                           target_avg_spike_rates):
+def err_spike_rates(net, sim_time, burn_in_time, target_avg_spike_rates):
     """Cost function for matching simulated vs expected avg spike rates.
 
     Used for optimizing cell excitability under poisson drive.
@@ -272,10 +273,11 @@ def err_disconn_spike_rate(net, sim_time, burn_in_time,
     return np.sum(spike_rate_diffs)
 
 
-def opt_baseline_spike_rates(opt_params, net, sim_params,
-                             target_avg_spike_rates):
+def opt_baseline_spike_rates_1(opt_params, net, sim_params,
+                               target_avg_spike_rates):
     """Function to minimize during optimization: err in baseline spikerates.
 
+    Stage 1: optimize over Poisson drive parameters
     Note: assumes all but the last element in opt_params is in log_10 scale.
     """
     sim_time = sim_params['sim_time']
@@ -285,12 +287,39 @@ def opt_baseline_spike_rates(opt_params, net, sim_params,
 
     # convert weight param back from log_10 scale
     poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
-    net_disconn, dpls_disconn = simulate_network(net, sim_time, burn_in_time,
-                                                 n_procs,
-                                                 poiss_params=poiss_params,
-                                                 conn_params=None,
-                                                 clear_conn=True,)
-    # note: pass in global variables "burn_in_time" and "sim_time"
-    err = err_disconn_spike_rate(net_disconn, sim_time, burn_in_time,
-                                 target_avg_spike_rates)
+    net_disconn, _ = simulate_network(net,
+                                      sim_time=sim_time,
+                                      burn_in_time=burn_in_time,
+                                      n_procs=n_procs,
+                                      poiss_params=poiss_params,
+                                      conn_params=None,
+                                      clear_conn=True)
+
+    err = err_spike_rates(net_disconn, sim_time, burn_in_time,
+                          target_avg_spike_rates)
+    return err
+
+
+def opt_baseline_spike_rates_2(opt_params, net, sim_params,
+                               target_avg_spike_rates):
+    """Function to minimize during optimization: err in baseline spikerates.
+
+    Stage 2: optimize over local network connectivity parameters
+    Note: assumes all but the last element in opt_params is in log_10 scale.
+    """
+    sim_time = sim_params['sim_time']
+    burn_in_time = sim_params['burn_in_time']
+    n_procs = sim_params['n_procs']
+    poiss_params = sim_params['poiss_params']
+
+    net_connected, _ = simulate_network(net,
+                                        sim_time=sim_time,
+                                        burn_in_time=burn_in_time,
+                                        n_procs=n_procs,
+                                        poiss_params=poiss_params,
+                                        conn_params=None,
+                                        clear_conn=True)
+
+    err = err_spike_rates(net_connected, sim_time, burn_in_time,
+                          target_avg_spike_rates)
     return err

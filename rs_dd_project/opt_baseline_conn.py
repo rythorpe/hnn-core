@@ -1,4 +1,4 @@
-"""Optimize the baseline Poisson drive to the Network.
+"""Optimize Network connectivity to match baseline spiking.
 
 Designed to be run in a batch script.
 """
@@ -21,7 +21,7 @@ from skopt.plots import plot_convergence, plot_objective
 
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
-                              simulate_network, opt_baseline_spike_rates_1)
+                              simulate_network, opt_baseline_spike_rates)
 
 ###############################################################################
 # %% set parameters
@@ -54,10 +54,6 @@ target_avg_spike_rates = {'L2_basket': 0.8,
                           'L5_pyramidal': 1.4,  # L5A + L5B avg
                           'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
                           'L6_pyramidal': 0.5}  # from De Kock 2007
-# avg rates in unconn network should be a bit less
-# try 33% of the avg rates in a fully connected network
-target_sr_unconn = {cell: rate * 0.33 for cell, rate in
-                    target_avg_spike_rates.items()}
 
 # simulation parameters
 n_procs = 32  # parallelize simulation
@@ -86,10 +82,9 @@ opt_params_bounds = [(np.log10(lb), np.log10(ub)) for lb, ub in
 # %% prepare cost function
 sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
               'n_procs': n_procs, 'poiss_rate_constant': poiss_rate}
-opt_min_func = partial(opt_baseline_spike_rates_1,
-                       net=net_original.copy(),
+opt_min_func = partial(opt_baseline_spike_rates, net=net_original.copy(),
                        sim_params=sim_params,
-                       target_avg_spike_rates=target_sr_unconn)
+                       target_avg_spike_rates=target_avg_spike_rates)
 
 ###############################################################################
 # %% optimize
@@ -109,7 +104,6 @@ opt_results = gp_minimize(func=opt_min_func,
                           n_initial_points=opt_n_init_points,  # 5**n_params
                           initial_point_generator='lhs',  # sobol; params<40
                           acq_optimizer='sampling',
-                          xi=0.001,  # smaller than default; only for EI/PI
                           verbose=True,
                           random_state=1234)
 opt_params = opt_results.x
