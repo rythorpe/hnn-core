@@ -32,7 +32,7 @@ _CVODE = None
 _LAST_NETWORK = None
 
 
-def _simulate_single_trial(net, tstop, dt, trial_idx):
+def _simulate_single_trial(net, tstop, dt, trial_idx, burn_in):
     """Simulate one trial including building the network
 
     This is used by both backends. MPIBackend calls this in mpi_child.py, once
@@ -67,7 +67,7 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
     h.finitialize()
 
     def simulation_time():
-        print(f'Trial {trial_idx + 1}: {round(h.t, 2)} ms...')
+        print(f'Trial {trial_idx + 1}: {round(h.t - burn_in, 2)} ms...')
 
     if rank == 0:
         for tt in range(0, int(h.tstop), 10):
@@ -86,19 +86,24 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
     # these calls aggregate data across procs/nodes
     neuron_net.aggregate_data(n_samples=times.size())
 
+    sim_times = times.as_numpy() - burn_in
+    t_mask = sim_times >= 0
+    times = list(sim_times[t_mask])
+
     # now convert data from Neuron into Python
     vsec_py = dict()
     for gid, vsec_dict in neuron_net._vsec.items():
         vsec_py[gid] = dict()
         for sec_name, vsec in vsec_dict.items():
-            vsec_py[gid][sec_name] = vsec.to_python()
+            vsec_py[gid][sec_name] = list(vsec.as_numpy()[t_mask])
 
     isec_py = dict()
     for gid, isec_dict in neuron_net._isec.items():
         isec_py[gid] = dict()
         for sec_name, isec in isec_dict.items():
             isec_py[gid][sec_name] = {
-                key: isec.to_python() for key, isec in isec.items()}
+                key: list(isec.as_numpy()[t_mask])
+                for key, isec in isec.items()}
 
     dpl_data_agg = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
                              cell_type in neuron_net._nrn_dipoles]).sum(axis=0)
@@ -107,23 +112,29 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
         neuron_net._nrn_dipoles['L2_pyramidal'].as_numpy(),
         neuron_net._nrn_dipoles['L5_pyramidal'].as_numpy(),
         neuron_net._nrn_dipoles['L6_pyramidal'].as_numpy()
-    ]
+    ][t_mask, :]
 
     rec_arr_py = dict()
     rec_times_py = dict()
     for arr_name, nrn_arr in neuron_net._nrn_rec_arrays.items():
-        rec_arr_py.update({arr_name: nrn_arr._get_nrn_voltages()})
-        rec_times_py.update({arr_name: nrn_arr._get_nrn_times()})
+        lfps = np.array(nrn_arr._get_nrn_voltages())[:, t_mask].tolist()
+        rec_arr_py.update({arr_name: lfps})
+        rec_times_py.update({arr_name: times})
+
+    spike_times = neuron_net._all_spike_times.as_numpy() - burn_in
+    spike_times_mask = spike_times >= 0
+    spike_times = list(spike_times[spike_times_mask])
+    spike_gids = list(neuron_net._all_spike_gids.as_numpy()[spike_times_mask])
 
     data = {'dpl_data': dpl_data,
-            'spike_times': neuron_net._all_spike_times.to_python(),
-            'spike_gids': neuron_net._all_spike_gids.to_python(),
+            'spike_times': spike_times,
+            'spike_gids': spike_gids,
             'gid_ranges': net.gid_ranges,
             'vsec': vsec_py,
             'isec': isec_py,
             'rec_data': rec_arr_py,
             'rec_times': rec_times_py,
-            'times': times.to_python()}
+            'times': times}
 
     return data
 

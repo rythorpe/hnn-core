@@ -16,7 +16,8 @@ from .viz import plot_dipole, plot_psd, plot_tfr_morlet
 
 
 def simulate_dipole(net, tstop, dt=0.025, n_trials=None, record_vsec=False,
-                    record_isec=False, postproc=False, baseline_win=[10, 15]):
+                    record_isec=False, postproc=False, baseline_win=[10, 15],
+                    burn_in=0):
     """Simulate a dipole given the experiment parameters.
 
     Parameters
@@ -66,6 +67,14 @@ def simulate_dipole(net, tstop, dt=0.025, n_trials=None, record_vsec=False,
         n_trials = net._params['N_trials']
     if n_trials < 1:
         raise ValueError("Invalid number of simulations: %d" % n_trials)
+    if burn_in < 0:
+        raise ValueError("Burn-in can only be defined as a positive"
+                         f"duration of time in ms. Got {burn_in}.")
+
+    # From the simulation engine's point-of-view, tstop is the total simulation
+    # duration. All output will be converted back to the original 0-tstop time
+    # scale after the simulation has run.
+    sim_duration = burn_in + tstop
 
     if not net.connectivity:
         warnings.warn('No connections instantiated in network. Consider using '
@@ -90,7 +99,7 @@ def simulate_dipole(net, tstop, dt=0.025, n_trials=None, record_vsec=False,
             if duration < 0.:
                 raise ValueError('Duration of tonic input cannot be negative')
 
-    net._instantiate_drives(n_trials=n_trials, tstop=tstop)
+    net._instantiate_drives(n_trials=n_trials, tstop=sim_duration)
     net._reset_rec_arrays()
 
     _check_option('record_vsec', record_vsec, ['all', 'soma', False])
@@ -106,7 +115,9 @@ def simulate_dipole(net, tstop, dt=0.025, n_trials=None, record_vsec=False,
                       ' in a future release of hnn-core. Please define '
                       'smoothing and scaling explicitly using Dipole methods.',
                       DeprecationWarning)
-    dpls = _BACKEND.simulate(net, tstop, dt, n_trials, postproc, baseline_win)
+
+    dpls = _BACKEND.simulate(net, sim_duration, dt, n_trials, postproc,
+                             burn_in, baseline_win)
 
     return dpls
 

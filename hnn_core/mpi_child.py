@@ -72,7 +72,7 @@ class MPISimulation(object):
             MPI.Finalize()
 
     def _read_net(self):
-        """Read net broadcasted to all ranks on stdin"""
+        """Read net + associated objects broadcasted to all ranks on stdin"""
 
         # read Network from stdin
         if self.rank == 0:
@@ -120,14 +120,15 @@ class MPISimulation(object):
         sys.stderr.write('@end_of_data:%d@\n' % len(pickled_bytes))
         sys.stderr.flush()  # flush to ensure signal is not buffered
 
-    def run(self, net, tstop, dt, n_trials):
+    def run(self, net, tstop, dt, n_trials, burn_in):
         """Run MPI simulation(s) and write results to stderr"""
 
         from hnn_core.network_builder import _simulate_single_trial
 
         sim_data = list()
         for trial_idx in range(n_trials):
-            single_sim_data = _simulate_single_trial(net, tstop, dt, trial_idx)
+            single_sim_data = _simulate_single_trial(net, tstop, dt, trial_idx,
+                                                     burn_in)
 
             # go ahead and append trial data for each rank, though
             # only rank 0 has data that should be sent back to MPIBackend
@@ -149,8 +150,8 @@ if __name__ == '__main__':
     try:
         with MPISimulation() as mpi_sim:
             # XXX: _read_net -> _read_obj, fix later
-            net, tstop, dt, n_trials = mpi_sim._read_net()
-            sim_data = mpi_sim.run(net, tstop, dt, n_trials)
+            net, tstop, dt, n_trials, burn_in = mpi_sim._read_net()
+            sim_data = mpi_sim.run(net, tstop, dt, n_trials, burn_in)
             mpi_sim._write_data_stderr(sim_data)
             mpi_sim._wait_for_exit_signal()
     except Exception:
