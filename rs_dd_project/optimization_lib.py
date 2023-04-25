@@ -46,7 +46,7 @@ def plot_net_response(dpls, net):
     return fig
 
 
-def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
+def plot_spiking_profiles(net, sim_time, target_spike_rates):
     # custom_params = {"axes.spines.right": False, "axes.spines.top": False}
     # sns.set_theme(style="ticks", rc=custom_params)
 
@@ -74,13 +74,11 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
         spike_times = np.concatenate(net.cell_response.spike_times).flatten()
 
         for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
-            gids_after_burn_in = np.array(spike_gids)[spike_times >
-                                                      burn_in_time]
-            n_spikes = np.sum(gids_after_burn_in == gid)
+            n_spikes = np.sum(np.array(spike_gids) == gid)
             pop_layer.append(layer_by_cell_type[cell_type])
             pop_cell_type.append(cell_type_ei)
             pop_spike_rates.append((n_spikes / n_trials /
-                                    ((sim_time - burn_in_time) * 1e-3)))
+                                    (sim_time * 1e-3)))
             pop_targets.append(target_spike_rates[cell_type])
 
     spiking_df = pd.DataFrame({'layer': pop_layer, 'cell type': pop_cell_type,
@@ -180,9 +178,8 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
         spike_times = np.array(net.cell_response.spike_times[0])  # same
 
         for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
-            gids_after_burn_in = np.array(spike_gids)[spike_times >
-                                                      burn_in_time]
-            n_spikes = np.sum(gids_after_burn_in == gid)
+
+            n_spikes = np.sum(np.array(spike_gids) == gid)
             pop_layer.append(layer_by_cell_type[cell_type])
             pop_cell_type.append(cell_type_ei)
             pop_spike_rates.append((n_spikes /
@@ -248,17 +245,18 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
 
     with MPIBackend(n_procs=n_procs):
         dpls = simulate_dipole(net, tstop=sim_time, n_trials=n_trials,
-                               baseline_win=[burn_in_time, sim_time])
+                               baseline_win=[0, sim_time],
+                               burn_in=burn_in_time)
 
     return net, dpls
 
 
-def err_spike_rates(net, sim_time, burn_in_time, target_avg_spike_rates):
+def err_spike_rates(net, sim_time, target_avg_spike_rates):
     """Cost function for matching simulated vs expected avg spike rates.
 
     Used for optimizing cell excitability under poisson drive.
     """
-    avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
+    avg_spike_rates = net.cell_response.mean_rates(tstart=0,
                                                    tstop=sim_time,
                                                    gid_ranges=net.gid_ranges)
 
@@ -295,8 +293,7 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
                                       conn_params=None,
                                       clear_conn=True)
 
-    err = err_spike_rates(net_disconn, sim_time, burn_in_time,
-                          target_avg_spike_rates)
+    err = err_spike_rates(net_disconn, sim_time, target_avg_spike_rates)
     return err
 
 
@@ -320,6 +317,5 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
                                         conn_params=None,
                                         clear_conn=True)
 
-    err = err_spike_rates(net_connected, sim_time, burn_in_time,
-                          target_avg_spike_rates)
+    err = err_spike_rates(net_connected, sim_time, target_avg_spike_rates)
     return err
