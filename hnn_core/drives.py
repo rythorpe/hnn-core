@@ -299,6 +299,8 @@ def _drive_cell_event_times(drive_type, dynamics, tstop, target_type='any',
     # brute force remove non-zero times. Might result in fewer vals
     # than desired
     # values MUST be sorted for VecStim()!
+    event_times = event_times[np.logical_and(event_times > 0,
+                                             event_times <= tstop)]
     event_times.sort()
     event_times = event_times.tolist()
 
@@ -325,6 +327,9 @@ def _create_extpois(*, t0, T, lamtha, prng):
         The event times.
     """
     # see: http://www.cns.nyu.edu/~david/handouts/poisson.pdf
+    if t0 < 0:
+        raise ValueError('The start time for Poisson inputs must be'
+                         f'greater than 0. Got {t0}')
     if T < t0:
         raise ValueError('The end time for Poisson inputs must be'
                          f'greater than start time. Got ({t0}, {T})')

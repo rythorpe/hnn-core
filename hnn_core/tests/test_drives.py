@@ -37,6 +37,12 @@ def test_external_drive_times():
         event_times = _drive_cell_event_times(drive_type=drive_type,
                                               dynamics=dynamics,
                                               tstop=tstop)
+    with pytest.raises(ValueError, match='The start time for Poisson'):
+        dynamics['tstop'] = tstop
+        dynamics['tstart'] = -1
+        event_times = _drive_cell_event_times(drive_type=drive_type,
+                                              dynamics=dynamics,
+                                              tstop=tstop)
 
     # checks the poisson spike train generation
     prng = np.random.RandomState()
@@ -45,6 +51,8 @@ def test_external_drive_times():
     event_intervals = np.diff(event_times)
     assert pytest.approx(event_intervals.mean(), abs=1.) == 1000 * 1 / lamtha
 
+    with pytest.raises(ValueError, match='The start time for Poisson'):
+        _create_extpois(t0=-5, T=5, lamtha=lamtha, prng=prng)
     with pytest.raises(ValueError, match='The end time for Poisson'):
         _create_extpois(t0=50, T=20, lamtha=lamtha, prng=prng)
     with pytest.raises(ValueError, match='Rate must be > 0'):
