@@ -350,6 +350,10 @@ def L6_model(params=None, add_drives_from_params=False,
     # remove the only L2_basket -> L5_pyramidal connection
     # del net.connectivity[10]
 
+    # Modify L5_basket -> L5_pyramidal inhibition
+    net.connectivity[6]['nc_dict']['A_weight'] = 0.025  # gabaa
+    net.connectivity[7]['nc_dict']['A_weight'] = 0.006  # gabab
+
     delay = net.delay
 
     if connect_layer_6:

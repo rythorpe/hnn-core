@@ -60,7 +60,7 @@ n_procs = 32  # parallelize simulation
 sim_time = 2200  # ms
 burn_in_time = 200  # ms
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
-                        grid_shape=(12, 12))
+                        grid_shape=(10, 10))
 
 # opt parameters
 opt_n_init_points = 150  # >2 ** n_params, 2 samples per dimension in hypercube
