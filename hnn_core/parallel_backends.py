@@ -529,7 +529,7 @@ class JoblibBackend(object):
 
         _BACKEND = self._old_backend
 
-    def simulate(self, net, tstop, dt, n_trials, postproc=False, burn_in=0,
+    def simulate(self, net, tstop, dt, n_trials, postproc=False,
                  baseline_win=None):
         """Simulate the HNN model
 
@@ -561,12 +561,12 @@ class JoblibBackend(object):
         print(f"Joblib will run {n_trials} trial(s) in parallel by "
               f"distributing trials over {self.n_jobs} jobs.")
         parallel, myfunc = self._parallel_func(_simulate_single_trial)
-        sim_data = parallel(myfunc(net, tstop, dt, trial_idx, burn_in) for
+        sim_data = parallel(myfunc(net, tstop, dt, trial_idx) for
                             trial_idx in range(n_trials))
 
         dpls = _gather_trial_data(sim_data=sim_data, net=net,
-                                  n_trials=n_trials, postproc=postproc,
-                                  baseline_win=baseline_win)
+                                  n_trials=n_trials,
+                                  postproc=postproc, baseline_win=baseline_win)
 
         return dpls
 
@@ -677,7 +677,7 @@ class MPIBackend(object):
         if self.n_procs > 1:
             kill_proc_name('nrniv')
 
-    def simulate(self, net, tstop, dt, n_trials, postproc=False, burn_in=0,
+    def simulate(self, net, tstop, dt, n_trials, postproc=False,
                  baseline_win=None):
         """Simulate the HNN model in parallel on all cores
 
@@ -728,8 +728,8 @@ class MPIBackend(object):
         env = _get_mpi_env()
 
         self.proc, sim_data = run_subprocess(
-            command=self.mpi_cmd, obj=[net, tstop, dt, n_trials, burn_in],
-            timeout=30, proc_queue=self.proc_queue, env=env, cwd=os.getcwd(),
+            command=self.mpi_cmd, obj=[net, tstop, dt, n_trials], timeout=30,
+            proc_queue=self.proc_queue, env=env, cwd=os.getcwd(),
             universal_newlines=True)
 
         dpls = _gather_trial_data(sim_data=sim_data, net=net,
