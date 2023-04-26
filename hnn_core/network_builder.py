@@ -40,7 +40,7 @@ def _simulate_single_trial(net, tstop, dt, trial_idx, burn_in):
     (non-blocking)
     """
 
-    neuron_net = NetworkBuilder(net, trial_idx=trial_idx)
+    neuron_net = NetworkBuilder(net, trial_idx=trial_idx, burn_in=burn_in)
 
     global _PC, _CVODE
 
@@ -275,7 +275,7 @@ class NetworkBuilder(object):
     `self.net._params` and the network is ready for another simulation.
     """
 
-    def __init__(self, net, trial_idx=0):
+    def __init__(self, net, trial_idx=0, burn_in=0):
         self.net = net
         self.trial_idx = trial_idx
 
@@ -315,9 +315,9 @@ class NetworkBuilder(object):
 
         self._rank = 0
 
-        self._build()
+        self._build(burn_in=burn_in)
 
-    def _build(self):
+    def _build(self, burn_in):
         """Building the network in NEURON."""
 
         global _CVODE, _PC
@@ -342,7 +342,7 @@ class NetworkBuilder(object):
         record_isec = self.net._params['record_isec']
         self._create_cells_and_drives(threshold=self.net._params['threshold'],
                                       record_vsec=record_vsec,
-                                      record_isec=record_isec)
+                                      record_isec=record_isec, burn_in=burn_in)
 
         self.state_init()
 
@@ -412,7 +412,7 @@ class NetworkBuilder(object):
         self._gid_list.sort()
 
     def _create_cells_and_drives(self, threshold, record_vsec=False,
-                                 record_isec=False):
+                                 record_isec=False, burn_in=0.0):
         """Parallel create cells AND external drives
 
         NB: _Cell.__init__ calls h.Section -> non-picklable!
@@ -446,8 +446,12 @@ class NetworkBuilder(object):
                 # add tonic biases
                 if ('tonic' in self.net.external_biases and
                         src_type in self.net.external_biases['tonic']):
-                    cell.create_tonic_bias(**self.net.external_biases
-                                           ['tonic'][src_type])
+                    tonic_kwargs = self.net.external_biases['tonic'][src_type]
+                    # NEURON model expects to see a burn-in period starting at
+                    # t=0
+                    tonic_kwargs['t0'] += burn_in
+                    tonic_kwargs['tstop'] += burn_in
+                    cell.create_tonic_bias(**tonic_kwargs)
                 cell.record(record_vsec, record_isec)
 
                 # this call could belong in init of a _Cell (with threshold)?
@@ -460,6 +464,10 @@ class NetworkBuilder(object):
             else:
                 event_times = self.net.external_drives[
                     src_type]['events'][self.trial_idx][gid_idx]
+                # NEURON model expects to see a burn-in period starting at t=0
+                event_times = np.array(event_times) + burn_in
+                # crop off events before the onset of the burn-in period
+                event_times = event_times[event_times > 0]
                 drive_cell = _ArtificialCell(event_times, threshold, gid=gid)
                 _PC.cell(drive_cell.gid, drive_cell.nrn_netcon)
                 self._drive_cells.append(drive_cell)
