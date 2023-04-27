@@ -105,8 +105,8 @@ opt_min_func = partial(opt_baseline_spike_rates_1,
 opt_results = gp_minimize(func=opt_min_func,
                           dimensions=opt_params_bounds,
                           x0=None,  # opt_params_0
-                          n_calls=opt_n_total_calls,  # >5**n_params
-                          n_initial_points=opt_n_init_points,  # 5**n_params
+                          n_calls=opt_n_total_calls,
+                          n_initial_points=opt_n_init_points,
                           initial_point_generator='lhs',  # sobol; params<40
                           acq_optimizer='sampling',
                           xi=0.001,  # smaller than default; only for EI/PI

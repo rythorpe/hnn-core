@@ -11,25 +11,34 @@ from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.viz import plot_dipole
 
 
-def get_conn_params(loc_net_connections):
+def get_conn_params(loc_net_connections, weights=True, lamthas=True):
     """Get optimization parameters from Network.connectivity attribute."""
     conn_params = list()
     for conn in loc_net_connections:
-        conn_params.append(np.log10(conn['nc_dict']['A_weight']))
-        conn_params.append(conn['nc_dict']['lamtha'])
+        if weights:
+            conn_params.append(np.log10(conn['nc_dict']['A_weight']))
+        if lamthas:
+            conn_params.append(conn['nc_dict']['lamtha'])
     return conn_params
 
 
-def set_conn_params(net, conn_params):
+def set_conn_params(net, conn_params, weights=True, lamthas=True):
     """Set updated Network.connectivity parameters in-place."""
-
-    if len(net.connectivity) != (len(conn_params) / 2):
+    if weights and lamthas:
+        n_expected_conns = len(conn_params) / 2
+    elif weights or lamthas:
+        n_expected_conns = len(conn_params)
+    else:
+        raise ValueError('conn_params is an empty list!')
+    if len(net.connectivity) != n_expected_conns:
         raise ValueError('Mismatch between size of input conn_params and '
                          'and connections in Network.connectivity')
 
     for conn_idx, conn in enumerate(net.connectivity):
-        conn['nc_dict']['A_weight'] = conn_params[conn_idx * 2]
-        conn['nc_dict']['lamtha'] = conn_params[conn_idx * 2 + 1]
+        if weights:
+            conn['nc_dict']['A_weight'] = conn_params[conn_idx * 2]
+        if lamthas:
+            conn['nc_dict']['lamtha'] = conn_params[conn_idx * 2 + 1]
 
 
 def plot_net_response(dpls, net):
@@ -214,8 +223,8 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
     net = net.copy()
 
     if conn_params is not None:
-        print('resetting network connectivity')
-        set_conn_params(net, conn_params)
+        print('resetting network connectivity (lamtha only)')
+        set_conn_params(net, conn_params, weights=False, lamthas=True)
 
     # when optimizing cell excitability under poisson drive, it's nice to use
     # a disconnected network
@@ -305,7 +314,6 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     """Function to minimize during optimization: err in baseline spikerates.
 
     Stage 2: optimize over local network connectivity parameters
-    Note: assumes all but the last element in opt_params is in log_10 scale.
     """
     sim_time = sim_params['sim_time']
     burn_in_time = sim_params['burn_in_time']
@@ -317,8 +325,8 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
                                         burn_in_time=burn_in_time,
                                         n_procs=n_procs,
                                         poiss_params=poiss_params,
-                                        conn_params=None,
-                                        clear_conn=True)
+                                        conn_params=opt_params.copy(),
+                                        clear_conn=False)
 
     err = err_spike_rates(net_connected, sim_time, burn_in_time,
                           target_avg_spike_rates)
