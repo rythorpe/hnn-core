@@ -12,16 +12,16 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 poiss_rate = 1e1
 poiss_params = [6.70e-04,
                 9.23e-04,
-                9.70e-04,
+                9.86e-04,
                 29.71e-04,
-                9.00e-04,
-                9.45e-04,
+                9.15e-04,
+                9.50e-04,
                 poiss_rate]
 
 n_procs = 12
-sim_time = 2200
+sim_time = 20200
 burn_in_time = 200
-n_trials = 10
+n_trials = 1
 np.random.seed(1234)
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
