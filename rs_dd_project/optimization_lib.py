@@ -33,12 +33,12 @@ def set_conn_params(net, conn_params, weights=True, lamthas=True):
     if len(net.connectivity) != n_expected_conns:
         raise ValueError('Mismatch between size of input conn_params and '
                          'and connections in Network.connectivity')
-
-    for conn_idx, conn in enumerate(net.connectivity):
+    conn_params_copy = conn_params.copy()
+    for conn in net.connectivity:
         if weights:
-            conn['nc_dict']['A_weight'] = conn_params[conn_idx * 2]
+            conn['nc_dict']['A_weight'] = conn_params_copy.pop(0)
         if lamthas:
-            conn['nc_dict']['lamtha'] = conn_params[conn_idx * 2 + 1]
+            conn['nc_dict']['lamtha'] = conn_params_copy.pop(0)
 
 
 def plot_net_response(dpls, net):
