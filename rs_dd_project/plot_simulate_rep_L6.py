@@ -149,10 +149,10 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         depression_factor = syn_depletion_factor ** rep_idx
     axes[0].arrow(rep_time + t_prox, 0, 0, arrow_height * depression_factor,
                   fc='k', ec=None,
-                  alpha=1., width=2, head_width=head_width,
+                  alpha=1., width=3, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
     axes[0].arrow(rep_time + t_dist, 1, 0, -arrow_height, fc='k', ec=None,
-                  alpha=1., width=2, head_width=head_width,
+                  alpha=1., width=3, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
 axes[0].set_ylim([0, arrow_height])
 axes[0].set_yticks([0, arrow_height])
@@ -190,7 +190,7 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
                                            spike_types=spike_type,
                                            rate=rate_factor, show=False)
 
-axes[1].set_ylabel('mean\nspikes/s')
+axes[1].set_ylabel('mean single-unit\nspikes/s')
 axes[1].set_ylim([0, 150])
 handles, _ = axes[1].get_legend_handles_labels()
 axes[1].legend(handles, ['L2/3I', 'L2/3E'], ncol=2, loc='lower center',

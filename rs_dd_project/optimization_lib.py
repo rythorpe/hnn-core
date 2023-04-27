@@ -95,7 +95,7 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
                        markers='D', ax=ax)
 
     ax.set_ylabel('layer')
-    ax.set_xlabel('mean single-unit spike rate (Hz)')
+    ax.set_xlabel('mean single-unit spikes/s')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles=handles[2:], labels=labels[2:])
 
