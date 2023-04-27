@@ -37,7 +37,7 @@ poiss_rate = 1e1
 poiss_weights = dict(L2_basket=6.70e-04, L2_pyramidal=9.23e-04,
                      L5_basket=9.86e-04, L5_pyramidal=29.71e-04,
                      L6_basket=9.15e-04, L6_pyramidal=9.50e-04)
-poiss_params = list(poiss_weights.values()).append(poiss_rate)
+poiss_params = list(poiss_weights.values()) + [poiss_rate]
 
 #min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
 min_lamtha, max_lamtha = 1., 100.
