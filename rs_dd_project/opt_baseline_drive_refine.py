@@ -12,9 +12,9 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 poiss_rate = 1e1
 poiss_params = [6.70e-04,
                 9.23e-04,
-                9.83e-04,
+                9.70e-04,
                 29.71e-04,
-                8.75e-04,
+                9.00e-04,
                 9.45e-04,
                 poiss_rate]
 
