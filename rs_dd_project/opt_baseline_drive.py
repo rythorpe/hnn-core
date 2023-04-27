@@ -63,6 +63,7 @@ target_sr_unconn = {cell: rate * 0.33 for cell, rate in
 n_procs = 32  # parallelize simulation
 sim_time = 2200  # ms
 burn_in_time = 200  # ms
+rng = np.random.default_rng(1234)
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
@@ -85,7 +86,8 @@ opt_params_bounds = [(np.log10(lb), np.log10(ub)) for lb, ub in
 ###############################################################################
 # %% prepare cost function
 sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
-              'n_procs': n_procs, 'poiss_rate_constant': poiss_rate}
+              'n_procs': n_procs, 'poiss_rate_constant': poiss_rate,
+              'rng': rng}
 opt_min_func = partial(opt_baseline_spike_rates_1,
                        net=net_original.copy(),
                        sim_params=sim_params,
@@ -139,7 +141,8 @@ poiss_params_init = [10 ** weight for weight in opt_params_0] + [poiss_rate]
 net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
                                  n_procs=n_procs,
                                  poiss_params=poiss_params_init,
-                                 clear_conn=True)
+                                 clear_conn=True,
+                                 rng=rng)
 
 fig_net_response = plot_net_response(dpls_0, net_0)
 plt.tight_layout()
@@ -154,7 +157,8 @@ fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 poiss_params = opt_params + [poiss_rate]
 net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
                              n_procs=n_procs, poiss_params=poiss_params,
-                             clear_conn=True)
+                             clear_conn=True,
+                             rng=rng)
 
 fig_net_response = plot_net_response(dpls, net)
 plt.tight_layout()

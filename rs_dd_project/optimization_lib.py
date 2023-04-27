@@ -218,9 +218,15 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
 
 
 def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
-                     poiss_params=None, conn_params=None, clear_conn=False):
+                     poiss_params=None, conn_params=None, clear_conn=False,
+                     rng=None):
     """Update network with sampled params and run simulation."""
     net = net.copy()
+    if rng is None:
+        # seed = 1234  # use with gbrt_minimize
+        seed = int(np.random.random() * 1e3)  # use with gp_minimize
+    else:
+        seed = int(rng.random() * 1e3)  # use with gp_minimize
 
     if conn_params is not None:
         print('resetting network connectivity (lamtha only)')
@@ -241,8 +247,6 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
         poiss_weights = {cell_type: weight for cell_type, weight in
                          zip(cell_types, poiss_params[:-1])}
         poiss_rate = poiss_params[-1]
-        # seed = 1234  # use with gbrt_minimize
-        seed = int(np.random.random() * 1e3)  # use with gp_minimize
         # add poisson drive with near-uniform spatial spread
         net.add_poisson_drive(name='poisson_drive',
                               rate_constant=poiss_rate,
@@ -293,6 +297,7 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
     burn_in_time = sim_params['burn_in_time']
     n_procs = sim_params['n_procs']
     poiss_rate = sim_params['poiss_rate_constant']
+    rng = sim_params['rng']
 
     # convert weight param back from log_10 scale
     poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
@@ -302,7 +307,8 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
                                       n_procs=n_procs,
                                       poiss_params=poiss_params,
                                       conn_params=None,
-                                      clear_conn=True)
+                                      clear_conn=True,
+                                      rng=rng)
 
     err = err_spike_rates(net_disconn, sim_time, burn_in_time,
                           target_avg_spike_rates)
@@ -319,6 +325,7 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     burn_in_time = sim_params['burn_in_time']
     n_procs = sim_params['n_procs']
     poiss_params = sim_params['poiss_params']
+    rng = sim_params['rng']
 
     net_connected, _ = simulate_network(net,
                                         sim_time=sim_time,
@@ -326,7 +333,8 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
                                         n_procs=n_procs,
                                         poiss_params=poiss_params,
                                         conn_params=opt_params.copy(),
-                                        clear_conn=False)
+                                        clear_conn=False,
+                                        rng=rng)
 
     err = err_spike_rates(net_connected, sim_time, burn_in_time,
                           target_avg_spike_rates)
