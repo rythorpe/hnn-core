@@ -10,11 +10,11 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
                               simulate_network, err_spike_rates)
 
 poiss_rate = 1e1
-poiss_params = [6.70e-04,
-                9.23e-04,
-                9.86e-04,
-                29.71e-04,
-                9.15e-04,
+poiss_params = [6.72e-04,
+                9.27e-04,
+                9.85e-04,
+                29.74e-04,
+                9.27e-04,
                 9.50e-04,
                 poiss_rate]
 
@@ -22,7 +22,7 @@ n_procs = 12
 sim_time = 20200
 burn_in_time = 200
 n_trials = 1
-np.random.seed(1234)
+rng = np.random.default_rng(1234)
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
@@ -42,7 +42,7 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=True,
-                             n_trials=n_trials, n_procs=n_procs)
+                             n_trials=n_trials, n_procs=n_procs, rng=rng)
 
 fig_net_response = plot_net_response(dpls, net)
 plt.tight_layout()
