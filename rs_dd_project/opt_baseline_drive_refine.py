@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
-                              simulate_network, err_spike_rates)
+                              simulate_network, err_spike_rates_logdiff)
 
 poiss_rate = 1e1
 poiss_params = [6.72e-04,
@@ -52,5 +52,5 @@ fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time,
 plt.tight_layout()
 plt.show()
 
-err = err_spike_rates(net, sim_time, burn_in_time, target_sr_unconn)
+err = err_spike_rates_logdiff(net, sim_time, burn_in_time, target_sr_unconn)
 print(f'spike rate profile error: {err}')  # compare to -17.2157 from optimization minimum

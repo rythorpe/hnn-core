@@ -266,7 +266,8 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
     return net, dpls
 
 
-def err_spike_rates(net, sim_time, burn_in_time, target_avg_spike_rates):
+def err_spike_rates_logdiff(net, sim_time, burn_in_time,
+                            target_avg_spike_rates):
     """Cost function for matching simulated vs expected avg spike rates.
 
     Used for optimizing cell excitability under poisson drive.
@@ -284,6 +285,37 @@ def err_spike_rates(net, sim_time, burn_in_time, target_avg_spike_rates):
         spike_rate_diffs.append(log_diff)
 
     return np.sum(spike_rate_diffs)
+
+
+def err_spike_rates_minnorm(net, sim_time, burn_in_time,
+                            target_avg_spike_rates):
+    """Cost function for matching simulated vs expected avg spike rates.
+
+    Used for optimizing cell excitability under poisson drive.
+    """
+    avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
+                                                   tstop=sim_time,
+                                                   gid_ranges=net.gid_ranges)
+
+    # main term: distance between observed and desired mean spike rates
+    # across cell types
+    spike_rate_diffs = list()
+    max_spike_rate_diff = 0.1
+    for cell_type in target_avg_spike_rates.keys():
+        diff = target_avg_spike_rates[cell_type] - avg_spike_rates[cell_type]
+        spike_rate_diffs.append(diff)
+    spike_rate_diff_norm = (np.linalg.norm(spike_rate_diffs) /
+                            (np.sqrt(len(spike_rate_diffs) *
+                             max_spike_rate_diff**2)))
+
+    # regularization term: minimize connection weights across connection types
+    conn_weights = get_conn_params(net.connectivity, weights=True,
+                                   lamthas=False)
+    max_weight = 1e-1
+    conn_weight_norm = (np.linalg.norm(conn_weights) /
+                        (np.sqrt(len(conn_weights) * max_weight**2)))
+
+    return spike_rate_diff_norm + (0.1 * conn_weight_norm)
 
 
 def opt_baseline_spike_rates_1(opt_params, net, sim_params,
@@ -310,8 +342,8 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
                                       clear_conn=True,
                                       rng=rng)
 
-    err = err_spike_rates(net_disconn, sim_time, burn_in_time,
-                          target_avg_spike_rates)
+    err = err_spike_rates_logdiff(net_disconn, sim_time, burn_in_time,
+                                  target_avg_spike_rates)
     return err
 
 
@@ -327,15 +359,16 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     poiss_params = sim_params['poiss_params']
     rng = sim_params['rng']
 
+    conn_params = opt_params.copy()
     net_connected, _ = simulate_network(net,
                                         sim_time=sim_time,
                                         burn_in_time=burn_in_time,
                                         n_procs=n_procs,
                                         poiss_params=poiss_params,
-                                        conn_params=opt_params.copy(),
+                                        conn_params=conn_params,
                                         clear_conn=False,
                                         rng=rng)
 
-    err = err_spike_rates(net_connected, sim_time, burn_in_time,
-                          target_avg_spike_rates)
+    err = err_spike_rates_minnorm(net_connected, sim_time, burn_in_time,
+                                  target_avg_spike_rates)
     return err
