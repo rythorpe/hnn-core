@@ -40,7 +40,7 @@ poiss_weights = dict(L2_basket=6.70e-04, L2_pyramidal=9.23e-04,
 poiss_params = list(poiss_weights.values()) + [poiss_rate]
 
 #min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
-min_lamtha, max_lamtha = 1., 100.
+min_lamtha, max_lamtha_i, max_lamtha_e = 1., 5.5, 10.0
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
