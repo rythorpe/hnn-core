@@ -61,6 +61,25 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
+opt_seq = [
+    {'varied': ['L2_basket',
+                'L2_pyramidal'],
+     'evaluated': ['L2_basket',
+                   'L2_pyramidal']},
+    {'varied': ['L5_basket',
+                'L5_pyramidal'],
+     'evaluated': ['L2_basket',
+                   'L2_pyramidal',
+                   'L5_basket',
+                   'L5_pyramidal']},
+    {'varied': ['L6_basket', 'L6_pyramidal'],
+     'evaluated': ['L2_basket',
+                   'L2_pyramidal',
+                   'L5_basket',
+                   'L5_pyramidal',
+                   'L6_basket',
+                   'L6_pyramidal']}
+]
 opt_n_init_points = 100  # < opt_n_total_calls
 opt_n_total_calls = 500
 
