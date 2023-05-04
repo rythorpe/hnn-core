@@ -85,8 +85,11 @@ opt_n_total_calls = 500
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
-opt_params_0 = get_conn_params(net_original.connectivity, weights=False,
-                               lamthas=True)
+opt_params_0, src_cell_types, targ_cell_types = get_conn_params(
+    net_original.connectivity,
+    weights=False,
+    lamthas=True
+)
 
 # local network connectivity lamtha bounds
 opt_params_bounds = np.tile([min_lamtha, max_lamtha],

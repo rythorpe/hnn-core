@@ -14,12 +14,17 @@ from hnn_core.viz import plot_dipole
 def get_conn_params(loc_net_connections, weights=True, lamthas=True):
     """Get optimization parameters from Network.connectivity attribute."""
     conn_params = list()
+    src_cell_types = list()
+    targ_cell_types = list()
     for conn in loc_net_connections:
         if weights:
             conn_params.append(np.log10(conn['nc_dict']['A_weight']))
         if lamthas:
             conn_params.append(conn['nc_dict']['lamtha'])
-    return conn_params
+        src_cell_types.append(conn['src_type'])
+        targ_cell_types.append(conn['target_type'])
+    return (np.array(conn_params), np.array(src_cell_types),
+            np.array(targ_cell_types))
 
 
 def set_conn_params(net, conn_params, weights=True, lamthas=True):
@@ -287,7 +292,7 @@ def err_spike_rates_logdiff(net, sim_time, burn_in_time,
     return np.sum(spike_rate_diffs)
 
 
-def err_spike_rates_minnorm(net, sim_time, burn_in_time,
+def err_spike_rates_minnorm(net, conn_weights, sim_time, burn_in_time,
                             target_avg_spike_rates):
     """Cost function for matching simulated vs expected avg spike rates.
 
@@ -309,8 +314,6 @@ def err_spike_rates_minnorm(net, sim_time, burn_in_time,
                              max_spike_rate_diff**2)))
 
     # regularization term: minimize connection weights across connection types
-    conn_weights = get_conn_params(net.connectivity, weights=True,
-                                   lamthas=False)
     max_weight = 1e-1
     conn_weight_norm = (np.linalg.norm(conn_weights) /
                         (np.sqrt(len(conn_weights) * max_weight**2)))
@@ -358,6 +361,7 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     n_procs = sim_params['n_procs']
     poiss_params = sim_params['poiss_params']
     rng = sim_params['rng']
+    varied_cell_types = sim_params['varied_cell_types']
 
     conn_params = opt_params.copy()
     net_connected, _ = simulate_network(net,
@@ -369,6 +373,17 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
                                         clear_conn=False,
                                         rng=rng)
 
-    err = err_spike_rates_minnorm(net_connected, sim_time, burn_in_time,
+    # penalize cost function for large connection weights
+    conn_weights, src_cell_types, targ_cell_types = get_conn_params(
+        net_connected.connectivity,
+        weights=True,
+        lamthas=False
+    )
+    src_mask = np.in1d(src_cell_types, varied_cell_types)
+    targ_mask = np.in1d(targ_cell_types, varied_cell_types)
+    varied_conn_weights = conn_weights[np.logical_and(src_mask, targ_mask)]
+
+    err = err_spike_rates_minnorm(net_connected, varied_conn_weights,
+                                  sim_time, burn_in_time,
                                   target_avg_spike_rates)
     return err
