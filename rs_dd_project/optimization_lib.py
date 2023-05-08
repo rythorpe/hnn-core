@@ -13,18 +13,22 @@ from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.viz import plot_dipole
 
 
-def get_conn_params(loc_net_connections, weights=True, lamthas=True):
+def get_conn_params(loc_net_connections, weights=True, lamthas=True,
+                    cell_types='all'):
     """Get optimization parameters from Network.connectivity attribute."""
     conn_params = list()
     src_cell_types = list()
     targ_cell_types = list()
     for conn in loc_net_connections:
-        if weights:
-            conn_params.append(np.log10(conn['nc_dict']['A_weight']))
-        if lamthas:
-            conn_params.append(conn['nc_dict']['lamtha'])
-        src_cell_types.append(conn['src_type'])
-        targ_cell_types.append(conn['target_type'])
+        in_population = cell_types is 'all' or (conn['src_type'] in cell_types
+                                                and conn['target_type'] in cell_types)
+        if in_population:
+            if weights:
+                conn_params.append(np.log10(conn['nc_dict']['A_weight']))
+            if lamthas:
+                conn_params.append(conn['nc_dict']['lamtha'])
+            src_cell_types.append(conn['src_type'])
+            targ_cell_types.append(conn['target_type'])
     return (np.array(conn_params), np.array(src_cell_types),
             np.array(targ_cell_types))
 
@@ -323,7 +327,8 @@ def err_spike_rates_minnorm(net, conn_weights, sim_time, burn_in_time,
     conn_weight_norm = (np.linalg.norm(conn_weights) /
                         (np.sqrt(len(conn_weights) * max_weight**2)))
 
-    return spike_rate_diff_norm + (0.1 * conn_weight_norm)
+    # XXX set regulization constant to 0.0 for now
+    return spike_rate_diff_norm + (0.0 * conn_weight_norm)
 
 
 def opt_baseline_spike_rates_1(opt_params, net, sim_params,
