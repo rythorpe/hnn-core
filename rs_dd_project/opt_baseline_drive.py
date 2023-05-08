@@ -17,15 +17,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from skopt import gp_minimize, gbrt_minimize
-from skopt.plots import plot_convergence, plot_objective
+from skopt.plots import plot_objective
 
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
-                              simulate_network, opt_baseline_spike_rates_1)
+                              simulate_network, opt_baseline_spike_rates_1,
+                              plot_convergence)
 
 ###############################################################################
 # %% set parameters
 output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
+#output_dir = '/home/ryan/Desktop/stuff'
 
 # drive parameters
 # note that basket cells and pyramidal cells require different amounts of AMPA
@@ -114,7 +116,8 @@ opt_results = gp_minimize(func=opt_min_func,
                           acq_optimizer='lbfgs',
                           verbose=True,
                           random_state=1234)
-opt_params = opt_results.x
+# get the last min of the surrogate function, not the min sampled observation
+opt_params = opt_results.x_iters[-1]
 # convert param back from log_10 scale
 opt_params = [10 ** weight for weight in opt_params]
 header = [weight + '_weight' for weight in poiss_weights_ub]
@@ -130,7 +133,7 @@ fig_converge = ax_converg.get_figure()
 plt.tight_layout()
 fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
-ax_objective = plot_objective(opt_results)
+ax_objective = plot_objective(opt_results, minimum='expected_minimum')
 fig_objective = ax_objective[0, 0].get_figure()
 plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
