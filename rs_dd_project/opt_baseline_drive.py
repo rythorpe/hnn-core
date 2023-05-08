@@ -112,7 +112,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           initial_point_generator='lhs',  # sobol; params<40
                           acq_func='EI',
                           acq_optimizer='lbfgs',
-                          noise=0.01,
+                          noise=0.001,
                           verbose=True,
                           random_state=1234)
 opt_params = opt_results.x
