@@ -19,7 +19,7 @@ poiss_params = [6.72e-04,
                 poiss_rate]
 
 n_procs = 12
-sim_time = 20200
+sim_time = 2200
 burn_in_time = 200
 n_trials = 1
 rng = np.random.default_rng(1234)
