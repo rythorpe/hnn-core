@@ -114,7 +114,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           initial_point_generator='lhs',  # sobol; params<40
                           acq_func='EI',
                           acq_optimizer='lbfgs',
-                          noise=0.1,
+                          noise=0.01,
                           verbose=True,
                           random_state=1234)
 # get the last min of the surrogate function, not the min sampled observation
