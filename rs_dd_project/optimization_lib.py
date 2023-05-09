@@ -20,8 +20,9 @@ def get_conn_params(loc_net_connections, weights=True, lamthas=True,
     src_cell_types = list()
     targ_cell_types = list()
     for conn in loc_net_connections:
-        in_population = cell_types is 'all' or (conn['src_type'] in cell_types
-                                                and conn['target_type'] in cell_types)
+        in_population = (cell_types == 'all' or
+                         (conn['src_type'] in cell_types and
+                          conn['target_type'] in cell_types))
         if in_population:
             if weights:
                 conn_params.append(np.log10(conn['nc_dict']['A_weight']))
