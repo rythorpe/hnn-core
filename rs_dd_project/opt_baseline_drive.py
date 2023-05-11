@@ -43,9 +43,6 @@ poiss_weights_lb = OrderedDict(L2_basket=4.8e-4, L2_pyramidal=6.2e-4,
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
 poiss_rate = 1e1
-min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
-min_lamtha, max_lamtha = 1., 100.
-min_rate, max_rate = 1., 100.
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
@@ -75,15 +72,9 @@ opt_n_total_calls = 300  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
-#opt_params_0 = get_conn_params(net_original.connectivity)
-# poisson drive synaptic weight initial conditions; log_10 scale
-opt_params_0 = [np.log10(weight) for weight in poiss_weights_ub.values()]
-# poisson drive synaptic weight bounds
-#opt_params_bounds = np.tile([min_weight, max_weight],
-#                            (len(poiss_weights_0), 1)).tolist()
-# log_10 scale
-opt_params_bounds = [(np.log10(lb), np.log10(ub)) for lb, ub in
-                     zip(poiss_weights_lb.values(), poiss_weights_ub.values())]
+opt_params_0 = list(poiss_weights_ub.values())
+opt_params_bounds = list(zip(poiss_weights_lb.values(),
+                             poiss_weights_ub.values()))
 
 ###############################################################################
 # %% prepare cost function
@@ -122,8 +113,7 @@ opt_results = gp_minimize(func=opt_min_func,
 # get the location and value of the expected minimum of the surrogate function
 ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
                                       random_state=1234)
-# convert param back from log_10 scale
-opt_params = [10 ** weight for weight in ev_params]
+opt_params = ev_params.copy()
 header = [weight + '_weight' for weight in poiss_weights_ub]
 header = ','.join(header)
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
@@ -138,14 +128,13 @@ fig_converge = ax_converg.get_figure()
 plt.tight_layout()
 fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
-ax_objective = plot_objective(opt_results, minimum='expected_minimum', sample_source='expected_minimum')
+ax_objective = plot_objective(opt_results, minimum='expected_minimum')
 fig_objective = ax_objective[0, 0].get_figure()
 plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
-# first convert weight params back from log_10 scale
-poiss_params_init = [10 ** weight for weight in opt_params_0] + [poiss_rate]
+poiss_params_init = opt_params_0 + [poiss_rate]
 net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
                                  n_procs=n_procs,
                                  poiss_params=poiss_params_init,

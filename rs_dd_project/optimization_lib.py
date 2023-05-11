@@ -347,7 +347,8 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
     rng = sim_params['rng']
 
     # convert weight param back from log_10 scale
-    poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
+    #poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
+    poiss_params = np.append(np.array(opt_params), poiss_rate)
     net_disconn, _ = simulate_network(net,
                                       sim_time=sim_time,
                                       burn_in_time=burn_in_time,
