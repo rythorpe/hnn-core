@@ -5,6 +5,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import OptimizeResult
+from skopt import expected_minimum
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import seaborn as sns

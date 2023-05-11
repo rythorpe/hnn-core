@@ -16,7 +16,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from skopt import gp_minimize, gbrt_minimize
+from skopt import gp_minimize, gbrt_minimize, expected_minimum
 from skopt.plots import plot_objective
 
 from hnn_core.network_models import L6_model
@@ -118,14 +118,18 @@ opt_results = gp_minimize(func=opt_min_func,
                           verbose=True,
                           random_state=1234)
 # get the last min of the surrogate function, not the min sampled observation
-opt_params = opt_results.x_iters[-1]
+#opt_params = opt_results.x_iters[-1]
+# get the location and value of the expected minimum of the surrogate function
+ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
+                                      random_state=1234)
 # convert param back from log_10 scale
-opt_params = [10 ** weight for weight in opt_params]
+opt_params = [10 ** weight for weight in ev_params]
 header = [weight + '_weight' for weight in poiss_weights_ub]
 header = ','.join(header)
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
            X=[opt_params], delimiter=',', header=header)
 print(f'poiss_weights: {opt_params}')
+print(f'distance from target: {ev_cost}')
 
 ###############################################################################
 # %% plot results
@@ -134,7 +138,7 @@ fig_converge = ax_converg.get_figure()
 plt.tight_layout()
 fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
-ax_objective = plot_objective(opt_results, minimum='expected_minimum')
+ax_objective = plot_objective(opt_results, minimum='expected_minimum', sample_source='expected_minimum')
 fig_objective = ax_objective[0, 0].get_figure()
 plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
