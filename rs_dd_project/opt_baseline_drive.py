@@ -33,13 +33,12 @@ output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
 # drive parameters
 # note that basket cells and pyramidal cells require different amounts of AMPA
 # excitatory current in order to drive a spike
-poiss_weights_ub = OrderedDict(L2_basket=10e-4, L2_pyramidal=40e-4,
-                               L5_basket=10e-4, L5_pyramidal=40e-4,
-                               L6_basket=10e-4, L6_pyramidal=40e-4)
-
 poiss_weights_lb = OrderedDict(L2_basket=4.8e-4, L2_pyramidal=6.2e-4,
                                L5_basket=4.8e-4, L5_pyramidal=20.5e-4,
                                L6_basket=4.8e-4, L6_pyramidal=6.2e-4)
+poiss_weights_ub = OrderedDict(L2_basket=10e-4, L2_pyramidal=40e-4,
+                               L5_basket=10e-4, L5_pyramidal=40e-4,
+                               L6_basket=10e-4, L6_pyramidal=40e-4)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
@@ -74,7 +73,7 @@ opt_n_total_calls = 600  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
-opt_params_0 = list(poiss_weights_lb.values())
+opt_params_0 = list(poiss_weights_ub.values())
 opt_params_bounds = list(zip(poiss_weights_lb.values(),
                              poiss_weights_ub.values()))
 
