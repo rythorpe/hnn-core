@@ -382,6 +382,11 @@ def pyramidal(cell_name, pos=(0, 0, 0), override_params=None, gid=None):
         # use same template as for L2Pyr
         L6Pyr = _cell_L2Pyr(override_params, pos=pos, gid=gid)
         L6Pyr.name = 'L6Pyr'
+        # apical dendrite gets proximal input
+        # basal dendrites get deep_basal input
+        L6Pyr.sect_loc = {'proximal': ['apical_tuft'],
+                          'deep_basal': ['apical_oblique', 'basal_2',
+                                         'basal_3']}
         return L6Pyr
     else:
         raise ValueError(f'Unknown pyramidal cell type: {cell_name}')

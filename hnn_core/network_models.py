@@ -358,19 +358,21 @@ def L6_model(params=None, add_drives_from_params=False,
 
     if connect_layer_6:
         # layer5 Pyr -> layer6 Pyr
+        weight = 0.00005
+        for loc in ['proximal', 'deep_basal']:
+            net.add_connection(src_gids='L5_pyramidal',
+                               target_gids='L6_pyramidal',
+                               loc=loc,
+                               receptor='ampa',
+                               weight=weight,
+                               delay=delay,
+                               lamtha=10.,
+                               probability=0.33)  # defuse excitatory input from L5
         net.add_connection(src_gids='L5_pyramidal',
                            target_gids='L6_pyramidal',
-                           loc='distal',
-                           receptor='ampa',
-                           weight=0.00005,
-                           delay=delay,
-                           lamtha=10.,
-                           probability=0.33)  # defuse excitatory input from L5
-        net.add_connection(src_gids='L5_pyramidal',
-                           target_gids='L6_pyramidal',
-                           loc='distal',
+                           loc='deep_basal',
                            receptor='nmda',
-                           weight=0.00005,
+                           weight=weight,
                            delay=delay,
                            lamtha=10.,
                            probability=0.33)  # defuse excitatory input from L5
@@ -378,14 +380,14 @@ def L6_model(params=None, add_drives_from_params=False,
         # layer6 Pyr -> layer6 Pyr
         net.add_connection(src_gids='L6_pyramidal',
                            target_gids='L6_pyramidal',
-                           loc='proximal',
+                           loc='deep_basal',
                            receptor='ampa',
                            weight=0.0001,
                            delay=delay,
                            lamtha=3.)
         net.add_connection(src_gids='L6_pyramidal',
                            target_gids='L6_pyramidal',
-                           loc='proximal',
+                           loc='deep_basal',
                            receptor='nmda',
                            weight=0.00005,
                            delay=delay,
