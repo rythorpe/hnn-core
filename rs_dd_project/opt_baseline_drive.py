@@ -73,7 +73,9 @@ opt_n_total_calls = 600  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
-opt_params_0 = list(poiss_weights_ub.values())
+lb = np.array(poiss_weights_lb.values())
+ub = np.array(poiss_weights_ub.values())
+opt_params_0 = ub - (ub - lb) / 2
 opt_params_bounds = list(zip(poiss_weights_lb.values(),
                              poiss_weights_ub.values()))
 
