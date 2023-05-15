@@ -113,10 +113,10 @@ opt_results = optimize.minimize(fun=opt_min_func,
                                 x0=opt_params_0,
                                 bounds=opt_params_bounds,
                                 method='Nelder-Mead',
-                                maxiter=opt_n_total_calls,
-                                maxfev=opt_n_total_calls,
-                                xatol=1e-6,
-                                disp=True)
+                                options=dict(maxiter=opt_n_total_calls,
+                                             maxfev=opt_n_total_calls,
+                                             xatol=1e-6,
+                                             disp=True))
 opt_params = list(opt_results.x)
 # get the last min of the surrogate function, not the min sampled observation
 #opt_params = opt_results.x_iters[-1]
