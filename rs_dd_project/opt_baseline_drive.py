@@ -16,6 +16,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from scipy import optimize
 from skopt import gp_minimize, gbrt_minimize, expected_minimum
 from skopt.plots import plot_objective
 
@@ -32,9 +33,9 @@ output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
 # drive parameters
 # note that basket cells and pyramidal cells require different amounts of AMPA
 # excitatory current in order to drive a spike
-poiss_weights_ub = OrderedDict(L2_basket=1e-3, L2_pyramidal=4e-3,
-                               L5_basket=1e-3, L5_pyramidal=4e-3,
-                               L6_basket=1e-3, L6_pyramidal=4e-3)
+poiss_weights_ub = OrderedDict(L2_basket=10e-4, L2_pyramidal=40e-4,
+                               L5_basket=10e-4, L5_pyramidal=40e-4,
+                               L6_basket=10e-4, L6_pyramidal=40e-4)
 
 poiss_weights_lb = OrderedDict(L2_basket=4.8e-4, L2_pyramidal=6.2e-4,
                                L5_basket=4.8e-4, L5_pyramidal=20.5e-4,
@@ -72,7 +73,7 @@ opt_n_total_calls = 300  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
-opt_params_0 = list(poiss_weights_ub.values())
+opt_params_0 = list(poiss_weights_lb.values())
 opt_params_bounds = list(zip(poiss_weights_lb.values(),
                              poiss_weights_ub.values()))
 
@@ -97,44 +98,56 @@ opt_min_func = partial(opt_baseline_spike_rates_1,
 #                            initial_point_generator='lhs',  # sobol, params<40
 #                            verbose=True,
 #                            random_state=1234)
-opt_results = gp_minimize(func=opt_min_func,
-                          dimensions=opt_params_bounds,
-                          x0=None,  # opt_params_0
-                          n_calls=opt_n_total_calls,
-                          n_initial_points=opt_n_init_points,
-                          initial_point_generator='lhs',  # sobol; params<40
-                          acq_func='EI',
-                          acq_optimizer='lbfgs',
-                          xi=1e-6,
-                          verbose=True,
-                          random_state=1234)
+#opt_results = gp_minimize(func=opt_min_func,
+#                          dimensions=opt_params_bounds,
+#                          x0=None,  # opt_params_0
+#                          n_calls=opt_n_total_calls,
+#                          n_initial_points=opt_n_init_points,
+#                          initial_point_generator='lhs',  # sobol; params<40
+#                          acq_func='EI',
+#                          acq_optimizer='lbfgs',
+#                          xi=1e-6,
+#                          verbose=True,
+#                          random_state=1234)
+opt_results = optimize.minimize(fun=opt_min_func,
+                                x0=opt_params_0,
+                                bounds=opt_params_bounds,
+                                method='Nelder-Mead',
+                                maxiter=opt_n_total_calls,
+                                maxfev=opt_n_total_calls,
+                                xatol=1e-6,
+                                disp=True)
+opt_params = list(opt_results.x)
 # get the last min of the surrogate function, not the min sampled observation
 #opt_params = opt_results.x_iters[-1]
 # get the location and value of the expected minimum of the surrogate function
-ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
-                                      random_state=1234)
-opt_params = ev_params.copy()
+#ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
+#                                      random_state=1234)
+#opt_params = ev_params.copy()
 header = [weight + '_weight' for weight in poiss_weights_ub]
 header = ','.join(header)
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
            X=[opt_params], delimiter=',', header=header)
 print(f'poiss_weights: {opt_params}')
-print(f'distance from target: {ev_cost}')
+#print(f'distance from target: {ev_cost}')
+print(f'Nelder-Mead success: {opt_results.success}')
+print(opt_results.message)
 
 ###############################################################################
 # %% plot results
-ax_converg = plot_convergence(opt_results, ax=None)
-fig_converge = ax_converg.get_figure()
-plt.tight_layout()
-fig_converge.savefig(op.join(output_dir, 'convergence.png'))
+#ax_converg = plot_convergence(opt_results, ax=None)
+#fig_converge = ax_converg.get_figure()
+#plt.tight_layout()
+#fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
-ax_objective = plot_objective(opt_results, minimum='expected_minimum')
-fig_objective = ax_objective[0, 0].get_figure()
-plt.tight_layout()
-fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
+#ax_objective = plot_objective(opt_results, minimum='expected_minimum')
+#fig_objective = ax_objective[0, 0].get_figure()
+#plt.tight_layout()
+#fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
 poiss_params_init = opt_params_0 + [poiss_rate]
+rng = np.random.default_rng(1234)
 net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
                                  n_procs=n_procs,
                                  poiss_params=poiss_params_init,
@@ -152,6 +165,7 @@ fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
 # post-optimization
 poiss_params = opt_params + [poiss_rate]
+rng = np.random.default_rng(1234)
 net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
                              n_procs=n_procs, poiss_params=poiss_params,
                              clear_conn=True,
