@@ -237,10 +237,12 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
     net = net.copy()
     # induce variation between simulations (aside from parameter exploration)
     if rng is None:
-        # seed = 1234  # use with gbrt_minimize
-        seed = np.randint(0, np.iinfo(np.int32).max)
-    else:
-        seed = rng.integers(0, np.iinfo(np.int32).max)
+        # define new generator with default seed
+        rng = np.random.default_rng()
+    elif isinstance(rng, int):
+        # define new generator with constant seed (e.g., use w/gbrt_minimize)
+        rng = np.random.default_rng(rng)
+    seed = rng.integers(0, np.iinfo(np.int32).max)
 
     if conn_params is not None:
         print('resetting network connectivity (lamtha only)')
