@@ -32,7 +32,7 @@ _CVODE = None
 _LAST_NETWORK = None
 
 
-def _simulate_single_trial(net, tstop, dt, trial_idx):
+def _simulate_single_trial(net, tstop, dt, trial_idx, verbose=False):
     """Simulate one trial including building the network
 
     This is used by both backends. MPIBackend calls this in mpi_child.py, once
@@ -69,7 +69,7 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
     def simulation_time():
         print(f'Trial {trial_idx + 1}: {round(h.t, 2)} ms...')
 
-    if rank == 0:
+    if rank == 0 and verbose:
         for tt in range(0, int(h.tstop), 10):
             _CVODE.event(tt, simulation_time)
 
@@ -162,7 +162,7 @@ def load_custom_mechanisms():
         raise FileNotFoundError(f'No .so or .dll file found in {mod_dir}')
 
     h.nrn_load_dll(mech_fname[0])
-    print('Loading custom mechanism files from %s' % mech_fname[0])
+    #print('Loading custom mechanism files from %s' % mech_fname[0])
     if not _is_loaded_mechanisms():
         raise ValueError('The custom mechanisms could not be loaded')
 

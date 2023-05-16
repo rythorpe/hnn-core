@@ -727,6 +727,7 @@ class MPIBackend(object):
 
         env = _get_mpi_env()
 
+        print("Simulation started....")
         self.proc, sim_data = run_subprocess(
             command=self.mpi_cmd, obj=[net, tstop, dt, n_trials], timeout=30,
             proc_queue=self.proc_queue, env=env, cwd=os.getcwd(),
@@ -735,6 +736,8 @@ class MPIBackend(object):
         dpls = _gather_trial_data(sim_data=sim_data, net=net,
                                   n_trials=n_trials, postproc=postproc,
                                   baseline_win=baseline_win)
+
+        print("Simulation complete.")
         return dpls
 
     def terminate(self):
