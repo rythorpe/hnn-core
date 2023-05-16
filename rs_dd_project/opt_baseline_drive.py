@@ -33,12 +33,12 @@ output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
 # drive parameters
 # note that basket cells and pyramidal cells require different amounts of AMPA
 # excitatory current in order to drive a spike
-poiss_weights_lb = OrderedDict(L2_basket=4.8e-4, L2_pyramidal=6.2e-4,
-                               L5_basket=4.8e-4, L5_pyramidal=20.5e-4,
-                               L6_basket=4.8e-4, L6_pyramidal=6.2e-4)
-poiss_weights_ub = OrderedDict(L2_basket=10e-4, L2_pyramidal=40e-4,
+poiss_weights_lb = OrderedDict(L2_basket=5e-4, L2_pyramidal=6e-4,
+                               L5_basket=5e-4, L5_pyramidal=20e-4,
+                               L6_basket=5e-4, L6_pyramidal=6e-4)
+poiss_weights_ub = OrderedDict(L2_basket=10e-4, L2_pyramidal=20e-4,
                                L5_basket=10e-4, L5_pyramidal=40e-4,
-                               L6_basket=10e-4, L6_pyramidal=40e-4)
+                               L6_basket=10e-4, L6_pyramidal=20e-4)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
 # disconnected network
@@ -69,13 +69,11 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
 
 # opt parameters
 opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 600  # >opt_n_init_points
+opt_n_total_calls = 500  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
-lb = np.array(list(poiss_weights_lb.values()))
-ub = np.array(list(poiss_weights_ub.values()))
-opt_params_0 = ub - (ub - lb) / 2
+opt_params_0 = list(poiss_weights_ub.values())
 opt_params_bounds = list(zip(poiss_weights_lb.values(),
                              poiss_weights_ub.values()))
 
@@ -100,52 +98,42 @@ opt_min_func = partial(opt_baseline_spike_rates_1,
 #                            initial_point_generator='lhs',  # sobol, params<40
 #                            verbose=True,
 #                            random_state=1234)
-#opt_results = gp_minimize(func=opt_min_func,
-#                          dimensions=opt_params_bounds,
-#                          x0=None,  # opt_params_0
-#                          n_calls=opt_n_total_calls,
-#                          n_initial_points=opt_n_init_points,
-#                          initial_point_generator='lhs',  # sobol; params<40
-#                          acq_func='EI',
-#                          acq_optimizer='lbfgs',
-#                          xi=1e-6,
-#                          verbose=True,
-#                          random_state=1234)
-opt_results = optimize.minimize(fun=opt_min_func,
-                                x0=opt_params_0,
-                                bounds=opt_params_bounds,
-                                method='Nelder-Mead',
-                                options=dict(maxiter=opt_n_total_calls,
-                                             maxfev=opt_n_total_calls,
-                                             xatol=1e-6,
-                                             disp=True))
-opt_params = list(opt_results.x)
+opt_results = gp_minimize(func=opt_min_func,
+                          dimensions=opt_params_bounds,
+                          x0=None,  # opt_params_0
+                          n_calls=opt_n_total_calls,
+                          n_initial_points=opt_n_init_points,
+                          initial_point_generator='lhs',  # sobol; params<40
+                          acq_func='EI',
+                          acq_optimizer='lbfgs',
+                          xi=1e-6,
+                          verbose=True,
+                          random_state=1)
+
 # get the last min of the surrogate function, not the min sampled observation
 #opt_params = opt_results.x_iters[-1]
 # get the location and value of the expected minimum of the surrogate function
-#ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
-#                                      random_state=1234)
-#opt_params = ev_params.copy()
+ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
+                                      random_state=1)
+opt_params = ev_params.copy()
 header = [weight + '_weight' for weight in poiss_weights_ub]
 header = ','.join(header)
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
            X=[opt_params], delimiter=',', header=header)
 print(f'poiss_weights: {opt_params}')
-#print(f'distance from target: {ev_cost}')
-print(f'Nelder-Mead success: {opt_results.success}')
-print(opt_results.message)
+print(f'distance from target: {ev_cost}')
 
 ###############################################################################
 # %% plot results
-#ax_converg = plot_convergence(opt_results, ax=None)
-#fig_converge = ax_converg.get_figure()
-#plt.tight_layout()
-#fig_converge.savefig(op.join(output_dir, 'convergence.png'))
+ax_converg = plot_convergence(opt_results, ax=None)
+fig_converge = ax_converg.get_figure()
+plt.tight_layout()
+fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
-#ax_objective = plot_objective(opt_results, minimum='expected_minimum')
-#fig_objective = ax_objective[0, 0].get_figure()
-#plt.tight_layout()
-#fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
+ax_objective = plot_objective(opt_results, minimum='expected_minimum')
+fig_objective = ax_objective[0, 0].get_figure()
+plt.tight_layout()
+fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
 poiss_params_init = np.append(opt_params_0, poiss_rate)
