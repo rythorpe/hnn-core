@@ -32,7 +32,7 @@ _CVODE = None
 _LAST_NETWORK = None
 
 
-def _simulate_single_trial(net, tstop, dt, trial_idx, verbose=False):
+def _simulate_single_trial(net, tstop, dt, trial_idx):
     """Simulate one trial including building the network
 
     This is used by both backends. MPIBackend calls this in mpi_child.py, once
@@ -67,10 +67,11 @@ def _simulate_single_trial(net, tstop, dt, trial_idx, verbose=False):
     h.finitialize()
 
     def simulation_time():
-        print(f'Trial {trial_idx + 1}: {round(h.t, 2)} ms...')
+        print(f'Trial {trial_idx + 1}: {round(100 * h.t / h.tstop)}%')
 
-    if rank == 0 and verbose:
-        for tt in range(0, int(h.tstop), 10):
+    if rank == 0:
+        print('Starting simulation...')
+        for tt in np.linspace(0, int(h.tstop), 11):
             _CVODE.event(tt, simulation_time)
 
     h.fcurrent()

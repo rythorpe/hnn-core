@@ -727,7 +727,6 @@ class MPIBackend(object):
 
         env = _get_mpi_env()
 
-        print("Simulation started....")
         self.proc, sim_data = run_subprocess(
             command=self.mpi_cmd, obj=[net, tstop, dt, n_trials], timeout=30,
             proc_queue=self.proc_queue, env=env, cwd=os.getcwd(),
