@@ -358,13 +358,13 @@ def L6_model(params=None, add_drives_from_params=False,
 
     if connect_layer_6:
         # layer5 Pyr -> layer6 Pyr
-        weight = 0.00005
+        weight_L5_L6 = 0.00005
         for loc in ['proximal', 'deep_basal']:
             net.add_connection(src_gids='L5_pyramidal',
                                target_gids='L6_pyramidal',
                                loc=loc,
                                receptor='ampa',
-                               weight=weight,
+                               weight=weight_L5_L6,
                                delay=delay,
                                lamtha=10.,
                                probability=0.33)  # defuse excitatory input from L5
@@ -372,7 +372,7 @@ def L6_model(params=None, add_drives_from_params=False,
                            target_gids='L6_pyramidal',
                            loc='deep_basal',
                            receptor='nmda',
-                           weight=weight,
+                           weight=weight_L5_L6,
                            delay=delay,
                            lamtha=10.,
                            probability=0.33)  # defuse excitatory input from L5

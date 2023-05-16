@@ -65,11 +65,11 @@ net = L6_model(connect_layer_6=True, legacy_mode=False,
 
 # prox drive weights and delays
 weights_ampa_prox = {'L2_basket': 0.100, 'L2_pyramidal': 0.200,
-                     'L5_basket': 0.030, 'L5_pyramidal': 0.008}
+                     'L5_basket': 0.030, 'L5_pyramidal': 0.008,
+                     'L6_pyramidal': 0.01}
 synaptic_delays_prox = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
-                        'L5_basket': 1., 'L5_pyramidal': 1.}
-weights_ampa_prox_L6 = {'L6_pyramidal': 0.01}
-synaptic_delays_prox_L6 = 0.1
+                        'L5_basket': 1., 'L5_pyramidal': 1.,
+                        'L6_pyramidal': 0.1}
 # dist drive weights and delays
 weights_ampa_dist = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
                      'L5_pyramidal': 0.100}
@@ -102,13 +102,6 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         f'evprox_rep{rep_idx}', mu=rep_time + t_prox, sigma=2.47, numspikes=1,
         weights_ampa=weights_ampa_prox, weights_nmda=None,
         location='proximal', synaptic_delays=synaptic_delays_prox,
-        probability=prox_conn_prob * depression_factor,
-        conn_seed=conn_seed, event_seed=event_seed)
-    # Hack: prox drive should also target the distal projections of L6 Pyr
-    net.add_evoked_drive(
-        f'evprox_rep{rep_idx}_L6', mu=rep_time + t_prox, sigma=2.47,
-        numspikes=1, weights_ampa=weights_ampa_prox_L6,
-        location='distal', synaptic_delays=synaptic_delays_prox_L6,
         probability=prox_conn_prob * depression_factor,
         conn_seed=conn_seed, event_seed=event_seed)
 
@@ -178,10 +171,8 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
             # (note that each drive has it's own set of artificial cell gids,
             # so the total artifical cell count is inflated compared to the
             # number of L4 stellate cells they represent)
-            n_cells_of_type = (
-                net.external_drives['evprox_rep0']['n_drive_cells'] +
-                net.external_drives['evprox_rep0_L6']['n_drive_cells']
-            )
+            n_cells_of_type = \
+                net.external_drives['evprox_rep0']['n_drive_cells']
         else:
             n_cells_of_type = len(net.gid_ranges[spike_type])
         rate_factor = 1 / n_cells_of_type
