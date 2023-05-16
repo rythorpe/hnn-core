@@ -296,13 +296,16 @@ def err_spike_rates_logdiff(net, sim_time, burn_in_time,
     for cell_type in target_avg_spike_rates.keys():
         # convert to log_10 scale to amplify distances close to zero
         # add distance to a number close to 0 to avoid instability as diff -> 0
-        #log_diff = np.log10(1e-6 + (target_avg_spike_rates[cell_type] -
-        #                    avg_spike_rates[cell_type]) ** 2)
-        #spike_rate_diffs.append(log_diff)
-        spike_rate_diffs.append(target_avg_spike_rates[cell_type] -
-                                avg_spike_rates[cell_type])
+        log_diff = np.log10(1e-6 + (target_avg_spike_rates[cell_type] -
+                            avg_spike_rates[cell_type]) ** 2)
+        spike_rate_diffs.append(log_diff)
+        # spike_rate_diffs.append(target_avg_spike_rates[cell_type] -
+        #                         avg_spike_rates[cell_type])
 
-    return np.linalg.norm(spike_rate_diffs)
+    # return np.linalg.norm(spike_rate_diffs)
+    min_log_diff = -6 * len(target_avg_spike_rates)  # theoretic minimum
+    # offset so theoretic min is at zero
+    return sum(spike_rate_diffs) - min_log_diff
 
 
 def err_spike_rates_minnorm(net, conn_weights, sim_time, burn_in_time,
