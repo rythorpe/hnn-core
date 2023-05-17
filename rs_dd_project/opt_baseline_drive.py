@@ -154,8 +154,10 @@ fig_net_response = plot_net_response(dpls_0, net_0)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'pre_opt_sim.png'))
 
-fig_sr_profiles = plot_spiking_profiles(net_0, sim_time, burn_in_time,
-                                        target_spike_rates=target_sr_unconn)
+fig_sr_profiles = plot_spiking_profiles(
+    net_0, sim_time, burn_in_time, target_spike_rates_1=target_sr_unconn,
+    target_spike_rates_2=target_avg_spike_rates
+)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
@@ -171,8 +173,10 @@ fig_net_response = plot_net_response(dpls, net)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'post_opt_sim.png'))
 
-fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time,
-                                        target_spike_rates=target_sr_unconn)
+fig_sr_profiles = plot_spiking_profiles(
+    net, sim_time, burn_in_time, target_spike_rates_1=target_sr_unconn,
+    target_spike_rates_2=target_avg_spike_rates
+)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'post_opt_spikerate_profile.png'))
 

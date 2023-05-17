@@ -68,7 +68,8 @@ def plot_net_response(dpls, net):
     return fig
 
 
-def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
+def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates_1,
+                          target_spike_rates_2):
     # custom_params = {"axes.spines.right": False, "axes.spines.top": False}
     # sns.set_theme(style="ticks", rc=custom_params)
 
@@ -84,7 +85,8 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
     pop_layer = list()
     pop_cell_type = list()
     pop_spike_rates = list()
-    pop_targets = list()
+    pop_targets_1 = list()
+    pop_targets_2 = list()
     for cell_type in net.cell_types:
         if 'basket' in cell_type:
             cell_type_ei = 'I'
@@ -103,23 +105,28 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates):
             pop_cell_type.append(cell_type_ei)
             pop_spike_rates.append((n_spikes / n_trials /
                                     ((sim_time - burn_in_time) * 1e-3)))
-            pop_targets.append(target_spike_rates[cell_type])
+            pop_targets_1.append(target_spike_rates_1[cell_type])
+            pop_targets_2.append(target_spike_rates_2[cell_type])
 
     spiking_df = pd.DataFrame({'layer': pop_layer, 'cell type': pop_cell_type,
                                'spike rate': pop_spike_rates,
-                               'target rate': pop_targets})
+                               'target rate 1': pop_targets_1,
+                               'target rate 2': pop_targets_2})
     ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
                      hue='cell type', palette='Greys', errorbar='se', ax=ax)
     # note: eyeball dodge value
     # also, setting legend='_nolegend_' doesn't work when hue is set
-    ax = sns.pointplot(data=spiking_df, x='target rate', y='layer',
-                       hue='cell type', join=False, dodge=0.4, color='k',
-                       markers='D', ax=ax)
+    ax = sns.pointplot(data=spiking_df, x='target rate 1', y='layer',
+                       hue='cell type', join=False, dodge=0.4,
+                       palette=['darkred'], markers='D', ax=ax)
+    ax = sns.pointplot(data=spiking_df, x='target rate 2', y='layer',
+                       hue='cell type', join=False, dodge=0.4,
+                       palette=['k'], markers='D', ax=ax)
 
     ax.set_ylabel('layer')
     ax.set_xlabel('mean single-unit spikes/s')
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles=handles[2:], labels=labels[2:])
+    ax.legend(handles=handles[4:], labels=labels[4:])
 
     # make sure calcuation above is consistent with mean_rates method
     # avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,

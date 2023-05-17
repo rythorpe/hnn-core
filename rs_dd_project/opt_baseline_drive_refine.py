@@ -19,7 +19,7 @@ poiss_params = [6.72e-04,
                 poiss_rate]
 
 n_procs = 12
-sim_time = 2300
+sim_time = 500
 burn_in_time = 300
 n_trials = 1
 rng = np.random.default_rng(1234)
@@ -47,8 +47,10 @@ net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
 fig_net_response = plot_net_response(dpls, net)
 plt.tight_layout()
 
-fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time,
-                                        target_spike_rates=target_sr_unconn)
+fig_sr_profiles = plot_spiking_profiles(
+    net, sim_time, burn_in_time, target_spike_rates_1=target_sr_unconn,
+    target_spike_rates_2=target_avg_spike_rates
+)
 plt.tight_layout()
 plt.show()
 
