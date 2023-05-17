@@ -18,7 +18,7 @@ import seaborn as sns
 
 from scipy import optimize
 from skopt import gp_minimize, gbrt_minimize, expected_minimum
-from skopt.plots import plot_objective
+from skopt.plots import plot_objective, plot_evaluations
 
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
@@ -126,6 +126,11 @@ print(f'poiss_weights: {opt_params}')
 
 ###############################################################################
 # %% plot results
+ax_eval = plot_evaluations(opt_results, ax=None)
+fig_eval = ax_eval.get_figure()
+plt.tight_layout()
+fig_eval.savefig(op.join(output_dir, 'param_evaluations.png'))
+
 ax_converg = plot_convergence(opt_results, ax=None)
 fig_converge = ax_converg.get_figure()
 plt.tight_layout()
