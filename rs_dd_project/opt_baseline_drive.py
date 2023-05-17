@@ -69,7 +69,7 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
 
 # opt parameters
 opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 200  # >opt_n_init_points
+opt_n_total_calls = 400  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
