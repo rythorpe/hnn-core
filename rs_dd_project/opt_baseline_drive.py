@@ -69,7 +69,7 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
 
 # opt parameters
 opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 200  # >opt_n_init_points
+opt_n_total_calls = 300  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
@@ -111,17 +111,17 @@ opt_results = gp_minimize(func=opt_min_func,
                           random_state=1)
 
 # get the last min of the surrogate function, not the min sampled observation
-#opt_params = opt_results.x_iters[-1]
+opt_params = opt_results.x.copy()
 # get the location and value of the expected minimum of the surrogate function
-ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
-                                      random_state=1)
-opt_params = ev_params.copy()
+#ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
+#                                      random_state=1)
+#opt_params = ev_params.copy()
 header = [weight + '_weight' for weight in poiss_weights_ub]
 header = ','.join(header)
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
            X=[opt_params], delimiter=',', header=header)
 print(f'poiss_weights: {opt_params}')
-print(f'distance from target: {ev_cost}')
+#print(f'distance from target: {ev_cost}')
 
 ###############################################################################
 # %% plot results
