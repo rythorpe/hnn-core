@@ -69,7 +69,7 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
 
 # opt parameters
 opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 300  # >opt_n_init_points
+opt_n_total_calls = 200  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
@@ -106,7 +106,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           initial_point_generator='lhs',  # sobol; params<40
                           acq_func='EI',
                           acq_optimizer='lbfgs',
-                          xi=1e-6,
+                          xi=1e-1,
                           verbose=True,
                           random_state=1)
 
