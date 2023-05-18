@@ -114,13 +114,13 @@ opt_results = gp_minimize(func=opt_min_func,
 # get the last min of the surrogate function, not the min sampled observation
 opt_params = opt_results.x.copy()
 # get the location and value of the expected minimum of the surrogate function
-#ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
-#                                      random_state=1)
+ev_params, ev_cost = expected_minimum(opt_results, n_random_starts=20,
+                                      random_state=1)
 #opt_params = ev_params.copy()
 header = [weight + '_weight' for weight in poiss_weights_ub]
 header = ','.join(header)
 np.savetxt(op.join(output_dir, 'optimized_baseline_drive_params.csv'),
-           X=[opt_params], delimiter=',', header=header)
+           X=[opt_params, ev_params], delimiter=',', header=header)
 print(f'poiss_weights: {opt_params}')
 #print(f'distance from target: {ev_cost}')
 
