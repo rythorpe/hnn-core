@@ -28,7 +28,7 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 ###############################################################################
 # %% set parameters
 output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
-output_dir = '/home/ryan/Desktop/stuff'
+#output_dir = '/home/ryan/Desktop/stuff'
 
 # drive parameters
 # note that basket cells and pyramidal cells require different amounts of AMPA
@@ -59,8 +59,8 @@ target_sr_unconn = {cell: rate * 0.33 for cell, rate in
                     target_avg_spike_rates.items()}
 
 # simulation parameters
-n_procs = 10  # parallelize simulation
-sim_time = 700  # ms
+n_procs = 32  # parallelize simulation
+sim_time = 2300  # ms
 burn_in_time = 300  # ms
 #rng = np.random.default_rng(1234)
 rng = 1234  # use a rng seeded the same for every iteration
@@ -68,8 +68,8 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
-opt_n_init_points = 5  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 10  # >opt_n_init_points
+opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
+opt_n_total_calls = 400  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
