@@ -440,7 +440,7 @@ def plot_convergence(*args, **kwargs):
     yscale = kwargs.get("yscale", None)
 
     if ax is None:
-        ax = plt.gca()
+        _, ax = plt.subplots(1, 1)
 
     ax.set_title("Convergence plot")
     ax.set_xlabel("Number of calls $n$")
