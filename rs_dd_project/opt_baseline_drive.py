@@ -126,7 +126,7 @@ print(f'poiss_weights: {opt_params}')
 
 ###############################################################################
 # %% plot results
-ax_eval = plot_evaluations(opt_results, ax=None)
+ax_eval = plot_evaluations(opt_results)
 fig_eval = ax_eval.get_figure()
 plt.tight_layout()
 fig_eval.savefig(op.join(output_dir, 'param_evaluations.png'))
