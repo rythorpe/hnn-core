@@ -14,25 +14,15 @@ from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.viz import plot_dipole
 
 
-def get_conn_params(loc_net_connections, weights=True, lamthas=True,
-                    cell_types='all'):
+def get_conn_params(loc_net_connections, weights=True, lamthas=True):
     """Get optimization parameters from Network.connectivity attribute."""
     conn_params = list()
-    src_cell_types = list()
-    targ_cell_types = list()
     for conn in loc_net_connections:
-        in_population = (cell_types == 'all' or
-                         (conn['src_type'] in cell_types and
-                          conn['target_type'] in cell_types))
-        if in_population:
-            if weights:
-                conn_params.append(np.log10(conn['nc_dict']['A_weight']))
-            if lamthas:
-                conn_params.append(conn['nc_dict']['lamtha'])
-            src_cell_types.append(conn['src_type'])
-            targ_cell_types.append(conn['target_type'])
-    return (np.array(conn_params), np.array(src_cell_types),
-            np.array(targ_cell_types))
+        if weights:
+            conn_params.append(np.log10(conn['nc_dict']['A_weight']))
+        if lamthas:
+            conn_params.append(conn['nc_dict']['lamtha'])
+    return np.array(conn_params)
 
 
 def set_conn_params(net, conn_params, weights=True, lamthas=True):

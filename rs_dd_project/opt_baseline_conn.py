@@ -19,6 +19,7 @@ import seaborn as sns
 from skopt import gp_minimize, gbrt_minimize
 from skopt.plots import plot_objective
 
+from hnn_core import pick_connection
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
                               simulate_network, opt_baseline_spike_rates_2,
@@ -54,8 +55,8 @@ target_avg_spike_rates = {'L2_basket': 0.8,
 
 # simulation parameters
 n_procs = 32  # parallelize simulation
-sim_time = 2200  # ms
-burn_in_time = 200  # ms
+sim_time = 2300  # ms
+burn_in_time = 300  # ms
 rng = np.random.default_rng(1234)
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
@@ -83,40 +84,50 @@ opt_seq = [
 opt_n_init_points = 100  # < opt_n_total_calls
 opt_n_total_calls = 500
 
-###############################################################################
-# %% set initial parameters and parameter bounds prior
-opt_params_0, src_cell_types, targ_cell_types = get_conn_params(
-    net_original.connectivity,
-    weights=False,
-    lamthas=True
-)
+for step_info in opt_seq:
+    ###########################################################################
+    # %% get relevant info for current optimization step
+    opt_params_bounds = list()
+    for cell_type in step_info['varied']:
+        # XXX this won't work because it'll select all conns with these sources
+        conn_idxs = pick_connection(net_original, src_gids=cell_type,
+                                    target_gids=cell_type)
+        if 'basket' in cell_type:
+            opt_params_bounds.append(())
+    
+    varied_conns = [net_original.connectivity[conn_idx] for conn_idx in
+                    conn_idxs]
 
-# local network connectivity lamtha bounds
-opt_params_bounds = np.tile([min_lamtha, max_lamtha],
-                            (len(opt_params_0), 1)).tolist()
+    ###########################################################################
+    # %% set initial parameters and parameter bounds prior
+    opt_params_0 = get_conn_params(varied_conns, weights=True, lamthas=True)
 
-###############################################################################
-# %% prepare cost function
-sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
-              'n_procs': n_procs, 'poiss_params': poiss_params, 'rng': rng}
-opt_min_func = partial(opt_baseline_spike_rates_2, net=net_original.copy(),
-                       sim_params=sim_params,
-                       target_avg_spike_rates=target_avg_spike_rates)
+    # local network connectivity lamtha bounds
+    opt_params_bounds = np.tile([min_lamtha, max_lamtha],
+                                (len(opt_params_0), 1)).tolist()
 
-###############################################################################
-# %% optimize
-opt_results = gp_minimize(func=opt_min_func,
-                          dimensions=opt_params_bounds,
-                          x0=opt_params_0,
-                          n_calls=opt_n_total_calls,
-                          n_initial_points=opt_n_init_points,
-                          initial_point_generator='lhs',  # sobol; params<40
-                          acq_func='EI',
-                          acq_optimizer='lbfgs',
-                          verbose=True,
-                          random_state=1234)
-# get the last min of the surrogate function, not the min sampled observation
-opt_params = opt_results.x_iters[-1].copy()
+    ###########################################################################
+    # %% prepare cost function
+    sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
+                'n_procs': n_procs, 'poiss_params': poiss_params, 'rng': rng}
+    opt_min_func = partial(opt_baseline_spike_rates_2, net=net_original.copy(),
+                        sim_params=sim_params,
+                        target_avg_spike_rates=target_avg_spike_rates)
+
+    ###########################################################################
+    # %% optimize
+    opt_results = gp_minimize(func=opt_min_func,
+                              dimensions=opt_params_bounds,
+                              x0=opt_params_0,
+                              n_calls=opt_n_total_calls,
+                              n_initial_points=opt_n_init_points,
+                              initial_point_generator='lhs',  # sobol; params<40
+                              acq_func='EI',
+                              acq_optimizer='lbfgs',
+                              verbose=True,
+                              random_state=1234)
+    # get the last min of the surrogate function, not the min sampled observation
+    opt_params = opt_results.x_iters[-1].copy()
 #header = [weight + '_weight' for weight in poiss_weights_ub]
 #header = ','.join(header)
 #np.savetxt(op.join(output_dir, 'optimized_lamtha_params.csv'),
@@ -149,8 +160,10 @@ fig_net_response = plot_net_response(dpls_0, net_0)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'pre_opt_sim.png'))
 
-fig_sr_profiles = plot_spiking_profiles(net_0, sim_time, burn_in_time,
-                                        target_spike_rates=target_avg_spike_rates)
+fig_sr_profiles = plot_spiking_profiles(
+    net_0, sim_time, burn_in_time, target_spike_rates_1=target_avg_spike_rates,
+    target_spike_rates_2=target_avg_spike_rates
+)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
@@ -166,8 +179,10 @@ fig_net_response = plot_net_response(dpls, net)
 plt.tight_layout()
 fig_net_response.savefig(op.join(output_dir, 'post_opt_sim.png'))
 
-fig_sr_profiles = plot_spiking_profiles(net, sim_time, burn_in_time,
-                                        target_spike_rates=target_avg_spike_rates)
+fig_sr_profiles = plot_spiking_profiles(
+    net, sim_time, burn_in_time, target_spike_rates_1=target_avg_spike_rates,
+    target_spike_rates_2=target_avg_spike_rates
+)
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'post_opt_spikerate_profile.png'))
 
