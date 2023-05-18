@@ -107,7 +107,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           acq_func='EI',
                           acq_optimizer='lbfgs',
                           xi=0.01,
-                          noise=1e-8,
+                          noise=1e-9,
                           verbose=True,
                           random_state=1)
 
