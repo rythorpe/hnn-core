@@ -18,11 +18,27 @@ poiss_params = [6.72e-04,
                 9.50e-04,
                 poiss_rate]
 
+poiss_params = [6.015690085422602555e-04,
+                8.870846881656557596e-04,
+                9.849717799957562019e-04,
+                3.001426886170132681e-03,
+                9.220506366139438487e-04,
+                9.448952371442351965e-04,
+                poiss_rate]
+
+poiss_params = [6.059706538226362774e-04,
+                8.854004692889319876e-04,
+                9.871726214402615825e-04,
+                2.990327807178780068e-03,
+                9.314732985709431876e-04,
+                9.440639072517770453e-04,
+                poiss_rate]
+
 n_procs = 12
 sim_time = 2300
 burn_in_time = 300
 n_trials = 1
-rng = np.random.default_rng(1234)
+rng = np.random.default_rng()
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell

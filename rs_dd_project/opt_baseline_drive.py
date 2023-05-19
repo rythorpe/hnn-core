@@ -63,13 +63,14 @@ n_procs = 32  # parallelize simulation
 sim_time = 2300  # ms
 burn_in_time = 300  # ms
 #rng = np.random.default_rng(1234)
-rng = 1234  # use a rng seeded the same for every iteration
+#rng = 1234  # use a rng seeded the same for every iteration
+rng = None
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
 # opt parameters
 opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 400  # >opt_n_init_points
+opt_n_total_calls = 500  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
@@ -107,7 +108,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           acq_func='EI',
                           acq_optimizer='lbfgs',
                           xi=0.01,
-                          noise=1e-9,
+                          noise=1e-1,
                           verbose=True,
                           random_state=1)
 
