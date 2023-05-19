@@ -37,7 +37,7 @@ poiss_weights_lb = OrderedDict(L2_basket=5e-4, L2_pyramidal=6e-4,
                                L5_basket=5e-4, L5_pyramidal=20e-4,
                                L6_basket=5e-4, L6_pyramidal=6e-4)
 poiss_weights_ub = OrderedDict(L2_basket=12e-4, L2_pyramidal=20e-4,
-                               L5_basket=12e-4, L5_pyramidal=45e-4,
+                               L5_basket=12e-4, L5_pyramidal=50e-4,
                                L6_basket=12e-4, L6_pyramidal=20e-4)
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
 # decreasing to 10 Hz seems to allow for random single-cell events in a
@@ -63,8 +63,7 @@ n_procs = 32  # parallelize simulation
 sim_time = 2300  # ms
 burn_in_time = 300  # ms
 #rng = np.random.default_rng(1234)
-#rng = 1234  # use a rng seeded the same for every iteration
-rng = None
+rng = 1234  # use a consistently seeded rng for every iteration
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(10, 10))
 
@@ -108,7 +107,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           acq_func='EI',
                           acq_optimizer='lbfgs',
                           xi=0.01,
-                          noise=1e-1,
+                          noise=1e-10,
                           verbose=True,
                           random_state=1)
 
