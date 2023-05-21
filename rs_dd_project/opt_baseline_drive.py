@@ -69,7 +69,7 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
 
 # opt parameters
 opt_n_init_points = 100  # >2 ** n_params, 2 samples per dimension in hypercube
-opt_n_total_calls = 500  # >opt_n_init_points
+opt_n_total_calls = 600  # >opt_n_init_points
 
 ###############################################################################
 # %% set initial parameters and parameter bounds prior
@@ -107,7 +107,7 @@ opt_results = gp_minimize(func=opt_min_func,
                           acq_func='EI',
                           acq_optimizer='lbfgs',
                           xi=0.01,
-                          noise=1e-10,
+                          noise=1e-9,
                           verbose=True,
                           random_state=1)
 
@@ -136,7 +136,8 @@ fig_converge = ax_converg.get_figure()
 plt.tight_layout()
 fig_converge.savefig(op.join(output_dir, 'convergence.png'))
 
-ax_objective = plot_objective(opt_results, minimum='expected_minimum')
+ax_objective = plot_objective(opt_results, n_samples=1000,
+                              minimum='expected_minimum')
 fig_objective = ax_objective[0, 0].get_figure()
 plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
