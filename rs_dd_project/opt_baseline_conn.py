@@ -35,9 +35,13 @@ output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
 # disconnected network
 poiss_rate = 1e1
 # take weights from opt_baseline_drive_refine.py
-poiss_weights = dict(L2_basket=6.70e-04, L2_pyramidal=9.23e-04,
-                     L5_basket=9.86e-04, L5_pyramidal=29.71e-04,
-                     L6_basket=9.15e-04, L6_pyramidal=9.50e-04)
+poiss_weights = dict(L2_basket=6.289657993813411703e-04,
+                     L2_pyramidal=9.358499249274205602e-04,
+                     L5_basket=9.886578056957024199e-04,
+                     L5_pyramidal=2.991545730497045634e-03,
+                     L6_basket=9.394567594233604315e-04,
+                     L6_pyramidal=9.406783797610669077e-04)
+
 poiss_params = list(poiss_weights.values()) + [poiss_rate]
 
 #min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
