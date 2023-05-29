@@ -337,7 +337,7 @@ def L6_model(params=None, add_drives_from_params=False,
 
     # increase size of network: 10x20 instead of 10x10
     params['N_pyr_x'] = grid_shape[0]
-    params['N_pyr_x'] = grid_shape[1]
+    params['N_pyr_y'] = grid_shape[1]
 
     # start with updated calcium model
     # XXX HACK: L6 pyr and basket cells are added in network.py
