@@ -306,7 +306,7 @@ def calcium_model(params=None, add_drives_from_params=False,
 
 
 def L6_model(params=None, add_drives_from_params=False,
-             legacy_mode=False, connect_layer_6=True, grid_shape=(10, 10)):
+             legacy_mode=False, connect_layer_6=True, grid_shape=(12, 12)):
     """Instantiate the updated calcium model with layer 6 cell types.
 
     Returns

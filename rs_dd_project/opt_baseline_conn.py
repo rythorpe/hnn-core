@@ -63,7 +63,7 @@ sim_time = 2300  # ms
 burn_in_time = 300  # ms
 rng = np.random.default_rng(1234)
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
-                        grid_shape=(10, 10))
+                        grid_shape=(12, 12))
 
 # opt parameters
 opt_seq = [

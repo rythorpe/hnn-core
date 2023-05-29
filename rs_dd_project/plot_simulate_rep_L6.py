@@ -28,7 +28,6 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 
 ###############################################################################
 # Define user parameters
-model_grid_shape = (10, 10)
 # Hyperparameters of repetitive drive sequence
 reps = 4
 stim_interval = 100.  # in ms; 10 Hz
@@ -49,7 +48,7 @@ conn_seed = 1
 # Let us first create our default network and visualize the cells
 # inside it.
 net = L6_model(connect_layer_6=True, legacy_mode=False,
-               grid_shape=model_grid_shape)
+               grid_shape=(12, 12))
 #net.plot_cells()
 #fig = plt.figure(figsize=(6, 6), constrained_layout=True)
 #for cell_type_idx, cell_type in enumerate(net.cell_types):

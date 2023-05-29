@@ -52,7 +52,7 @@ target_sr_unconn = {cell: rate * 0.33 for cell, rate in
                     target_avg_spike_rates.items()}
 
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
-                        grid_shape=(10, 10))
+                        grid_shape=(12, 12))
 net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=True,
                              n_trials=n_trials, n_procs=n_procs, rng=rng)
