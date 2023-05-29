@@ -54,8 +54,8 @@ target_avg_spike_rates = {'L2_basket': 0.8,
                           'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
                           'L6_pyramidal': 0.5}  # from De Kock 2007
 # avg rates in unconn network should be a bit less
-# try 33% of the avg rates in a fully connected network
-target_sr_unconn = {cell: rate * 0.33 for cell, rate in
+# try 20% of the avg rates in a fully connected network
+target_sr_unconn = {cell: rate * 0.2 for cell, rate in
                     target_avg_spike_rates.items()}
 
 # simulation parameters
