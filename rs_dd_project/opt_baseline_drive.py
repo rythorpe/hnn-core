@@ -83,7 +83,7 @@ sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
               'n_procs': n_procs, 'poiss_rate_constant': poiss_rate,
               'rng': rng}
 opt_min_func = partial(opt_baseline_spike_rates_1,
-                       net=net_original.copy(),
+                       net=net_original,
                        sim_params=sim_params,
                        target_avg_spike_rates=target_sr_unconn)
 
