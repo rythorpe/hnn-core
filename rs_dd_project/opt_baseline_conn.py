@@ -23,7 +23,8 @@ from hnn_core import pick_connection
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
                               simulate_network, opt_baseline_spike_rates_2,
-                              get_conn_params, plot_convergence)
+                              get_conn_params, set_conn_params,
+                              plot_convergence)
 
 ###############################################################################
 # %% set parameters
@@ -44,8 +45,9 @@ poiss_weights = dict(L2_basket=6.289657993813411703e-04,
 
 poiss_params = list(poiss_weights.values()) + [poiss_rate]
 
-#min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
-min_lamtha, max_lamtha_i, max_lamtha_e = 1., 5.5, 10.0
+min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
+#min_lamtha, max_lamtha_i, max_lamtha_e = 1., 5.5, 10.0
+lamtha = 6.0
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
@@ -64,6 +66,10 @@ burn_in_time = 300  # ms
 rng = np.random.default_rng(1234)
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(12, 12))
+
+# set spatial constant for all local network connections to a single value
+lamthas = np.ones_like(net_original.connectivity) * lamtha
+set_conn_params(net_original, conn_params=lamthas, weights=False, lamthas=True)
 
 # opt parameters
 opt_seq = [
@@ -85,38 +91,50 @@ opt_seq = [
                    'L6_basket',
                    'L6_pyramidal']}
 ]
-opt_n_init_points = 100  # < opt_n_total_calls
-opt_n_total_calls = 500
+opt_n_init_points = 300  # < opt_n_total_calls
+opt_n_total_calls = 600
 
-for step_info in opt_seq:
+all_cell_types = list(net_original.cell_types.keys())
+for step_idx, step_cell_types in enumerate(opt_seq):
     ###########################################################################
     # %% get relevant info for current optimization step
-    opt_params_bounds = list()
-    for cell_type in step_info['varied']:
-        # XXX this won't work because it'll select all conns with these sources
-        conn_idxs = pick_connection(net_original, src_gids=cell_type,
-                                    target_gids=cell_type)
-        if 'basket' in cell_type:
-            opt_params_bounds.append(())
-    
+    src_types = step_cell_types['varied']
+    src_gids = list()
+    for cell_type in src_types:
+        src_gids.extend(list(net_original.gid_ranges[cell_type]))
+
+    targ_types = step_cell_types['evaluated']
+    targ_gids = list()
+    for cell_type in targ_types:
+        targ_gids.extend(list(net_original.gid_ranges[cell_type]))
+
+    conn_idxs = pick_connection(net_original, src_gids=src_gids,
+                                target_gids=targ_gids)
+
     varied_conns = [net_original.connectivity[conn_idx] for conn_idx in
                     conn_idxs]
 
+    # silence all connections
+    # only the varied conns will contribute to this opt step
+    net_step = net_original.copy()
+    for conn in net_step.connectivity:
+        conn['nc_dict']['A_weight'] = 0.0
+
     ###########################################################################
     # %% set initial parameters and parameter bounds prior
-    opt_params_0 = get_conn_params(varied_conns, weights=True, lamthas=True)
+    opt_params_0 = get_conn_params(varied_conns, weights=True, lamthas=False)
 
-    # local network connectivity lamtha bounds
-    opt_params_bounds = np.tile([min_lamtha, max_lamtha],
+    # local network connectivity synaptic weight bounds
+    opt_params_bounds = np.tile([min_weight, max_weight],
                                 (len(opt_params_0), 1)).tolist()
 
     ###########################################################################
     # %% prepare cost function
     sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
-                'n_procs': n_procs, 'poiss_params': poiss_params, 'rng': rng}
-    opt_min_func = partial(opt_baseline_spike_rates_2, net=net_original.copy(),
-                        sim_params=sim_params,
-                        target_avg_spike_rates=target_avg_spike_rates)
+                  'n_procs': n_procs, 'poiss_params': poiss_params, 'rng': rng}
+    opt_min_func = partial(opt_baseline_spike_rates_2, net=net_step,
+                           sim_params=sim_params,
+                           target_avg_spike_rates=target_avg_spike_rates)
 
     ###########################################################################
     # %% optimize
@@ -128,17 +146,18 @@ for step_info in opt_seq:
                               initial_point_generator='lhs',  # sobol; params<40
                               acq_func='EI',
                               acq_optimizer='lbfgs',
+                              xi=0.01,
+                              noise=1e-10,
                               verbose=True,
-                              random_state=1234)
-    # get the last min of the surrogate function, not the min sampled observation
-    opt_params = opt_results.x_iters[-1].copy()
+                              random_state=1)
+    opt_params = opt_results.x.copy()
 #header = [weight + '_weight' for weight in poiss_weights_ub]
 #header = ','.join(header)
 #np.savetxt(op.join(output_dir, 'optimized_lamtha_params.csv'),
 #           X=[opt_params], delimiter=',', header=header)
-np.savetxt(op.join(output_dir, 'optimized_lamtha_params.csv'),
+np.savetxt(op.join(output_dir, 'optimized_conn_weight_params.csv'),
            X=[opt_params], delimiter=',')
-print(f'lamtha params: {opt_params}')
+print(f'conn weight params: {opt_params}')
 
 ###############################################################################
 # %% plot results

@@ -243,8 +243,8 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
     seed = rng.integers(0, np.iinfo(np.int32).max)
 
     if conn_params is not None:
-        print('resetting network connectivity (lamtha only)')
-        set_conn_params(net, conn_params, weights=False, lamthas=True)
+        print('resetting network connectivity (weights only)')
+        set_conn_params(net, conn_params, weights=True, lamthas=False)
 
     # when optimizing cell excitability under poisson drive, it's nice to use
     # a disconnected network
