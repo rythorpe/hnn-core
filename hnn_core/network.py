@@ -226,7 +226,7 @@ def pick_connection(net, src_gids=None, target_gids=None,
     _validate_type(receptor, (str, list, None), 'receptor',
                    'str, list, or None')
 
-    valid_loc = ['proximal', 'distal', 'soma']
+    valid_loc = ['proximal', 'distal', 'soma', 'deep_basal']
     valid_receptor = ['ampa', 'nmda', 'gabaa', 'gabab']
 
     # Convert receptor and loc to list
