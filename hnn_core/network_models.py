@@ -356,6 +356,8 @@ def L6_model(params=None, add_drives_from_params=False,
 
     delay = net.delay
 
+    L5_L6_prob = 0.33  # defuse excitatory input from L5 -> L6
+    L5_L6_conn_seed = 1  # use the same seed to enforce matching subpop conn
     if connect_layer_6:
         # layer5 Pyr -> layer6 Pyr
         weight_L5_L6 = 0.00005
@@ -367,7 +369,8 @@ def L6_model(params=None, add_drives_from_params=False,
                                weight=weight_L5_L6,
                                delay=delay,
                                lamtha=10.,
-                               probability=0.33)  # defuse excitatory input from L5
+                               probability=L5_L6_prob,
+                               conn_seed=L5_L6_conn_seed)
         net.add_connection(src_gids='L5_pyramidal',
                            target_gids='L6_pyramidal',
                            loc='deep_basal',
@@ -375,7 +378,8 @@ def L6_model(params=None, add_drives_from_params=False,
                            weight=weight_L5_L6,
                            delay=delay,
                            lamtha=10.,
-                           probability=0.33)  # defuse excitatory input from L5
+                           probability=L5_L6_prob,
+                           conn_seed=L5_L6_conn_seed)
 
         # layer6 Pyr -> layer6 Pyr
         net.add_connection(src_gids='L6_pyramidal',
