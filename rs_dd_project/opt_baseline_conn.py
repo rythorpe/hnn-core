@@ -47,7 +47,7 @@ poiss_params = list(poiss_weights.values()) + [poiss_rate]
 
 min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
 #min_lamtha, max_lamtha_i, max_lamtha_e = 1., 5.5, 10.0
-lamtha = 6.0
+lamtha = 6.0  # will apply to all local network connections!!
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
@@ -64,12 +64,21 @@ n_procs = 32  # parallelize simulation
 sim_time = 2300  # ms
 burn_in_time = 300  # ms
 rng = np.random.default_rng(1234)
+
+# prepare network
 net_original = L6_model(connect_layer_6=True, legacy_mode=False,
                         grid_shape=(12, 12))
 
 # set spatial constant for all local network connections to a single value
 lamthas = np.ones_like(net_original.connectivity) * lamtha
 set_conn_params(net_original, conn_params=lamthas, weights=False, lamthas=True)
+
+# initialize network with silenced connections that will get updated
+# on each step
+net_updated = net_original.copy()
+# silence all connections
+for conn in net_updated.connectivity:
+    conn['nc_dict']['A_weight'] = 0.0
 
 # opt parameters
 opt_seq = [
@@ -98,6 +107,9 @@ all_cell_types = list(net_original.cell_types.keys())
 for step_idx, step_cell_types in enumerate(opt_seq):
     ###########################################################################
     # %% get relevant info for current optimization step
+
+    # only the varied conns of the current step and the conns set in previous
+    # steps will contribute to this opt step
     src_types = step_cell_types['varied']
     src_gids = list()
     for cell_type in src_types:
@@ -114,14 +126,9 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     varied_conns = [net_original.connectivity[conn_idx] for conn_idx in
                     conn_idxs]
 
-    # silence all connections
-    # only the varied conns will contribute to this opt step
-    net_step = net_original.copy()
-    for conn in net_step.connectivity:
-        conn['nc_dict']['A_weight'] = 0.0
-
     ###########################################################################
     # %% set initial parameters and parameter bounds prior
+    # note: this function takes a list of connectivity objects
     opt_params_0 = get_conn_params(varied_conns, weights=True, lamthas=False)
 
     # local network connectivity synaptic weight bounds
@@ -132,7 +139,7 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     # %% prepare cost function
     sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
                   'n_procs': n_procs, 'poiss_params': poiss_params, 'rng': rng}
-    opt_min_func = partial(opt_baseline_spike_rates_2, net=net_step,
+    opt_min_func = partial(opt_baseline_spike_rates_2, net=net_updated,
                            sim_params=sim_params,
                            target_avg_spike_rates=target_avg_spike_rates)
 
@@ -143,7 +150,7 @@ for step_idx, step_cell_types in enumerate(opt_seq):
                               x0=opt_params_0,
                               n_calls=opt_n_total_calls,
                               n_initial_points=opt_n_init_points,
-                              initial_point_generator='lhs',  # sobol; params<40
+                              initial_point_generator='lhs',
                               acq_func='EI',
                               acq_optimizer='lbfgs',
                               xi=0.01,
@@ -151,6 +158,9 @@ for step_idx, step_cell_types in enumerate(opt_seq):
                               verbose=True,
                               random_state=1)
     opt_params = opt_results.x.copy()
+    # update network with results from current step
+    # XXX FIX: needs some way of knowing which connections to update this step
+    set_conn_params(net_updated, opt_params, weights=True, lamthas=False)
 #header = [weight + '_weight' for weight in poiss_weights_ub]
 #header = ','.join(header)
 #np.savetxt(op.join(output_dir, 'optimized_lamtha_params.csv'),
