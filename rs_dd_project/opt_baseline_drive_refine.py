@@ -35,7 +35,7 @@ n_procs = 12
 sim_time = 2300
 burn_in_time = 300
 n_trials = 1
-rng = np.random.default_rng(13344)
+rng = np.random.default_rng(1234)
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
