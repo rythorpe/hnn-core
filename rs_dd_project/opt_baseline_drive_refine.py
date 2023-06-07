@@ -11,8 +11,7 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 
 poiss_rate = 1e1
 
-# manually-tuned
-# [old values]
+# manually-tuned results for 33% target rate [old values]
 poiss_params = [6.72e-04,
                 9.27e-04,
                 9.85e-04,
@@ -21,14 +20,22 @@ poiss_params = [6.72e-04,
                 9.50e-04,
                 poiss_rate]
 
-# final optimization results
-# [use this one!!!]
+# final optimization results for 33% target rate
 poiss_params = [6.289657993813411703e-04,
                 9.358499249274205602e-04,
                 9.886578056957024199e-04,
                 2.991545730497045634e-03,
                 9.394567594233604315e-04,
                 9.406783797610669077e-04,
+                poiss_rate]
+
+# final optimization results for 20% target rate + manual tuning [use this one]
+poiss_params = [5.823801023405118966e-04,
+                8.617101631605665613e-04,
+                9.603200828904341754e-04,
+                2.900971997811154900e-03,
+                7.081385474760127415e-04,
+                9.301705407062075449e-04,
                 poiss_rate]
 
 n_procs = 12
