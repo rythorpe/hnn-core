@@ -23,8 +23,8 @@ from hnn_core import pick_connection
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
                               simulate_network, opt_baseline_spike_rates_2,
-                              get_conn_params, set_conn_params,
-                              plot_convergence)
+                              get_conn_params, set_conn_lamthas,
+                              scale_conn_weights, plot_convergence)
 
 ###############################################################################
 # %% set parameters
@@ -71,7 +71,9 @@ net_original = L6_model(connect_layer_6=True, legacy_mode=False,
 
 # set spatial constant for all local network connections to a single value
 lamthas = np.ones_like(net_original.connectivity) * lamtha
-set_conn_params(net_original, conn_params=lamthas, weights=False, lamthas=True)
+which_conn_idxs = range(len(net_original.connectivity))
+set_conn_lamthas(net_original, lamthas=lamthas,
+                 which_conn_idxs=which_conn_idxs)
 
 # initialize network with silenced connections that will get updated
 # on each step
@@ -123,13 +125,16 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     conn_idxs = pick_connection(net_original, src_gids=src_gids,
                                 target_gids=targ_gids)
 
-    varied_conns = [net_original.connectivity[conn_idx] for conn_idx in
-                    conn_idxs]
+    # add back selected original connections that will get rescaled
+    # during this step of optimization
+    for conn_idx in conn_idxs:
+        net_updated.connectivity[conn_idx]['nc_dict']['A_weight'] = \
+            net_original.connectivity[conn_idx]['nc_dict']['A_weight']
 
     ###########################################################################
     # %% set initial parameters and parameter bounds prior
-    # note: this function takes a list of connectivity objects
-    opt_params_0 = get_conn_params(varied_conns, weights=True, lamthas=False)
+    # start with scaling factors of one
+    opt_params_0 = np.ones_like(conn_idxs)
 
     # local network connectivity synaptic weight bounds
     opt_params_bounds = np.tile([min_weight, max_weight],
@@ -153,14 +158,15 @@ for step_idx, step_cell_types in enumerate(opt_seq):
                               initial_point_generator='lhs',
                               acq_func='EI',
                               acq_optimizer='lbfgs',
-                              xi=0.01,
+                              xi=0.005,
                               noise=1e-10,
                               verbose=True,
                               random_state=1)
     opt_params = opt_results.x.copy()
     # update network with results from current step
     # XXX FIX: needs some way of knowing which connections to update this step
-    set_conn_params(net_updated, opt_params, weights=True, lamthas=False)
+    scale_conn_weights(net_updated, scaling_factors=opt_params,
+                       which_conn_idxs=conn_idxs)
 #header = [weight + '_weight' for weight in poiss_weights_ub]
 #header = ','.join(header)
 #np.savetxt(op.join(output_dir, 'optimized_lamtha_params.csv'),
@@ -182,10 +188,9 @@ plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
-net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
+net_0, dpls_0 = simulate_network(net_original, sim_time, burn_in_time,
                                  n_procs=n_procs,
                                  poiss_params=poiss_params,
-                                 conn_params=opt_params_0,
                                  clear_conn=False,
                                  rng=rng)
 
@@ -201,10 +206,9 @@ plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
 # post-optimization
-net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
+net, dpls = simulate_network(net_updated, sim_time, burn_in_time,
                              n_procs=n_procs,
                              poiss_params=poiss_params,
-                             conn_params=opt_params,
                              clear_conn=False,
                              rng=rng)
 

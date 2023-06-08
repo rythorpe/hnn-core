@@ -5,7 +5,6 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import OptimizeResult
-from skopt import expected_minimum
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import seaborn as sns
@@ -14,34 +13,35 @@ from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.viz import plot_dipole
 
 
-def get_conn_params(loc_net_connections, weights=True, lamthas=True):
-    """Get optimization parameters from Network.connectivity attribute."""
+def get_conn_params(net, param_type):
+    """Get list of lamtha or weight parameters for all network connections."""
     conn_params = list()
-    for conn in loc_net_connections:
-        if weights:
-            conn_params.append(np.log10(conn['nc_dict']['A_weight']))
-        if lamthas:
-            conn_params.append(conn['nc_dict']['lamtha'])
-    return np.array(conn_params)
-
-
-def set_conn_params(net, conn_params, weights=True, lamthas=True):
-    """Set updated Network.connectivity parameters in-place."""
-    if weights and lamthas:
-        n_expected_conns = len(conn_params) / 2
-    elif weights or lamthas:
-        n_expected_conns = len(conn_params)
-    else:
-        raise ValueError('conn_params is an empty list!')
-    if len(net.connectivity) != n_expected_conns:
-        raise ValueError('Mismatch between size of input conn_params and '
-                         'and connections in Network.connectivity')
-    conn_params_copy = conn_params.copy()
     for conn in net.connectivity:
-        if weights:
-            conn['nc_dict']['A_weight'] = conn_params_copy.pop(0)
-        if lamthas:
-            conn['nc_dict']['lamtha'] = conn_params_copy.pop(0)
+        if param_type == 'weight':
+            conn_params.append(conn['nc_dict']['A_weight'])
+        elif param_type == 'lamtha':
+            conn_params.append(conn['nc_dict']['lamtha'])
+        else:
+            raise ValueError('unknown connection parameter type!!')
+    return conn_params
+
+
+def set_conn_lamthas(net, lamthas, which_conn_idxs):
+    """Set spatial decay contant of selected network connections in-place."""
+    set_conn_count = 0
+    for conn_idx, conn in enumerate(net.connectivity):
+        if conn_idx in which_conn_idxs:
+            conn['nc_dict']['lamtha'] = lamthas[set_conn_count]
+            set_conn_count += 1
+
+
+def scale_conn_weights(net, scaling_factors, which_conn_idxs):
+    """Scale synaptic weights of selected network connections in-place."""
+    set_conn_count = 0
+    for conn_idx, conn in enumerate(net.connectivity):
+        if conn_idx in which_conn_idxs:
+            conn['nc_dict']['A_weight'] *= scaling_factors[set_conn_count]
+            set_conn_count += 1
 
 
 def plot_net_response(dpls, net):
@@ -229,9 +229,8 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
 
 
 def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
-                     poiss_params=None, conn_params=None, clear_conn=False,
-                     rng=None):
-    """Update network with sampled params and run simulation."""
+                     poiss_params=None, clear_conn=False, rng=None):
+    """Add poisson drive to empty network and run simulation."""
     net = net.copy()
     # induce variation between simulations (aside from parameter exploration)
     if rng is None:
@@ -241,10 +240,6 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
         # define new generator with constant seed (e.g., use w/gbrt_minimize)
         rng = np.random.default_rng(rng)
     seed = rng.integers(0, np.iinfo(np.int32).max)
-
-    if conn_params is not None:
-        print('resetting network connectivity (weights only)')
-        set_conn_params(net, conn_params, weights=True, lamthas=False)
 
     # when optimizing cell excitability under poisson drive, it's nice to use
     # a disconnected network
@@ -327,7 +322,8 @@ def err_spike_rates_minnorm(net, conn_weights, sim_time, burn_in_time,
                             (np.sqrt(len(spike_rate_diffs) *
                              max_spike_rate_diff**2)))
 
-    # regularization term: minimize connection weights across connection types
+    # regularization term: penalize for large connection weights across
+    # connection types
     max_weight = 1e-1
     conn_weight_norm = (np.linalg.norm(conn_weights) /
                         (np.sqrt(len(conn_weights) * max_weight**2)))
@@ -341,7 +337,6 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
     """Function to minimize during optimization: err in baseline spikerates.
 
     Stage 1: optimize over Poisson drive parameters
-    Note: assumes all but the last element in opt_params is in log_10 scale.
     """
     sim_time = sim_params['sim_time']
     burn_in_time = sim_params['burn_in_time']
@@ -357,7 +352,6 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
                                       burn_in_time=burn_in_time,
                                       n_procs=n_procs,
                                       poiss_params=poiss_params,
-                                      conn_params=None,
                                       clear_conn=True,
                                       rng=rng)
 
@@ -377,29 +371,22 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     n_procs = sim_params['n_procs']
     poiss_params = sim_params['poiss_params']
     rng = sim_params['rng']
-    varied_cell_types = sim_params['varied_cell_types']
+    which_conn_idxs = sim_params['which_conn_idxs']
 
-    conn_params = opt_params.copy()
-    net_connected, _ = simulate_network(net,
+    net_scaled = net.copy()
+    scale_conn_weights(net_scaled, scaling_factors=opt_params,
+                       which_conn_idxs=which_conn_idxs)
+    net_connected, _ = simulate_network(net_scaled,
                                         sim_time=sim_time,
                                         burn_in_time=burn_in_time,
                                         n_procs=n_procs,
                                         poiss_params=poiss_params,
-                                        conn_params=conn_params,
                                         clear_conn=False,
                                         rng=rng)
 
+    # note: pass in opt_params (weight scaling factors) to
     # penalize cost function for large connection weights
-    conn_weights, src_cell_types, targ_cell_types = get_conn_params(
-        net_connected.connectivity,
-        weights=True,
-        lamthas=False
-    )
-    src_mask = np.in1d(src_cell_types, varied_cell_types)
-    targ_mask = np.in1d(targ_cell_types, varied_cell_types)
-    varied_conn_weights = conn_weights[np.logical_and(src_mask, targ_mask)]
-
-    err = err_spike_rates_minnorm(net_connected, varied_conn_weights,
+    err = err_spike_rates_minnorm(net_connected, opt_params,
                                   sim_time, burn_in_time,
                                   target_avg_spike_rates)
     return err
