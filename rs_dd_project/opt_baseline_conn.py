@@ -66,8 +66,7 @@ burn_in_time = 300  # ms
 rng = np.random.default_rng(1234)
 
 # prepare network
-net_original = L6_model(connect_layer_6=True, legacy_mode=False,
-                        grid_shape=(12, 12))
+net_original = L6_model()
 
 # set spatial constant for all local network connections to a single value
 lamthas = np.ones_like(net_original.connectivity) * lamtha

@@ -64,8 +64,7 @@ sim_time = 2300  # ms
 burn_in_time = 300  # ms
 #rng = np.random.default_rng(1234)
 rng = 1234  # use a consistently seeded rng for every iteration
-net_original = L6_model(connect_layer_6=True, legacy_mode=False,
-                        grid_shape=(12, 12))
+net_original = L6_model()
 
 # opt parameters
 opt_n_init_points = 400  # >2 ** n_params, 2 samples per dimension in hypercube
