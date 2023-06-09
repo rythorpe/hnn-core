@@ -134,7 +134,7 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     ###########################################################################
     # %% set initial parameters and parameter bounds prior
     # start with scaling factors of one
-    opt_params_0 = np.ones_like(conn_idxs)
+    opt_params_0 = [1 for _ in conn_idxs]
 
     # local network connectivity synaptic weight bounds
     opt_params_bounds = np.tile([min_scaling_exp, max_scaling_exp],
@@ -143,7 +143,8 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     ###########################################################################
     # %% prepare cost function
     sim_params = {'sim_time': sim_time, 'burn_in_time': burn_in_time,
-                  'n_procs': n_procs, 'poiss_params': poiss_params, 'rng': rng}
+                  'n_procs': n_procs, 'poiss_params': poiss_params,
+                  'which_conn_idxs': conn_idxs, 'rng': rng}
     opt_min_func = partial(opt_baseline_spike_rates_2, net=net_updated,
                            sim_params=sim_params,
                            target_avg_spike_rates=target_avg_spike_rates)
@@ -162,7 +163,7 @@ for step_idx, step_cell_types in enumerate(opt_seq):
                               noise=1e-10,
                               verbose=True,
                               random_state=1)
-    scaling_fctrs = 10 ** np.array(opt_results.x)
+    scaling_fctrs = [10.0 ** exp for exp in opt_results.x]
     # update network with results from current step
     # XXX FIX: needs some way of knowing which connections to update this step
     scale_conn_weights(net_updated, scaling_factors=scaling_fctrs,

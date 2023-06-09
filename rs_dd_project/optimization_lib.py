@@ -374,7 +374,7 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     which_conn_idxs = sim_params['which_conn_idxs']
 
     net_scaled = net.copy()
-    scaling_fctrs = 10 ** np.array(opt_params)
+    scaling_fctrs = [10.0 ** exp for exp in opt_params]
     scale_conn_weights(net_scaled, scaling_factors=scaling_fctrs,
                        which_conn_idxs=which_conn_idxs)
     net_connected, _ = simulate_network(net_scaled,
