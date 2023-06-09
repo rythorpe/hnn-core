@@ -29,6 +29,7 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 ###############################################################################
 # %% set parameters
 output_dir = '/users/rthorpe/data/rthorpe/hnn_core_opt_output'
+#output_dir = '/home/ryan/Desktop/stuff'
 
 # drive parameters
 # 1 kHz as in Billeh et al. 2020 is too fast for this size of network
@@ -45,9 +46,9 @@ poiss_weights = dict(L2_basket=6.289657993813411703e-04,
 
 poiss_params = list(poiss_weights.values()) + [poiss_rate]
 
-min_weight, max_weight = 1e-5, 1e-1  # will opt over log_10 domain
+min_scaling_exp, max_scaling_exp = -2, 2  # scaling fctor: 10^-2, 10^2
 #min_lamtha, max_lamtha_i, max_lamtha_e = 1., 5.5, 10.0
-lamtha = 6.0  # will apply to all local network connections!!
+lamtha = 4.0  # will apply to all local network connections!!
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
@@ -136,7 +137,7 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     opt_params_0 = np.ones_like(conn_idxs)
 
     # local network connectivity synaptic weight bounds
-    opt_params_bounds = np.tile([min_weight, max_weight],
+    opt_params_bounds = np.tile([min_scaling_exp, max_scaling_exp],
                                 (len(opt_params_0), 1)).tolist()
 
     ###########################################################################
@@ -161,18 +162,19 @@ for step_idx, step_cell_types in enumerate(opt_seq):
                               noise=1e-10,
                               verbose=True,
                               random_state=1)
-    opt_params = opt_results.x.copy()
+    scaling_fctrs = 10 ** np.array(opt_results.x)
     # update network with results from current step
     # XXX FIX: needs some way of knowing which connections to update this step
-    scale_conn_weights(net_updated, scaling_factors=opt_params,
+    scale_conn_weights(net_updated, scaling_factors=scaling_fctrs,
                        which_conn_idxs=conn_idxs)
 #header = [weight + '_weight' for weight in poiss_weights_ub]
 #header = ','.join(header)
 #np.savetxt(op.join(output_dir, 'optimized_lamtha_params.csv'),
 #           X=[opt_params], delimiter=',', header=header)
+final_conn_weights = get_conn_params(net_updated, 'weight')
 np.savetxt(op.join(output_dir, 'optimized_conn_weight_params.csv'),
-           X=[opt_params], delimiter=',')
-print(f'conn weight params: {opt_params}')
+           X=[final_conn_weights], delimiter=',')
+print(f'conn weight params: {final_conn_weights}')
 
 ###############################################################################
 # %% plot results
