@@ -58,9 +58,9 @@ target_avg_spike_rates = {'L2_basket': 0.8,
 target_sr_unconn = {cell: rate * 0.2 for cell, rate in
                     target_avg_spike_rates.items()}
 
-net = L6_model()
+net = L6_model(grid_shape=(10, 30))
 for conn in net.connectivity:
-    conn['nc_dict']['lamtha'] = 1.5
+    conn['nc_dict']['lamtha'] = 2.0
 net, dpls = simulate_network(net.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=False,
                              n_trials=n_trials, n_procs=n_procs, rng=rng)
