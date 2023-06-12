@@ -102,7 +102,7 @@ opt_seq = [
                    'L6_basket',
                    'L6_pyramidal']}
 ]
-opt_n_init_points = 300  # < opt_n_total_calls
+opt_n_init_points = 400  # < opt_n_total_calls
 opt_n_total_calls = 600
 
 all_cell_types = list(net_original.cell_types.keys())
@@ -134,7 +134,7 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     ###########################################################################
     # %% set initial parameters and parameter bounds prior
     # start with scaling factors of one
-    opt_params_0 = [1 for _ in conn_idxs]
+    opt_params_0 = [0 for _ in conn_idxs]
 
     # local network connectivity synaptic weight bounds
     opt_params_bounds = np.tile([min_scaling_exp, max_scaling_exp],
