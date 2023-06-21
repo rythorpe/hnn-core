@@ -168,6 +168,7 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     # XXX FIX: needs some way of knowing which connections to update this step
     scale_conn_weights(net_updated, scaling_factors=scaling_fctrs,
                        which_conn_idxs=conn_idxs)
+    print(f'optimization step {step_idx} completed!')
 #header = [weight + '_weight' for weight in poiss_weights_ub]
 #header = ','.join(header)
 #np.savetxt(op.join(output_dir, 'optimized_lamtha_params.csv'),
