@@ -5,6 +5,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import OptimizeResult
+import antropy as ant
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import seaborn as sns
@@ -301,11 +302,11 @@ def err_spike_rates_logdiff(net, sim_time, burn_in_time,
     return sum(spike_rate_diffs) - min_log_diff
 
 
-def err_spike_rates_minnorm(net, conn_weights, sim_time, burn_in_time,
-                            target_avg_spike_rates):
+def err_spike_rates_conn(net, sim_time, burn_in_time,
+                         target_avg_spike_rates):
     """Cost function for matching simulated vs expected avg spike rates.
 
-    Used for optimizing cell excitability under poisson drive.
+    Used for optimizing local network connectivity given poisson drive.
     """
     avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
                                                    tstop=sim_time,
@@ -322,14 +323,16 @@ def err_spike_rates_minnorm(net, conn_weights, sim_time, burn_in_time,
                             (np.sqrt(len(spike_rate_diffs) *
                              max_spike_rate_diff**2)))
 
-    # regularization term: penalize for large connection weights across
-    # connection types
-    max_weight = 1e-1
-    conn_weight_norm = (np.linalg.norm(conn_weights) /
-                        (np.sqrt(len(conn_weights) * max_weight**2)))
+    # regularization term: penalize for over or under autocorrelated spike
+    # rates over time (via Detrended Fluxuation Analysis)
 
-    # XXX set regulization constant to 0.0 for now
-    return spike_rate_diff_norm + (0.0 * conn_weight_norm)
+    target_hurst = 0.5
+    hurst_tol = 0.05
+    # XXX calculate spike rate timeseries for all cells
+    hurst = ant.detrended_fluctuation(spike_rate_ts)
+    hurst_norm = np.abs(hurst - target_hurst) / hurst_tol
+
+    return spike_rate_diff_norm + hurst_norm
 
 
 def opt_baseline_spike_rates_1(opt_params, net, sim_params,
@@ -387,9 +390,9 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
 
     # note: pass in opt_params (weight scaling factors) to
     # penalize cost function for large connection weights
-    err = err_spike_rates_minnorm(net_connected, opt_params,
-                                  sim_time, burn_in_time,
-                                  target_avg_spike_rates)
+    err = err_spike_rates_conn(net_connected,
+                               sim_time, burn_in_time,
+                               target_avg_spike_rates)
     return err
 
 
