@@ -38,7 +38,7 @@ poiss_params = [5.823801023405118966e-04,
                 9.301705407062075449e-04,
                 poiss_rate]
 
-n_procs = 12
+n_procs = 6
 sim_time = 2300
 burn_in_time = 300
 n_trials = 1
@@ -58,7 +58,7 @@ target_avg_spike_rates = {'L2_basket': 0.8,
 target_sr_unconn = {cell: rate * 0.2 for cell, rate in
                     target_avg_spike_rates.items()}
 
-net = L6_model(grid_shape=(10, 30))
+net = L6_model(grid_shape=(12, 12))
 for conn in net.connectivity:
     conn['nc_dict']['lamtha'] = 2.0
 net, dpls = simulate_network(net.copy(), sim_time, burn_in_time,
