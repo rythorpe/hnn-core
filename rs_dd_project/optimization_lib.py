@@ -323,16 +323,41 @@ def err_spike_rates_conn(net, sim_time, burn_in_time,
                             (np.sqrt(len(spike_rate_diffs) *
                              max_spike_rate_diff**2)))
 
+    # regularization term: penalize for a spiking renewal process that is too
+    # predictable (i.e., rhythmic)
+
+    # concatenate across trials
+    spike_times = np.concatenate(net.cell_response.spike_times)
+    spike_gids = np.concatenate(net.cell_response.spike_gids)
+    # sort by spike times
+    sort_idxs = np.argsort(spike_times)
+    spike_times = spike_times[sort_idxs]
+    spike_gids = spike_gids[sort_idxs]
+    # compile inter-event-intervals for each cell that spikes
+    iei_agg = list()
+    for cell_gid in np.unique(spike_gids):
+        iei = np.diff(spike_times[spike_gids == cell_gid]).tolist()
+        iei_agg.extend(iei)
+    # square of the coefficient of variation (~Fano Factor)
+    cv2 = np.var(iei_agg) / np.mean(iei_agg) ** 2
+    regularizer = 1 - cv2  # invert s.t. 0 is Poisson-like, 1 is rhythmic
+    # normalize by a user-defined tolerance s.t. this term is weighted
+    # evenly with the desired spike rate distance tolerance
+    regularizer /= 0.2
+
     # regularization term: penalize for over or under autocorrelated spike
     # rates over time (via Detrended Fluxuation Analysis)
+    # target_hurst = 0.5
+    # hurst_tol = 0.05
+    # t_win = 5.0  # ms
+    # tstart = burn_in_time
+    # tstop = sim_time
+    # bins = np.arange()
+    # spike_rate_ts = np.histogram(net.cell_response.spike_times, bins=np.arange())
+    # hurst = ant.detrended_fluctuation(spike_rate_ts)
+    # regularizer = np.abs(hurst - target_hurst) / hurst_tol
 
-    target_hurst = 0.5
-    hurst_tol = 0.05
-    # XXX calculate spike rate timeseries for all cells
-    hurst = ant.detrended_fluctuation(spike_rate_ts)
-    hurst_norm = np.abs(hurst - target_hurst) / hurst_tol
-
-    return spike_rate_diff_norm + hurst_norm
+    return spike_rate_diff_norm + regularizer
 
 
 def opt_baseline_spike_rates_1(opt_params, net, sim_params,
