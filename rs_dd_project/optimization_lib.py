@@ -340,10 +340,10 @@ def err_spike_rates_conn(net, sim_time, burn_in_time,
         iei_agg.extend(iei)
     # square of the coefficient of variation (~Fano Factor)
     cv2 = np.var(iei_agg) / np.mean(iei_agg) ** 2
-    regularizer = 1 - cv2  # invert s.t. 0 is Poisson-like, 1 is rhythmic
+    regularizer = 1 / cv2 - 1  # invert s.t. 0 is Poisson-like, 1 is rhythmic
     # normalize by a user-defined tolerance s.t. this term is weighted
     # evenly with the desired spike rate distance tolerance
-    regularizer /= 0.2
+    regularizer /= 0.25
 
     # regularization term: penalize for over or under autocorrelated spike
     # rates over time (via Detrended Fluxuation Analysis)

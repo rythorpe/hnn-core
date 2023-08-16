@@ -226,4 +226,4 @@ fig_sr_profiles = plot_spiking_profiles(
 plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'post_opt_spikerate_profile.png'))
 
-print('local net connectivity (lamtha) optimization routine completed successfully!!!')
+print('local net connectivity optimization routine completed successfully!!!')
