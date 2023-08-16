@@ -38,7 +38,7 @@ poiss_params = [5.823801023405118966e-04,
                 9.301705407062075449e-04,
                 poiss_rate]
 
-n_procs = 6
+n_procs = 10
 sim_time = 2300
 burn_in_time = 300
 n_trials = 1
