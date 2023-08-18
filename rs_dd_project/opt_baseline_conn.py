@@ -46,7 +46,7 @@ poiss_weights = dict(L2_basket=5.823801023405118966e-04,
 
 poiss_params = list(poiss_weights.values()) + [poiss_rate]
 
-min_scaling_exp, max_scaling_exp = -2, 2  # scaling fctor: 10^-2, 10^2
+min_scaling_exp, max_scaling_exp = -2.0, 2.0  # scaling fctor: 10^-2, 10^2
 #min_lamtha, max_lamtha_i, max_lamtha_e = 1., 5.5, 10.0
 lamtha = 4.0  # will apply to all local network connections!!
 
@@ -135,11 +135,13 @@ for step_idx, step_cell_types in enumerate(opt_seq):
     ###########################################################################
     # %% set initial parameters and parameter bounds prior
     # start with scaling factors of one
-    opt_params_0 = [0 for _ in conn_idxs]
+    opt_params_0 = [0 for conn_idx in conn_idxs]
 
     # local network connectivity synaptic weight bounds
+    # make sure the values are stored as floats since they define bounds in
+    # R^n_params
     opt_params_bounds = np.tile([min_scaling_exp, max_scaling_exp],
-                                (len(opt_params_0), 1)).tolist()
+                                (len(opt_params_0), 1)).astype(float).tolist()
 
     ###########################################################################
     # %% prepare cost function

@@ -11,24 +11,6 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 
 poiss_rate = 1e1
 
-# manually-tuned results for 33% target rate [old values]
-poiss_params = [6.72e-04,
-                9.27e-04,
-                9.85e-04,
-                29.74e-04,
-                9.27e-04,
-                9.50e-04,
-                poiss_rate]
-
-# final optimization results for 33% target rate
-poiss_params = [6.289657993813411703e-04,
-                9.358499249274205602e-04,
-                9.886578056957024199e-04,
-                2.991545730497045634e-03,
-                9.394567594233604315e-04,
-                9.406783797610669077e-04,
-                poiss_rate]
-
 # final optimization results for 20% target rate + manual tuning [use this one]
 poiss_params = [5.823801023405118966e-04,
                 8.617101631605665613e-04,
@@ -42,6 +24,7 @@ n_procs = 10
 sim_time = 2300
 burn_in_time = 300
 n_trials = 1
+clear_conn = True
 rng = np.random.default_rng(1234)
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
@@ -59,10 +42,12 @@ target_sr_unconn = {cell: rate * 0.2 for cell, rate in
                     target_avg_spike_rates.items()}
 
 net = L6_model(grid_shape=(12, 12))
+# only relevant when clear_conn is True ##
 for conn in net.connectivity:
     conn['nc_dict']['lamtha'] = 2.0
+##########################################
 net, dpls = simulate_network(net.copy(), sim_time, burn_in_time,
-                             poiss_params=poiss_params, clear_conn=False,
+                             poiss_params=poiss_params, clear_conn=clear_conn,
                              n_trials=n_trials, n_procs=n_procs, rng=rng)
 
 fig_net_response = plot_net_response(dpls, net)
