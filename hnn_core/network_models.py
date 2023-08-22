@@ -335,7 +335,7 @@ def L6_model(params=None, add_drives_from_params=False,
     if params is None:
         params = read_params(params_fname)
 
-    # increase size of network: 10x20 instead of 10x10
+    # increase size of network: 12x12 instead of 10x10
     params['N_pyr_x'] = grid_shape[0]
     params['N_pyr_y'] = grid_shape[1]
 
@@ -348,8 +348,8 @@ def L6_model(params=None, add_drives_from_params=False,
     net.cell_types[cell_name] = pyramidal_ca(
         cell_name=_short_name(cell_name), pos=pos)
 
-    conn_weights = {"gbar_L2Pyr_L2Pyr_ampa": 0.0005,
-                    "gbar_L2Pyr_L2Pyr_nmda": 0.0005,
+    conn_weights = {"gbar_L2Pyr_L2Pyr_ampa": 0.00045,
+                    "gbar_L2Pyr_L2Pyr_nmda": 0.00001,
                     "gbar_L2Basket_L2Pyr_gabaa": 0.05,
                     "gbar_L2Basket_L2Pyr_gabab": 0.05,
                     "gbar_L2Pyr_L5Pyr": 0.00025,
@@ -358,13 +358,16 @@ def L6_model(params=None, add_drives_from_params=False,
                     "gbar_L5Pyr_L5Pyr_nmda": 0.0005,
                     "gbar_L5Basket_L5Pyr_gabaa": 0.025,
                     "gbar_L5Basket_L5Pyr_gabab": 0.006,  # changed from jones09
-                    "gbar_L2Pyr_L2Basket": 0.0005,
+                    "gbar_L2Pyr_L2Basket": 0.00060,
                     "gbar_L2Basket_L2Basket": 0.02,
                     "gbar_L2Pyr_L5Basket": 0.00025,
                     "gbar_L5Pyr_L5Basket": 0.0005,
                     "gbar_L5Basket_L5Basket": 0.02}
     lamtha = 4.0
     delay = net.delay
+    prob_e = 0.5  # e->e
+    prob_i = 1.0  # any connection involving i
+    conn_seed = 1
 
     # layer2 Pyr -> layer2 Pyr
     # layer5 Pyr -> layer5 Pyr
@@ -376,7 +379,8 @@ def L6_model(params=None, add_drives_from_params=False,
             weight = conn_weights[key]
             net.add_connection(
                 target_cell, target_cell, loc, receptor, weight,
-                delay, lamtha, allow_autapses=False)
+                delay, lamtha, allow_autapses=False, probability=prob_e,
+                conn_seed=conn_seed)
 
     # layer2 Basket -> layer2 Pyr
     src_cell = 'L2_basket'
@@ -386,7 +390,8 @@ def L6_model(params=None, add_drives_from_params=False,
         key = f'gbar_L2Basket_L2Pyr_{receptor}'
         weight = conn_weights[key]
         net.add_connection(
-            src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+            src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+            probability=prob_i, conn_seed=conn_seed)
 
     # layer5 Basket -> layer5 Pyr
     src_cell = 'L5_basket'
@@ -396,7 +401,8 @@ def L6_model(params=None, add_drives_from_params=False,
         key = f'gbar_L5Basket_{_short_name(target_cell)}_{receptor}'
         weight = conn_weights[key]
         net.add_connection(
-            src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+            src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+            probability=prob_i, conn_seed=conn_seed)
 
     # layer2 Pyr -> layer5 Pyr
     src_cell = 'L2_pyramidal'
@@ -405,7 +411,8 @@ def L6_model(params=None, add_drives_from_params=False,
         key = f'gbar_L2Pyr_{_short_name(target_cell)}'
         weight = conn_weights[key]
         net.add_connection(
-            src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+            src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+            probability=prob_e, conn_seed=conn_seed)
 
     # layer2 Basket -> layer5 Pyr
     src_cell = 'L2_basket'
@@ -414,7 +421,8 @@ def L6_model(params=None, add_drives_from_params=False,
     loc = 'distal'
     receptor = 'gabaa'
     net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+        probability=prob_i, conn_seed=conn_seed)
 
     # xx -> layer2 Basket
     src_cell = 'L2_pyramidal'
@@ -424,7 +432,8 @@ def L6_model(params=None, add_drives_from_params=False,
     loc = 'soma'
     receptor = 'ampa'
     net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+        probability=prob_i, conn_seed=conn_seed)
 
     src_cell = 'L2_basket'
     key = f'gbar_L2Basket_{_short_name(target_cell)}'
@@ -432,7 +441,8 @@ def L6_model(params=None, add_drives_from_params=False,
     loc = 'soma'
     receptor = 'gabaa'
     net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+        probability=prob_i, conn_seed=conn_seed)
 
     # xx -> layer5 Basket
     src_cell = 'L5_basket'
@@ -443,7 +453,7 @@ def L6_model(params=None, add_drives_from_params=False,
     weight = conn_weights[key]
     net.add_connection(
         src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-        allow_autapses=False)
+        allow_autapses=False, probability=prob_i, conn_seed=conn_seed)
 
     src_cell = 'L5_pyramidal'
     key = f'gbar_L5Pyr_{_short_name(target_cell)}'
@@ -451,7 +461,8 @@ def L6_model(params=None, add_drives_from_params=False,
     loc = 'soma'
     receptor = 'ampa'
     net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+        probability=prob_i, conn_seed=conn_seed)
 
     src_cell = 'L2_pyramidal'
     key = f'gbar_L2Pyr_{_short_name(target_cell)}'
@@ -459,7 +470,8 @@ def L6_model(params=None, add_drives_from_params=False,
     loc = 'soma'
     receptor = 'ampa'
     net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha)
+        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
+        probability=prob_i, conn_seed=conn_seed)
 
     # Layer 6
 
@@ -476,8 +488,8 @@ def L6_model(params=None, add_drives_from_params=False,
                                weight=weight_L5_L6,
                                delay=delay,
                                lamtha=lamtha,
-                               probability=L5_L6_prob,
-                               conn_seed=L5_L6_conn_seed)
+                               probability=prob_e,
+                               conn_seed=conn_seed)
         net.add_connection(src_gids='L5_pyramidal',
                            target_gids='L6_pyramidal',
                            loc='deep_basal',
@@ -485,8 +497,8 @@ def L6_model(params=None, add_drives_from_params=False,
                            weight=weight_L5_L6,
                            delay=delay,
                            lamtha=lamtha,
-                           probability=L5_L6_prob,
-                           conn_seed=L5_L6_conn_seed)
+                           probability=prob_e,
+                           conn_seed=conn_seed)
 
         # layer6 Pyr -> layer6 Pyr
         net.add_connection(src_gids='L6_pyramidal',
@@ -495,14 +507,18 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='ampa',
                            weight=0.0001,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_e,
+                           conn_seed=conn_seed)
         net.add_connection(src_gids='L6_pyramidal',
                            target_gids='L6_pyramidal',
                            loc='deep_basal',
                            receptor='nmda',
                            weight=0.00005,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_e,
+                           conn_seed=conn_seed)
 
         # layer6 Bask -> layer6 Pyr
         net.add_connection(src_gids='L6_basket',
@@ -511,14 +527,18 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='gabaa',
                            weight=0.005,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
         net.add_connection(src_gids='L6_basket',
                            target_gids='L6_pyramidal',
                            loc='soma',
                            receptor='gabab',
                            weight=0.005,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
 
         # layer6 Pyr -> layer6 Bask
         net.add_connection(src_gids='L6_pyramidal',
@@ -527,7 +547,9 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='ampa',
                            weight=0.0005,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
 
         # layer6 Bask -> layer2 Pyr
         net.add_connection(src_gids='L6_basket',
@@ -536,7 +558,9 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='gabaa',
                            weight=0.001,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
 
         # layer6 Bask -> layer2 Bask
         net.add_connection(src_gids='L6_basket',
@@ -545,7 +569,9 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='gabaa',
                            weight=0.001,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
 
         # layer6 Bask -> layer5 Pyr
         net.add_connection(src_gids='L6_basket',
@@ -554,7 +580,9 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='gabaa',
                            weight=0.0005,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
 
         # layer6 Bask -> layer5 Bask
         net.add_connection(src_gids='L6_basket',
@@ -563,7 +591,9 @@ def L6_model(params=None, add_drives_from_params=False,
                            receptor='gabaa',
                            weight=0.0025,
                            delay=delay,
-                           lamtha=lamtha)
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
 
     return net
 
