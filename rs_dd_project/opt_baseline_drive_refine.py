@@ -3,8 +3,6 @@
 # Author: Ryan Thorpe <ryan_thorpe@brown.edu>
 
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from hnn_core.network_models import L6_model
