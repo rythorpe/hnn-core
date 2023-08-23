@@ -358,7 +358,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "gbar_L5Pyr_L5Pyr_nmda": 0.0005,
                     "gbar_L5Basket_L5Pyr_gabaa": 0.025,
                     "gbar_L5Basket_L5Pyr_gabab": 0.006,  # changed from jones09
-                    "gbar_L2Pyr_L2Basket": 0.00060,
+                    "gbar_L2Pyr_L2Basket": 0.00062,
                     "gbar_L2Basket_L2Basket": 0.02,
                     "gbar_L2Pyr_L5Basket": 0.00025,
                     "gbar_L5Pyr_L5Basket": 0.0005,
@@ -366,7 +366,7 @@ def L6_model(params=None, add_drives_from_params=False,
     lamtha = 4.0
     delay = net.delay
     prob_e = 0.5  # e->e
-    prob_i = 1.0  # any connection involving i
+    prob_i = 0.85  # any connection involving i
     conn_seed = 1
 
     # layer2 Pyr -> layer2 Pyr
