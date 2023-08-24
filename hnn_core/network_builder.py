@@ -107,7 +107,7 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
         dpl_data_agg,
         neuron_net._nrn_dipoles['L2_pyramidal'].as_numpy(),
         neuron_net._nrn_dipoles['L5_pyramidal'].as_numpy(),
-        neuron_net._nrn_dipoles['L6_pyramidal'].as_numpy()
+        neuron_net._nrn_dipoles['midal'].as_numpy()
     ]
 
     rec_arr_py = dict()
@@ -429,7 +429,7 @@ class NetworkBuilder(object):
 
                 # instantiate NEURON object
                 if src_type in ('L2_pyramidal', 'L5_pyramidal',
-                                'L6_pyramidal'):
+                                'midal'):
                     cell.build(sec_name_apical='apical_trunk')
                 else:
                     cell.build()
@@ -492,14 +492,13 @@ class NetworkBuilder(object):
                     src_type = self.net.gid_to_type(src_gid)
                     target_type = self.net.gid_to_type(target_gid)
                     target_cell = self._cells[target_filter[target_gid]]
-                    connection_name = f'{_short_name(src_type)}_'\
-                                      f'{_short_name(target_type)}_{receptor}'
+                    connection_name = f'{src_type}_'\
+                                      f'{target_type}_{receptor}'
                     if connection_name not in self.ncs:
                         self.ncs[connection_name] = list()
-                    pos_idx = src_gid - net.gid_ranges[_long_name(src_type)][0]
+                    pos_idx = src_gid - net.gid_ranges[src_type][0]
                     # NB pos_dict for this drive must include ALL cell types!
-                    nc_dict['pos_src'] = net.pos_dict[
-                        _long_name(src_type)][pos_idx]
+                    nc_dict['pos_src'] = net.pos_dict[src_type][pos_idx]
 
                     # get synapse locations
                     syn_keys = list()

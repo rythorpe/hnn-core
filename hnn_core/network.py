@@ -60,17 +60,37 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     """
     pos_dict = dict()
 
-    # PYRAMIDAL CELLS
+    # PYRAMIDAL CELLS L5
     xxrange = np.arange(n_pyr_x) * inplane_distance
     yyrange = np.arange(n_pyr_y) * inplane_distance
-
-    pos_dict['L5_pyramidal'] = [
+    pos_dict['L5e'] = [
         pos for pos in it.product(xxrange, yyrange, [0])]
-    pos_dict['L2_pyramidal'] = [
+
+    # PYRAMIDAL CELLS L2/3
+    # Group 1
+    xxrange = np.arange(0, n_pyr_x, 2) * inplane_distance
+    yyrange = np.arange(0, n_pyr_y, 2) * inplane_distance
+    pos_dict['L2e_1'] = [
         pos for pos in it.product(xxrange, yyrange, [zdiff])]
-    # L6 will be placed below L5 at half the distance between L5 and L2/3
-    pos_dict['L6_pyramidal'] = [
+    # Group 2
+    xxrange = np.arange(1, n_pyr_x, 2) * inplane_distance
+    yyrange = np.arange(1, n_pyr_y, 2) * inplane_distance
+    pos_dict['L2e_2'] = [
+        pos for pos in it.product(xxrange, yyrange, [zdiff])]
+
+    # PYRAMIDAL CELLS L6
+    # L6 will be placed below L5 at half the distance between L5 and L2/
+    # Group 1
+    xxrange = np.arange(0, n_pyr_x, 2) * inplane_distance
+    yyrange = np.arange(0, n_pyr_y, 2) * inplane_distance
+    pos_dict['L6e_1'] = [
         pos for pos in it.product(xxrange, yyrange, [-zdiff / 2])]
+    # Group 2
+    xxrange = np.arange(1, n_pyr_x, 2) * inplane_distance
+    yyrange = np.arange(1, n_pyr_y, 2) * inplane_distance
+    pos_dict['L6e_2'] = [
+        pos for pos in it.product(xxrange, yyrange, [-zdiff / 2])]
+
 
     # BASKET CELLS
     xzero = np.arange(0, n_pyr_x, 3) * inplane_distance
@@ -85,13 +105,19 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     # append the z value for position for L2 and L5
     # print(len(coords_sorted))
 
-    pos_dict['L5_basket'] = [(pos_xy[0], pos_xy[1], 0.2 * zdiff) for
-                             pos_xy in coords_sorted]
-    pos_dict['L2_basket'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff) for
-                             pos_xy in coords_sorted]
-    pos_dict['L6_basket'] = [(pos_xy[0], pos_xy[1],
-                             (-zdiff / 2) + (0.2 * zdiff)) for pos_xy in
-                             coords_sorted]
+    pos_dict['L5i'] = [(pos_xy[0], pos_xy[1], 0.2 * zdiff) for
+                       pos_xy in coords_sorted]
+    # for L2/3 and L6, alternate between groups 1 and 2 when assigning pos
+    pos_dict['L2i_1'] = [(pos_xy[0][::2], pos_xy[1][::2], 0.8 * zdiff) for
+                         pos_xy in coords_sorted]
+    pos_dict['L2i_2'] = [(pos_xy[0][1::2], pos_xy[1][1::2], 0.8 * zdiff) for
+                         pos_xy in coords_sorted]
+    pos_dict['L6i_1'] = [(pos_xy[0][::2], pos_xy[1][::2],
+                         (-zdiff / 2) + (0.2 * zdiff)) for pos_xy in
+                         coords_sorted]
+    pos_dict['L6i_2'] = [(pos_xy[0][1::2], pos_xy[1][1::2],
+                         (-zdiff / 2) + (0.2 * zdiff)) for pos_xy in
+                         coords_sorted]
 
     # ORIGIN
     # origin's z component isn't really used in
@@ -371,12 +397,18 @@ class Network(object):
 
         # Source dict of names, first real ones only!
         cell_types = {
-            'L2_basket': basket(cell_name=_short_name('L2_basket')),
-            'L2_pyramidal': pyramidal(cell_name=_short_name('L2_pyramidal')),
-            'L5_basket': basket(cell_name=_short_name('L5_basket')),
-            'L5_pyramidal': pyramidal(cell_name=_short_name('L5_pyramidal')),
-            'L6_basket': basket(cell_name=_short_name('L6_basket')),
-            'L6_pyramidal': pyramidal(cell_name=_short_name('L6_pyramidal'))
+            'L2i_1': basket(cell_name=_short_name('L2_basket')),
+            'L2i_2': basket(cell_name=_short_name('L2_basket')),
+            'L2e_1': pyramidal(cell_name=_short_name('L2_pyramidal')),
+            'L2e_2': pyramidal(cell_name=_short_name('L2_pyramidal')),
+            'L5i': basket(cell_name=_short_name('L5_basket')),
+            'L5e': pyramidal(cell_name=_short_name('L5_pyramidal')),
+            'L6i_1': basket(cell_name=_short_name('L6_basket')),
+            'L6i_2': basket(cell_name=_short_name('L6_basket')),
+            'L6i_cross1': basket(cell_name=_short_name('L6_basket')),
+            'L6i_cross2': basket(cell_name=_short_name('L6_basket')),
+            'L6e_1': pyramidal(cell_name=_short_name('L6_pyramidal')),
+            'L6e_2': pyramidal(cell_name=_short_name('L6_pyramidal')),
         }
 
         self.cell_response = None
@@ -416,11 +448,13 @@ class Network(object):
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        s = ("%d x %d Pyramidal cells (L2, L5)"
+        n_L2_basket = len(self.pos_dict['L2i_1']) + len(self.pos_dict['L2i_2'])
+        n_L5_basket = len(self.pos_dict['L5i'])
+        n_L6_basket = len(self.pos_dict['L6i_1']) + len(self.pos_dict['L6i_2'])
+        s = ("%d x %d Pyramidal cells (L2, L5, L6)"
              % (self._N_pyr_x, self._N_pyr_y))
-        s += ("\n%d L2 basket cells\n%d L5 basket cells"
-              % (len(self.pos_dict['L2_basket']),
-                 len(self.pos_dict['L5_basket'])))
+        s += ("\n%d L2 basket cells\n%d L5 basket cells\n%d L6 basket cells"
+              % (n_L2_basket, n_L5_basket, n_L6_basket))
         return '<%s | %s>' % (class_name, s)
 
     def set_cell_positions(self, *, inplane_distance=None,
@@ -1177,7 +1211,7 @@ class Network(object):
             target_gids = [[target_gids] for _ in range(len(src_gids))]
         elif isinstance(target_gids, str):
             _check_option('target_gids', target_gids, valid_target_cells)
-            target_gids = [list(self.gid_ranges[_long_name(target_gids)])
+            target_gids = [list(self.gid_ranges[target_gids])
                            for _ in range(len(src_gids))]
         elif isinstance(target_gids, range):
             target_gids = [list(target_gids) for _ in range(len(src_gids))]
