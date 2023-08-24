@@ -348,8 +348,8 @@ def L6_model(params=None, add_drives_from_params=False,
     net.cell_types[cell_name] = pyramidal_ca(
         cell_name=_short_name(cell_name), pos=pos)
 
-    conn_weights = {"gbar_L2Pyr_L2Pyr_ampa": 0.00045,
-                    "gbar_L2Pyr_L2Pyr_nmda": 0.00001,
+    conn_weights = {"gbar_L2Pyr_L2Pyr_ampa": 0.000445,
+                    "gbar_L2Pyr_L2Pyr_nmda": 0.000008,
                     "gbar_L2Basket_L2Pyr_gabaa": 0.05,
                     "gbar_L2Basket_L2Pyr_gabab": 0.05,
                     "gbar_L2Pyr_L5Pyr": 0.00025,
