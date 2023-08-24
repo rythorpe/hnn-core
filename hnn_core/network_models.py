@@ -348,25 +348,31 @@ def L6_model(params=None, add_drives_from_params=False,
     net.cell_types[cell_name] = pyramidal_ca(
         cell_name=_short_name(cell_name), pos=pos)
 
-    conn_weights = {"gbar_L2Pyr_L2Pyr_ampa": 0.000445,
-                    "gbar_L2Pyr_L2Pyr_nmda": 0.000008,
-                    "gbar_L2Basket_L2Pyr_gabaa": 0.05,
-                    "gbar_L2Basket_L2Pyr_gabab": 0.05,
-                    "gbar_L2Pyr_L5Pyr": 0.00025,
+    # Update biophysics (increase gabab duration of inhibition) as in Law model
+    # for cell_type in net.cell_types.keys():
+    #     if 'pyramidal' in cell_type:
+    #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
+    #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
+
+    conn_weights = {"gbar_L2Pyr_L2Pyr_ampa": 0.00055,
+                    "gbar_L2Pyr_L2Pyr_nmda": 0.00001,
+                    "gbar_L2Basket_L2Pyr_gabaa": 0.040,
+                    "gbar_L2Basket_L2Pyr_gabab": 0.030,
+                    "gbar_L2Pyr_L5Pyr": 0.00020,
                     "gbar_L2Basket_L5Pyr": 0.001,
-                    "gbar_L5Pyr_L5Pyr_ampa": 0.0005,
-                    "gbar_L5Pyr_L5Pyr_nmda": 0.0005,
-                    "gbar_L5Basket_L5Pyr_gabaa": 0.025,
-                    "gbar_L5Basket_L5Pyr_gabab": 0.006,  # changed from jones09
-                    "gbar_L2Pyr_L2Basket": 0.00062,
+                    "gbar_L5Pyr_L5Pyr_ampa": 0.00077,
+                    "gbar_L5Pyr_L5Pyr_nmda": 0.00015,
+                    "gbar_L5Basket_L5Pyr_gabaa": 0.028,
+                    "gbar_L5Basket_L5Pyr_gabab": 0.0061,  # changed from jones09
+                    "gbar_L2Pyr_L2Basket": 0.00065,
                     "gbar_L2Basket_L2Basket": 0.02,
-                    "gbar_L2Pyr_L5Basket": 0.00025,
-                    "gbar_L5Pyr_L5Basket": 0.0005,
+                    "gbar_L2Pyr_L5Basket": 0.00020,
+                    "gbar_L5Pyr_L5Basket": 0.00047,
                     "gbar_L5Basket_L5Basket": 0.02}
     lamtha = 4.0
     delay = net.delay
-    prob_e = 0.5  # e->e
-    prob_i = 0.85  # any connection involving i
+    prob_e = 0.33  # e->e
+    prob_i = 0.66  # i->, i<->e
     conn_seed = 1
 
     # layer2 Pyr -> layer2 Pyr
@@ -535,6 +541,17 @@ def L6_model(params=None, add_drives_from_params=False,
                            loc='soma',
                            receptor='gabab',
                            weight=0.005,
+                           delay=delay,
+                           lamtha=lamtha,
+                           probability=prob_i,
+                           conn_seed=conn_seed)
+
+        # layer6 Bask -> layer6 Bask
+        net.add_connection(src_gids='L6_basket',
+                           target_gids='L6_basket',
+                           loc='soma',
+                           receptor='gabaa',
+                           weight=0.02,
                            delay=delay,
                            lamtha=lamtha,
                            probability=prob_i,

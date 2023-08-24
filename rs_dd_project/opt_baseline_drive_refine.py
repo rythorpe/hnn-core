@@ -21,10 +21,11 @@ poiss_params = [5.823801023405118966e-04,
                 poiss_rate]
 
 n_procs = 10
-sim_time = 2300
+sim_time = 1300
 burn_in_time = 300
 n_trials = 1
 clear_conn = False
+connect_layer_6 = True
 rng = np.random.default_rng(1234)
 
 # taken from Reyes-Puerta 2015 and De Kock 2007
@@ -41,7 +42,7 @@ target_avg_spike_rates = {'L2_basket': 0.8,
 target_sr_unconn = {cell: rate * 0.2 for cell, rate in
                     target_avg_spike_rates.items()}
 
-net = L6_model(grid_shape=(12, 12))
+net = L6_model(grid_shape=(12, 12), connect_layer_6=connect_layer_6)
 net, dpls = simulate_network(net.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=clear_conn,
                              n_trials=n_trials, n_procs=n_procs, rng=rng)
