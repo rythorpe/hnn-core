@@ -91,7 +91,6 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     pos_dict['L6e_2'] = [
         pos for pos in it.product(xxrange, yyrange, [-zdiff / 2])]
 
-
     # BASKET CELLS
     xzero = np.arange(0, n_pyr_x, 3) * inplane_distance
     xone = np.arange(1, n_pyr_x, 3) * inplane_distance
@@ -105,19 +104,17 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     # append the z value for position for L2 and L5
     # print(len(coords_sorted))
 
-    pos_dict['L5i'] = [(pos_xy[0], pos_xy[1], 0.2 * zdiff) for
-                       pos_xy in coords_sorted]
+    pos_dict['L5i'] = [(pos_xy[0], pos_xy[1], 0.2 * zdiff)
+                       for pos_xy in coords_sorted]
     # for L2/3 and L6, alternate between groups 1 and 2 when assigning pos
-    pos_dict['L2i_1'] = [(pos_xy[0][::2], pos_xy[1][::2], 0.8 * zdiff) for
-                         pos_xy in coords_sorted]
-    pos_dict['L2i_2'] = [(pos_xy[0][1::2], pos_xy[1][1::2], 0.8 * zdiff) for
-                         pos_xy in coords_sorted]
-    pos_dict['L6i_1'] = [(pos_xy[0][::2], pos_xy[1][::2],
-                         (-zdiff / 2) + (0.2 * zdiff)) for pos_xy in
-                         coords_sorted]
-    pos_dict['L6i_2'] = [(pos_xy[0][1::2], pos_xy[1][1::2],
-                         (-zdiff / 2) + (0.2 * zdiff)) for pos_xy in
-                         coords_sorted]
+    pos_dict['L2i_1'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff)
+                         for pos_xy in coords_sorted[::2]]
+    pos_dict['L2i_2'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff)
+                         for pos_xy in coords_sorted[1::2]]
+    pos_dict['L6i_1'] = [(pos_xy[0], pos_xy[1] (-zdiff / 2) + (0.2 * zdiff))
+                         for pos_xy in coords_sorted[::2]]
+    pos_dict['L6i_2'] = [(pos_xy[0], pos_xy[1], (-zdiff / 2) + (0.2 * zdiff))
+                         for pos_xy in coords_sorted[1::2]]
 
     # ORIGIN
     # origin's z component isn't really used in
@@ -130,6 +127,12 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
 
     # save the origin for adding external drives later
     pos_dict['origin'] = origin
+
+    # finally, add cross-laminar L6 basket cells (one for each group)
+    pos_dict['L6i_cross1'] = [(origin[0], origin[1],
+                               (-zdiff / 2) + (0.2 * zdiff))]
+    pos_dict['L6i_cross2'] = [(origin[0], origin[1],
+                               (-zdiff / 2) + (0.2 * zdiff))]
 
     return pos_dict
 
