@@ -404,8 +404,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     unique_types = list(cell_response._gid_ranges.keys())
     spike_types_mask = {s_type: np.in1d(spike_types_data, s_type)
                         for s_type in unique_types}
-    cell_types = ['L6_pyramidal', 'L6_basket', 'L5_pyramidal', 'L5_basket',
-                  'L2_pyramidal', 'L2_basket']
+    cell_types = cell_response._cell_type_names
     input_types = np.setdiff1d(unique_types, cell_types)
 
     if isinstance(spike_types, str):
@@ -543,8 +542,7 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
         spike_types = np.array([])
         spike_gids = np.array([])
 
-    cell_types = ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal',
-                  'L6_basket', 'L6_pyramidal']
+    cell_types = cell_response._cell_type_names
     cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'y',
                         'L2_pyramidal': 'g', 'L2_basket': 'orange',
                         'L6_pyramidal': 'c', 'L6_basket': 'm'}
@@ -609,11 +607,14 @@ def plot_cells(net, ax=None, show=True):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-    cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'orange',
-                        'L2_pyramidal': 'g', 'L2_basket': 'y',
-                        'L6_pyramidal': 'b', 'L6_basket': 'c'}
+    cell_type_colors = {'L5e': 'k', 'L5i': 'k',
+                        'L2e_1': 'r', 'L2i_1': 'r',
+                        'L2e_2': 'b', 'L2i_2': 'b',
+                        'L6e_1': 'r', 'L6i_1': 'r',
+                        'L6e_2': 'b', 'L6i_2': 'b',
+                        'L6i_cross1': 'r', 'L6i_cross2': 'b'}
     markers = {'L5_pyramidal': '^', 'L2_pyramidal': '^', 'L6_pyramidal': '^',
-               'L5_basket': 'x', 'L2_basket': 'x', 'L6_basket': 'x'}
+               'L5_basket': 'o', 'L2_basket': 'o', 'L6_basket': 'o'}
 
     for cell_type in net.cell_types:
         x = [pos[0] for pos in net.pos_dict[cell_type]]

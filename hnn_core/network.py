@@ -111,7 +111,7 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
                          for pos_xy in coords_sorted[::2]]
     pos_dict['L2i_2'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff)
                          for pos_xy in coords_sorted[1::2]]
-    pos_dict['L6i_1'] = [(pos_xy[0], pos_xy[1] (-zdiff / 2) + (0.2 * zdiff))
+    pos_dict['L6i_1'] = [(pos_xy[0], pos_xy[1], (-zdiff / 2) + (0.2 * zdiff))
                          for pos_xy in coords_sorted[::2]]
     pos_dict['L6i_2'] = [(pos_xy[0], pos_xy[1], (-zdiff / 2) + (0.2 * zdiff))
                          for pos_xy in coords_sorted[1::2]]

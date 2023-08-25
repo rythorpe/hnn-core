@@ -251,9 +251,12 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
         print("simulating fully-connected network")
 
     if poiss_params is not None:
-        cell_types = ['L2_basket', 'L2_pyramidal',
-                      'L5_basket', 'L5_pyramidal',
-                      'L6_basket', 'L6_pyramidal']
+        # cell_types = ['L2_basket', 'L2_pyramidal',
+        #               'L5_basket', 'L5_pyramidal',
+        #               'L6_basket', 'L6_pyramidal']
+        cell_types = ['L2i_1', 'L2i_2', 'L2e_1', 'L2e_2',
+                      'L5i', 'L5e',
+                      'L6i_1', 'L6i_2', 'L6e_1', 'L6e_2']
         poiss_weights = {cell_type: weight for cell_type, weight in
                          zip(cell_types, poiss_params[:-1])}
         poiss_rate = poiss_params[-1]

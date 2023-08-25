@@ -12,11 +12,25 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 poiss_rate = 1e1
 
 # final optimization results for 20% target rate + manual tuning [use this one]
+# poiss_params = [5.823801023405118966e-04,
+#                 8.617101631605665613e-04,
+#                 9.603200828904341754e-04,
+#                 2.900971997811154900e-03,
+#                 7.081385474760127415e-04,
+#                 9.301705407062075449e-04,
+#                 poiss_rate]
+
 poiss_params = [5.823801023405118966e-04,
+                5.823801023405118966e-04,
+                8.617101631605665613e-04,
                 8.617101631605665613e-04,
                 9.603200828904341754e-04,
+                9.603200828904341754e-04,
+                2.900971997811154900e-03,
                 2.900971997811154900e-03,
                 7.081385474760127415e-04,
+                7.081385474760127415e-04,
+                9.301705407062075449e-04,
                 9.301705407062075449e-04,
                 poiss_rate]
 
@@ -31,12 +45,24 @@ rng = np.random.default_rng(1234)
 # taken from Reyes-Puerta 2015 and De Kock 2007
 # see Constantinople and Bruno 2013 for laminar difference in E-cell
 # excitability and proportion of connected pairs
-target_avg_spike_rates = {'L2_basket': 0.8,
-                          'L2_pyramidal': 0.3,
-                          'L5_basket': 2.4,  # L5A + L5B avg
-                          'L5_pyramidal': 1.4,  # L5A + L5B avg
-                          'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
-                          'L6_pyramidal': 0.5}  # from De Kock 2007
+# target_avg_spike_rates = {'L2_basket': 0.8,
+#                           'L2_pyramidal': 0.3,
+#                           'L5_basket': 2.4,  # L5A + L5B avg
+#                           'L5_pyramidal': 1.4,  # L5A + L5B avg
+#                           'L6_basket': 1.3,  # estimated; Reyes-Puerta 2015
+#                           'L6_pyramidal': 0.5}  # from De Kock 2007
+
+target_avg_spike_rates = {'L2i_1': 0.8,
+                          'L2i_2': 0.8,
+                          'L2e_1': 0.3,
+                          'L2e_2': 0.3,
+                          'L5i': 2.4,  # L5A + L5B avg
+                          'L5e': 1.4,  # L5A + L5B avg
+                          'L6i_1': 1.3,  # estimated; Reyes-Puerta 2015
+                          'L6i_2': 1.3,  # estimated; Reyes-Puerta 2015
+                          'L6e_1': 0.5,  # from De Kock 2007
+                          'L6e_2': 0.5}  # from De Kock 2007
+
 # avg rates in unconn network should be a bit less
 # try 20% of the avg rates in a fully connected network
 target_sr_unconn = {cell: rate * 0.2 for cell, rate in

@@ -343,10 +343,8 @@ def L6_model(params=None, add_drives_from_params=False,
     net = Network(params, add_drives_from_params=add_drives_from_params,
                   legacy_mode=legacy_mode)
     # use L5 pyramidal cell as in updated calcium model
-    cell_name = 'L5_pyramidal'
-    pos = net.cell_types[cell_name].pos
-    net.cell_types[cell_name] = pyramidal_ca(
-        cell_name=_short_name(cell_name), pos=pos)
+    pos = net.cell_types['L5e'].pos
+    net.cell_types['L5e'] = pyramidal_ca(cell_name='L5Pyr', pos=pos)
 
     # Update biophysics (increase gabab duration of inhibition) as in Law model
     # for cell_type in net.cell_types.keys():
@@ -358,17 +356,17 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L2e_L2e_nmda": 0.00001,
                     "L2i_L2e_gabaa": 0.040,
                     "L2i_L2e_gabab": 0.030,
-                    "L2e_L5e": 0.00020,
-                    "L2i_L5e": 0.001,
+                    "L2e_L5e_ampa": 0.00020,
+                    "L2i_L5e_gabaa": 0.001,
                     "L5e_L5e_ampa": 0.00077,
                     "L5e_L5e_nmda": 0.00015,
                     "L5i_L5e_gabaa": 0.028,
                     "L5i_L5e_gabab": 0.0061,  # changed from jones09
-                    "L2e_L2i": 0.00065,
-                    "L2i_L2i": 0.02,
-                    "L2e_L5i": 0.00020,
-                    "L5e_L5i": 0.00047,
-                    "L5i_L5i": 0.02}
+                    "L2e_L2i_ampa": 0.00065,
+                    "L2i_L2i_gabaa": 0.02,
+                    "L2e_L5i_ampa": 0.00020,
+                    "L5e_L5i_ampa": 0.00047,
+                    "L5i_L5i_gabaa": 0.02}
     lamtha = 4.0
     delay = net.delay
     prob_e = 0.3  # e->e
@@ -422,10 +420,10 @@ def L6_model(params=None, add_drives_from_params=False,
 
     src_cell = 'L5e'
     target_cell = 'L5i'
-    key = f'{src_cell}_{target_cell}_{receptor}'
-    weight = conn_weights[key]
     loc = 'soma'
     receptor = 'ampa'
+    key = f'{src_cell}_{target_cell}_{receptor}'
+    weight = conn_weights[key]
     net.add_connection(
         src_cell,
         target_cell, loc, receptor, weight, delay,
@@ -455,10 +453,10 @@ def L6_model(params=None, add_drives_from_params=False,
         # layer2 Basket -> layer5 Pyr
         src_cell = f'L2i'
         target_cell = f'L5e'
-        key = f'{src_cell}_{target_cell}_{receptor}'
-        weight = conn_weights[key]
         loc = 'distal'
         receptor = 'gabaa'
+        key = f'{src_cell}_{target_cell}_{receptor}'
+        weight = conn_weights[key]
         net.add_connection(
             f'{src_cell}_{src_group}',
             target_cell, loc, receptor, weight, delay,
@@ -467,10 +465,10 @@ def L6_model(params=None, add_drives_from_params=False,
 
         src_cell = f'L2e'
         target_cell = 'L5i'
-        key = f'{src_cell}_{target_cell}_{receptor}'
-        weight = conn_weights[key]
         loc = 'soma'
         receptor = 'ampa'
+        key = f'{src_cell}_{target_cell}_{receptor}'
+        weight = conn_weights[key]
         net.add_connection(
             f'{src_cell}_{src_group}',
             target_cell, loc, receptor, weight, delay,
@@ -566,22 +564,22 @@ def L6_model(params=None, add_drives_from_params=False,
             # xx -> layer2 Basket
             src_cell = f'L2e'
             target_cell = f'L2i'
-            key = f'{src_cell}_{target_cell}_{receptor}'
-            weight = conn_weights[key]
             loc = 'soma'
             receptor = 'ampa'
+            key = f'{src_cell}_{target_cell}_{receptor}'
+            weight = conn_weights[key]
             net.add_connection(
                 f'{src_cell}_{src_group}',
                 f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
                 lamtha,
                 probability=prob_i, conn_seed=conn_seed)
 
-            src_cell = f'L2e'
+            src_cell = f'L2i'
             target_cell = f'L2i'
-            key = f'{src_cell}_{target_cell}_{receptor}'
-            weight = conn_weights[key]
             loc = 'soma'
             receptor = 'gabaa'
+            key = f'{src_cell}_{target_cell}_{receptor}'
+            weight = conn_weights[key]
             net.add_connection(
                 f'{src_cell}_{src_group}',
                 f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
