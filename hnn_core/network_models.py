@@ -354,223 +354,271 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"gbar_L2Pyr_L2Pyr_ampa": 0.00055,
-                    "gbar_L2Pyr_L2Pyr_nmda": 0.00001,
-                    "gbar_L2Basket_L2Pyr_gabaa": 0.040,
-                    "gbar_L2Basket_L2Pyr_gabab": 0.030,
-                    "gbar_L2Pyr_L5Pyr": 0.00020,
-                    "gbar_L2Basket_L5Pyr": 0.001,
-                    "gbar_L5Pyr_L5Pyr_ampa": 0.00077,
-                    "gbar_L5Pyr_L5Pyr_nmda": 0.00015,
-                    "gbar_L5Basket_L5Pyr_gabaa": 0.028,
-                    "gbar_L5Basket_L5Pyr_gabab": 0.0061,  # changed from jones09
-                    "gbar_L2Pyr_L2Basket": 0.00065,
-                    "gbar_L2Basket_L2Basket": 0.02,
-                    "gbar_L2Pyr_L5Basket": 0.00020,
-                    "gbar_L5Pyr_L5Basket": 0.00047,
-                    "gbar_L5Basket_L5Basket": 0.02}
+    conn_weights = {"L2e_L2e_ampa": 0.00055,
+                    "L2e_L2e_nmda": 0.00001,
+                    "L2i_L2e_gabaa": 0.040,
+                    "L2i_L2e_gabab": 0.030,
+                    "L2e_L5e": 0.00020,
+                    "L2i_L5e": 0.001,
+                    "L5e_L5e_ampa": 0.00077,
+                    "L5e_L5e_nmda": 0.00015,
+                    "L5i_L5e_gabaa": 0.028,
+                    "L5i_L5e_gabab": 0.0061,  # changed from jones09
+                    "L2e_L2i": 0.00065,
+                    "L2i_L2i": 0.02,
+                    "L2e_L5i": 0.00020,
+                    "L5e_L5i": 0.00047,
+                    "L5i_L5i": 0.02}
     lamtha = 4.0
     delay = net.delay
-    prob_e = 0.33  # e->e
-    prob_i = 0.66  # i->, i<->e
-    conn_seed = 1
 
-    # layer2 Pyr -> layer2 Pyr
-    # layer5 Pyr -> layer5 Pyr
-    loc = 'proximal'
-    for target_cell in ['L2_pyramidal', 'L5_pyramidal']:
-        for receptor in ['nmda', 'ampa']:
-            key = f'gbar_{_short_name(target_cell)}_'\
-                  f'{_short_name(target_cell)}_{receptor}'
+    # within-group connections
+    conn_seed = 1  # using the same seed will enforce matching subpop conn!!!
+
+    for src_group in [1, 2]:
+        for targ_group in [1, 2]:
+            # inhibition within and between groups is constant
+            prob_i = 0.66  # i->i, i<->e
+            # excitation, however, is greater within groups
+            if src_group == targ_group:
+                prob_e = 0.3  # e->e
+            else:
+                prob_e = 0.1
+
+            # layer2 Pyr -> layer2 Pyr
+            # layer5 Pyr -> layer5 Pyr
+            loc = 'proximal'
+            for cell_type in ['L2e', 'L5e']:
+                src_cell = target_cell = cell_type
+                for receptor in ['nmda', 'ampa']:
+                    key = f'{src_cell}_{target_cell}_{receptor}'
+                    weight = conn_weights[key]
+                    net.add_connection(
+                        f'{src_cell}_{src_group}',
+                        f'{target_cell}_{targ_group}', loc, receptor, weight,
+                        delay, lamtha, allow_autapses=False,
+                        probability=prob_e,
+                        conn_seed=conn_seed)
+
+            # layer2 Basket -> layer2 Pyr
+            src_cell = 'L2i'
+            target_cell = 'L2e'
+            loc = 'soma'
+            for receptor in ['gabaa', 'gabab']:
+                key = f'{src_cell}_{target_cell}_{receptor}'
+                weight = conn_weights[key]
+                net.add_connection(
+                    f'{src_cell}_{src_group}',
+                    f'{target_cell}_{targ_group}', loc, receptor, weight,
+                    delay, lamtha,
+                    probability=prob_i, conn_seed=conn_seed)
+
+            # layer5 Basket -> layer5 Pyr
+            src_cell = 'L5i'
+            target_cell = 'L5e'
+            loc = 'soma'
+            for receptor in ['gabaa', 'gabab']:
+                key = f'{src_cell}_{target_cell}_{receptor}'
+                weight = conn_weights[key]
+                net.add_connection(
+                    f'{src_cell}_{src_group}',
+                    f'{target_cell}_{targ_group}', loc, receptor, weight,
+                    delay, lamtha,
+                    probability=prob_i, conn_seed=conn_seed)
+
+            # layer2 Pyr -> layer5 Pyr
+            src_cell = 'L2e'
+            target_cell = 'L5e'
+            receptor = 'ampa'
+            for loc in ['proximal', 'distal']:
+                key = f'{src_cell}_{target_cell}_{receptor}'
+                weight = conn_weights[key]
+                net.add_connection(
+                    f'{src_cell}_{src_group}',
+                    f'{target_cell}_{targ_group}', loc, receptor, weight,
+                    delay, lamtha,
+                    probability=prob_e, conn_seed=conn_seed)
+
+            # layer2 Basket -> layer5 Pyr
+            src_cell = f'L2i_{src_group}'
+            target_cell = f'L5e_{targ_group}'
+            key = f'{src_cell}_{target_cell}_{receptor}'
+            weight = conn_weights[key]
+            loc = 'distal'
+            receptor = 'gabaa'
+            net.add_connection(
+                f'{src_cell}_{src_group}',
+                f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
+                lamtha,
+                probability=prob_i, conn_seed=conn_seed)
+
+            # xx -> layer2 Basket
+            src_cell = f'L2e_{src_group}'
+            target_cell = f'L2i_{targ_group}'
+            key = f'{src_cell}_{target_cell}_{receptor}'
+            weight = conn_weights[key]
+            loc = 'soma'
+            receptor = 'ampa'
+            net.add_connection(
+                f'{src_cell}_{src_group}',
+                f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
+                lamtha,
+                probability=prob_i, conn_seed=conn_seed)
+
+            src_cell = f'L2e_{src_group}'
+            target_cell = f'L2i_{targ_group}'
+            key = f'{src_cell}_{target_cell}_{receptor}'
+            weight = conn_weights[key]
+            loc = 'soma'
+            receptor = 'gabaa'
+            net.add_connection(
+                f'{src_cell}_{src_group}',
+                f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
+                lamtha,
+                probability=prob_i, conn_seed=conn_seed)
+
+            # xx -> layer5 Basket
+            src_cell = 'L5i'
+            target_cell = 'L5i'
+            loc = 'soma'
+            receptor = 'gabaa'
+            key = f'{src_cell}_{target_cell}_{receptor}'
             weight = conn_weights[key]
             net.add_connection(
-                target_cell, target_cell, loc, receptor, weight,
-                delay, lamtha, allow_autapses=False, probability=prob_e,
-                conn_seed=conn_seed)
+                f'{src_cell}_{src_group}',
+                f'{target_cell}_{targ_group}', loc, receptor, weight,
+                delay, lamtha,
+                allow_autapses=False, probability=prob_i, conn_seed=conn_seed)
 
-    # layer2 Basket -> layer2 Pyr
-    src_cell = 'L2_basket'
-    target_cell = 'L2_pyramidal'
-    loc = 'soma'
-    for receptor in ['gabaa', 'gabab']:
-        key = f'gbar_L2Basket_L2Pyr_{receptor}'
-        weight = conn_weights[key]
-        net.add_connection(
-            src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-            probability=prob_i, conn_seed=conn_seed)
+            src_cell = 'L5e'
+            target_cell = 'L5i'
+            key = f'{src_cell}_{target_cell}_{receptor}'
+            weight = conn_weights[key]
+            loc = 'soma'
+            receptor = 'ampa'
+            net.add_connection(
+                f'{src_cell}_{src_group}',
+                f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
+                lamtha,
+                probability=prob_i, conn_seed=conn_seed)
 
-    # layer5 Basket -> layer5 Pyr
-    src_cell = 'L5_basket'
-    target_cell = 'L5_pyramidal'
-    loc = 'soma'
-    for receptor in ['gabaa', 'gabab']:
-        key = f'gbar_L5Basket_{_short_name(target_cell)}_{receptor}'
-        weight = conn_weights[key]
-        net.add_connection(
-            src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-            probability=prob_i, conn_seed=conn_seed)
+            src_cell = f'L2e_{src_group}'
+            target_cell = 'L5i'
+            key = f'{src_cell}_{target_cell}_{receptor}'
+            weight = conn_weights[key]
+            loc = 'soma'
+            receptor = 'ampa'
+            net.add_connection(
+                f'{src_cell}_{src_group}',
+                f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
+                lamtha,
+                probability=prob_i, conn_seed=conn_seed)
 
-    # layer2 Pyr -> layer5 Pyr
-    src_cell = 'L2_pyramidal'
-    receptor = 'ampa'
-    for loc in ['proximal', 'distal']:
-        key = f'gbar_L2Pyr_{_short_name(target_cell)}'
-        weight = conn_weights[key]
-        net.add_connection(
-            src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-            probability=prob_e, conn_seed=conn_seed)
-
-    # layer2 Basket -> layer5 Pyr
-    src_cell = 'L2_basket'
-    key = f'gbar_L2Basket_{_short_name(target_cell)}'
-    weight = conn_weights[key]
-    loc = 'distal'
-    receptor = 'gabaa'
-    net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-        probability=prob_i, conn_seed=conn_seed)
-
-    # xx -> layer2 Basket
-    src_cell = 'L2_pyramidal'
-    target_cell = 'L2_basket'
-    key = f'gbar_L2Pyr_{_short_name(target_cell)}'
-    weight = conn_weights[key]
-    loc = 'soma'
-    receptor = 'ampa'
-    net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-        probability=prob_i, conn_seed=conn_seed)
-
-    src_cell = 'L2_basket'
-    key = f'gbar_L2Basket_{_short_name(target_cell)}'
-    weight = conn_weights[key]
-    loc = 'soma'
-    receptor = 'gabaa'
-    net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-        probability=prob_i, conn_seed=conn_seed)
-
-    # xx -> layer5 Basket
-    src_cell = 'L5_basket'
-    target_cell = 'L5_basket'
-    loc = 'soma'
-    receptor = 'gabaa'
-    key = f'gbar_L5Basket_{_short_name(target_cell)}'
-    weight = conn_weights[key]
-    net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-        allow_autapses=False, probability=prob_i, conn_seed=conn_seed)
-
-    src_cell = 'L5_pyramidal'
-    key = f'gbar_L5Pyr_{_short_name(target_cell)}'
-    weight = conn_weights[key]
-    loc = 'soma'
-    receptor = 'ampa'
-    net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-        probability=prob_i, conn_seed=conn_seed)
-
-    src_cell = 'L2_pyramidal'
-    key = f'gbar_L2Pyr_{_short_name(target_cell)}'
-    weight = conn_weights[key]
-    loc = 'soma'
-    receptor = 'ampa'
-    net.add_connection(
-        src_cell, target_cell, loc, receptor, weight, delay, lamtha,
-        probability=prob_i, conn_seed=conn_seed)
-
-    # Layer 6
-
-    L5_L6_prob = 0.33  # defuse excitatory input from L5 -> L6
-    L5_L6_conn_seed = 1  # use the same seed to enforce matching subpop conn
-    if connect_layer_6:
-        # layer5 Pyr -> layer6 Pyr
-        weight_L5_L6 = 0.00005
-        for loc in ['proximal', 'deep_basal']:
-            net.add_connection(src_gids='L5_pyramidal',
-                               target_gids='L6_pyramidal',
-                               loc=loc,
-                               receptor='ampa',
+            # layer5 Pyr -> layer6 Pyr
+            weight_L5_L6 = 0.00005
+            for loc in ['proximal', 'deep_basal']:
+                net.add_connection(src_gids='L5e',
+                                   target_gids=f'L6e_{targ_group}',
+                                   loc=loc,
+                                   receptor='ampa',
+                                   weight=weight_L5_L6,
+                                   delay=delay,
+                                   lamtha=lamtha,
+                                   probability=prob_e,
+                                   conn_seed=conn_seed)
+            net.add_connection(src_gids='L5e',
+                               target_gids=f'L6e_{targ_group}',
+                               loc='deep_basal',
+                               receptor='nmda',
                                weight=weight_L5_L6,
                                delay=delay,
                                lamtha=lamtha,
                                probability=prob_e,
                                conn_seed=conn_seed)
-        net.add_connection(src_gids='L5_pyramidal',
-                           target_gids='L6_pyramidal',
-                           loc='deep_basal',
-                           receptor='nmda',
-                           weight=weight_L5_L6,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_e,
-                           conn_seed=conn_seed)
 
-        # layer6 Pyr -> layer6 Pyr
-        net.add_connection(src_gids='L6_pyramidal',
-                           target_gids='L6_pyramidal',
-                           loc='deep_basal',
-                           receptor='ampa',
-                           weight=0.0001,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_e,
-                           conn_seed=conn_seed)
-        net.add_connection(src_gids='L6_pyramidal',
-                           target_gids='L6_pyramidal',
-                           loc='deep_basal',
-                           receptor='nmda',
-                           weight=0.00005,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_e,
-                           conn_seed=conn_seed)
+            # layer6 Pyr -> layer6 Pyr
+            net.add_connection(src_gids=f'L6e_{src_group}',
+                            target_gids=f'L6e_{targ_group}',
+                            loc='deep_basal',
+                            receptor='ampa',
+                            weight=0.0001,
+                            delay=delay,
+                            lamtha=lamtha,
+                            probability=prob_e,
+                            conn_seed=conn_seed)
+            net.add_connection(src_gids=f'L6e_{src_group}',
+                            target_gids=f'L6e_{targ_group}',
+                            loc='deep_basal',
+                            receptor='nmda',
+                            weight=0.00005,
+                            delay=delay,
+                            lamtha=lamtha,
+                            probability=prob_e,
+                            conn_seed=conn_seed)
 
-        # layer6 Bask -> layer6 Pyr
-        net.add_connection(src_gids='L6_basket',
-                           target_gids='L6_pyramidal',
-                           loc='soma',
-                           receptor='gabaa',
-                           weight=0.005,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_i,
-                           conn_seed=conn_seed)
-        net.add_connection(src_gids='L6_basket',
-                           target_gids='L6_pyramidal',
-                           loc='soma',
-                           receptor='gabab',
-                           weight=0.005,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_i,
-                           conn_seed=conn_seed)
+            # layer6 Pyr -> layer6 Bask
+            net.add_connection(src_gids=f'L6e_{src_group}',
+                            target_gids=f'L6i_{targ_group}',
+                            loc='soma',
+                            receptor='ampa',
+                            weight=0.0005,
+                            delay=delay,
+                            lamtha=lamtha,
+                            probability=prob_i,
+                            conn_seed=conn_seed)
+            
+            # layer6 Pyr -> layer6 cross-laminar Bask
+            net.add_connection(src_gids=f'L6e_{src_group}',
+                            target_gids=f'L6i_cross{targ_group}',
+                            loc='soma',
+                            receptor='ampa',
+                            weight=0.0005,
+                            delay=delay,
+                            lamtha=lamtha,
+                            probability=prob_i,
+                            conn_seed=conn_seed)
 
-        # layer6 Bask -> layer6 Bask
-        net.add_connection(src_gids='L6_basket',
-                           target_gids='L6_basket',
-                           loc='soma',
-                           receptor='gabaa',
-                           weight=0.02,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_i,
-                           conn_seed=conn_seed)
+            # layer6 Bask -> layer6 Pyr
+            net.add_connection(src_gids=f'L6i_{src_group}',
+                            target_gids=f'L6e_{targ_group}',
+                            loc='soma',
+                            receptor='gabaa',
+                            weight=0.005,
+                            delay=delay,
+                            lamtha=lamtha,
+                            probability=prob_i,
+                            conn_seed=conn_seed)
+            net.add_connection(src_gids=f'L6i_{src_group}',
+                            target_gids=f'L6e_{targ_group}',
+                            loc='soma',
+                            receptor='gabab',
+                            weight=0.005,
+                            delay=delay,
+                            lamtha=lamtha,
+                            probability=prob_i,
+                            conn_seed=conn_seed)
 
-        # layer6 Pyr -> layer6 Bask
-        net.add_connection(src_gids='L6_pyramidal',
-                           target_gids='L6_basket',
-                           loc='soma',
-                           receptor='ampa',
-                           weight=0.0005,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_i,
-                           conn_seed=conn_seed)
+            # layer6 Bask -> layer6 Bask
+            net.add_connection(src_gids=f'L6i_{src_group}',
+                            target_gids=f'L6i_{targ_group}',
+                            loc='soma',
+                            receptor='gabaa',
+                            weight=0.02,
+                            delay=delay,
+                            lamtha=lamtha,
+                            probability=prob_i,
+                            conn_seed=conn_seed)
+
+    # between-group connections
+    prob_e = 0.33  # e->e
+    prob_i = 0.66  # i->, i<->e
+    conn_seed = 3  # using the same seed will enforce matching subpop conn!!!
+
+    for groups in [[1, 2], [2, 1]]:
 
         # layer6 Bask -> layer2 Pyr
-        net.add_connection(src_gids='L6_basket',
-                           target_gids='L2_pyramidal',
+        net.add_connection(src_gids=f'L6i_cross{groups[0]}',
+                           target_gids=f'L2e_{groups[1]}',
                            loc='soma',
                            receptor='gabaa',
                            weight=0.001,
@@ -579,38 +627,50 @@ def L6_model(params=None, add_drives_from_params=False,
                            probability=prob_i,
                            conn_seed=conn_seed)
 
-        # layer6 Bask -> layer2 Bask
-        net.add_connection(src_gids='L6_basket',
-                           target_gids='L2_basket',
-                           loc='soma',
-                           receptor='gabaa',
-                           weight=0.001,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_i,
-                           conn_seed=conn_seed)
+        if connect_layer_6:
+            # layer6 Bask -> layer2 Pyr
+            net.add_connection(src_gids=f'L6i_cross{groups[0]}',
+                               target_gids=f'L2e_{groups[1]}',
+                               loc='soma',
+                               receptor='gabaa',
+                               weight=0.001,
+                               delay=delay,
+                               lamtha=lamtha,
+                               probability=prob_i,
+                               conn_seed=conn_seed)
 
-        # layer6 Bask -> layer5 Pyr
-        net.add_connection(src_gids='L6_basket',
-                           target_gids='L5_pyramidal',
-                           loc='soma',
-                           receptor='gabaa',
-                           weight=0.0005,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_i,
-                           conn_seed=conn_seed)
+            # # layer6 Bask -> layer2 Bask
+            # net.add_connection(src_gids=f'L6i_{groups[0]}',
+            #                    target_gids=f'L2i_{groups[1]}',
+            #                    loc='soma',
+            #                    receptor='gabaa',
+            #                    weight=0.001,
+            #                    delay=delay,
+            #                    lamtha=lamtha,
+            #                    probability=prob_i,
+            #                    conn_seed=conn_seed)
 
-        # layer6 Bask -> layer5 Bask
-        net.add_connection(src_gids='L6_basket',
-                           target_gids='L5_basket',
-                           loc='soma',
-                           receptor='gabaa',
-                           weight=0.0025,
-                           delay=delay,
-                           lamtha=lamtha,
-                           probability=prob_i,
-                           conn_seed=conn_seed)
+            # layer6 Bask -> layer5 Pyr
+            net.add_connection(src_gids=f'L6i_cross{groups[0]}',
+                               target_gids='L5e',
+                               loc='soma',
+                               receptor='gabaa',
+                               weight=0.0005,
+                               delay=delay,
+                               lamtha=lamtha,
+                               probability=prob_i,
+                               conn_seed=conn_seed)
+
+            # # layer6 Bask -> layer5 Bask
+            # net.add_connection(src_gids=f'L6i_{groups[0]}',
+            #                    target_gids='L5i',
+            #                    loc='soma',
+            #                    receptor='gabaa',
+            #                    weight=0.0025,
+            #                    delay=delay,
+            #                    lamtha=lamtha,
+            #                    probability=prob_i,
+            #                    conn_seed=conn_seed)
 
     return net
 
