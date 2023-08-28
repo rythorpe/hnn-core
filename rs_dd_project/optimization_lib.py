@@ -182,18 +182,18 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
     # custom_params = {"axes.spines.right": False, "axes.spines.top": False}
     # sns.set_theme(style="ticks", rc=custom_params)
 
-    layer_by_cell_type = {'L2_basket': 'L2/3',
-                          'L2_pyramidal': 'L2/3',
-                          'L5_basket': 'L5',
-                          'L5_pyramidal': 'L5',
-                          'L6_basket': 'L6',
-                          'L6_pyramidal': 'L6'}
+    layer_by_cell_type = {'L2i': 'L2/3',
+                          'L2e': 'L2/3',
+                          'L5i': 'L5',
+                          'L5e': 'L5',
+                          'L6i': 'L6',
+                          'L6e': 'L6'}
 
     pop_layer = list()
     pop_cell_type = list()
     pop_spike_rates = list()
     for cell_type in net.cell_types:
-        if 'basket' in cell_type:
+        if 'i' in cell_type:
             cell_type_ei = 'I'
         else:
             cell_type_ei = 'E'

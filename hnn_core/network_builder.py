@@ -103,11 +103,17 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
 
     dpl_data_agg = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
                              cell_type in neuron_net._nrn_dipoles]).sum(axis=0)
+    # need to aggregate and sum across different groups in L2/3 and L6
+    dpl_data_L2 = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
+                            cell_type in ('L2e_1', 'L2e_2')]).sum(axis=0)
+    dpl_data_L6 = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
+                            cell_type in ('L6e_1', 'L6e_2')]).sum(axis=0)
+
     dpl_data = np.c_[
         dpl_data_agg,
-        neuron_net._nrn_dipoles['L2_pyramidal'].as_numpy(),
-        neuron_net._nrn_dipoles['L5_pyramidal'].as_numpy(),
-        neuron_net._nrn_dipoles['midal'].as_numpy()
+        dpl_data_L2,
+        neuron_net._nrn_dipoles['L5e'].as_numpy(),
+        dpl_data_L6
     ]
 
     rec_arr_py = dict()
