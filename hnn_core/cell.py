@@ -259,6 +259,9 @@ class Cell:
 
     Attributes
     ----------
+    name : str
+        The name of the cell. Note that this name isn't necessarily the same as
+        the keys within Network.cell_types.
     pos : list of length 3
         The position of the cell.
     sections : nested dict

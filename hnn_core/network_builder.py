@@ -103,17 +103,11 @@ def _simulate_single_trial(net, tstop, dt, trial_idx):
 
     dpl_data_agg = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
                              cell_type in neuron_net._nrn_dipoles]).sum(axis=0)
-    # need to aggregate and sum across different groups in L2/3 and L6
-    dpl_data_L2 = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
-                            cell_type in ('L2e_1', 'L2e_2')]).sum(axis=0)
-    dpl_data_L6 = np.stack([neuron_net._nrn_dipoles[cell_type].as_numpy() for
-                            cell_type in ('L6e_1', 'L6e_2')]).sum(axis=0)
-
     dpl_data = np.c_[
         dpl_data_agg,
-        dpl_data_L2,
-        neuron_net._nrn_dipoles['L5e'].as_numpy(),
-        dpl_data_L6
+        neuron_net._nrn_dipoles['L2_pyramidal'].as_numpy(),
+        neuron_net._nrn_dipoles['L5_pyramidal'].as_numpy(),
+        neuron_net._nrn_dipoles['L6_pyramidal'].as_numpy()
     ]
 
     rec_arr_py = dict()
@@ -329,8 +323,9 @@ class NetworkBuilder(object):
 
         self._clear_last_network_objects()
 
-        for cell_type in self.net.cell_types:
-            self._nrn_dipoles[cell_type] = h.Vector()
+        self._nrn_dipoles['L2_pyramidal'] = h.Vector()
+        self._nrn_dipoles['L5_pyramidal'] = h.Vector()
+        self._nrn_dipoles['L6_pyramidal'] = h.Vector()
 
         self._gid_assign()
 
@@ -434,8 +429,7 @@ class NetworkBuilder(object):
                 cell.pos = self.net.pos_dict[src_type][gid_idx]
 
                 # instantiate NEURON object
-                if src_type in ('L2_pyramidal', 'L5_pyramidal',
-                                'midal'):
+                if cell.name in ('L2Pyr', 'L5Pyr', 'L6Pyr'):
                     cell.build(sec_name_apical='apical_trunk')
                 else:
                     cell.build()
