@@ -545,7 +545,7 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
 
     cell_type_colors = {'L2/3e': 'r', 'L2/3i': 'y',
                         'L5e': 'g', 'L5i': 'orange',
-                        'L6e': 'c', 'L6i': 'm'}
+                        'L6e': 'c', 'L6i': 'm', 'L6i_cross': 'w'}
 
     if ax is None:
         _, ax = plt.subplots(1, 1, constrained_layout=True)
@@ -615,8 +615,12 @@ def plot_cells(net, ax=None, show=True):
                         'L6e_1': 'r', 'L6i_1': 'r',
                         'L6e_2': 'b', 'L6i_2': 'b',
                         'L6i_cross1': 'r', 'L6i_cross2': 'b'}
-    markers = {'L5_pyramidal': '^', 'L2_pyramidal': '^', 'L6_pyramidal': '^',
-               'L5_basket': 'o', 'L2_basket': 'o', 'L6_basket': 'o'}
+    markers = {'L5e': '^', 'L5i': 'o',
+               'L2e_1': '^', 'L2i_1': 'o',
+               'L2e_2': '^', 'L2i_2': 'o',
+               'L6e_1': '^', 'L6i_1': 'o',
+               'L6e_2': '^', 'L6i_2': 'o',
+               'L6i_cross1': 'o', 'L6i_cross2': 'o'}
 
     for cell_type in net.cell_types:
         x = [pos[0] for pos in net.pos_dict[cell_type]]

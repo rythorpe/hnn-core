@@ -13,6 +13,15 @@ import seaborn as sns
 from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.viz import plot_dipole
 
+# order matters!!!
+cell_groups = {'L2/3i': ['L2i_1', 'L2i_2'],
+               'L2/3e': ['L2e_1', 'L2e_2'],
+               'L5i': ['L5i'],
+               'L5e': ['L5e'],
+               'L6i': ['L6i_1', 'L6i_2'],
+               'L6e': ['L6e_1', 'L6e_2']}
+special_groups = {'L6i_cross': ['L6i_cross1', 'L6i_cross2']}
+
 
 def get_conn_params(net, param_type):
     """Get list of lamtha or weight parameters for all network connections."""
@@ -55,14 +64,11 @@ def plot_net_response(dpls, net):
     net.cell_response.plot_spikes_hist(ax=axes[0], bin_width=1.0, show=False)
     plot_dipole(dpls, ax=axes[1:5], layer=['L2', 'L5', 'L6', 'agg'],
                 show=False)
-
-    spike_types = {'L2/3i': ['L2i_1', 'L2i_2'],
-                   'L2/3e': ['L2e_1', 'L2e_2'],
-                   'L5i': ['L5i'],
-                   'L5e': ['L5e'],
-                   'L6i': ['L6i_1', 'L6i_2'],
-                   'L6e': ['L6e_1', 'L6e_2']}
-    net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=spike_types,
+    # create dictionary of all cell groupings, including cross-laminar L6 types
+    cell_types = cell_groups.copy()
+    cell_types.update(special_groups)
+    # plot raster for all cell types
+    net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=cell_types,
                                          show=False)
     return fig
 
@@ -74,45 +80,47 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates_1,
 
     fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
-    cell_type_by_layer = {'L2/3': ['L2e_1', 'L2e_2', 'L2i_1', 'L2i_2'],
-                          'L5': ['L5e', 'L5i'],
-                          'L6': ['L6e_1', 'L6e_2', 'L6i_1', 'L6i_2']}
-
     # collapse across trials
     n_trials = len(net.cell_response.spike_gids)
     spike_gids = np.concatenate(net.cell_response.spike_gids).flatten()
     spike_times = np.concatenate(net.cell_response.spike_times).flatten()
 
-    pop_layer = list()
-    pop_cell_type = list()
+    pop_layers = list()
+    pop_cell_types = list()
     pop_spike_rates = list()
     pop_targets_1 = list()
     pop_targets_2 = list()
-    for layer, cell_types in cell_type_by_layer.items():
+    for layer, cell_types in cell_groups.items():
+        layer = layer[:-1]  # crop off e/i from end of cell_type
         for cell_type in cell_types:
-            if 'i_' in cell_type:
-                cell_type_ei = 'I'
+            if 'i' in cell_type:
+                cell_type_ei = 'i'
             else:
-                cell_type_ei = 'E'
+                cell_type_ei = 'e'
+            cell_type_key = f'{layer}{cell_type_ei}'
 
-            for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
+            # count spikes for all cells of this type (e or i) for this layer
+            for gid in net.gid_ranges[cell_type]:
                 gids_after_burn_in = np.array(spike_gids)[spike_times >
                                                           burn_in_time]
                 n_spikes = np.sum(gids_after_burn_in == gid)
-                pop_layer.append(layer)
-                pop_cell_type.append(cell_type_ei)
+                # append to list to construct dataframe later
+                pop_layers.append(layer)
+                pop_cell_types.append(cell_type_ei)
                 pop_spike_rates.append((n_spikes / n_trials /
                                         ((sim_time - burn_in_time) * 1e-3)))
-                pop_targets_1.append(target_spike_rates_1[cell_type])
-                pop_targets_2.append(target_spike_rates_2[cell_type])
+                pop_targets_1.append(target_spike_rates_1[cell_type_key])
+                pop_targets_2.append(target_spike_rates_2[cell_type_key])
 
-    spiking_df = pd.DataFrame({'layer': pop_layer, 'cell type': pop_cell_type,
+    spiking_df = pd.DataFrame({'layer': pop_layers,
+                               'cell type': pop_cell_types,
                                'spike rate': pop_spike_rates,
                                'target rate 1': pop_targets_1,
                                'target rate 2': pop_targets_2})
 
     ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
-                     hue='cell type', palette='Greys', errorbar='se', ax=ax)
+                     hue='cell type', estimator='mean', palette='Greys',
+                     errorbar='se', ax=ax)
     # note: eyeball dodge value to match barplot
     # also, setting legend='_nolegend_' doesn't work when hue is set
     ax = sns.pointplot(data=spiking_df, x='target rate 1', y='layer',
@@ -261,11 +269,10 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
         # cell_types = ['L2_basket', 'L2_pyramidal',
         #               'L5_basket', 'L5_pyramidal',
         #               'L6_basket', 'L6_pyramidal']
-        cell_types = ['L2i_1', 'L2i_2', 'L2e_1', 'L2e_2',
-                      'L5i', 'L5e',
-                      'L6i_1', 'L6i_2', 'L6e_1', 'L6e_2']
-        poiss_weights = {cell_type: weight for cell_type, weight in
-                         zip(cell_types, poiss_params[:-1])}
+        # place cell types from all groups in an a list (in order!!)
+        poiss_weights = {cell_group: weight for cell_type, weight in
+                         zip(cell_groups.values(), poiss_params[:-1])
+                         for cell_group in cell_type}
         poiss_rate = poiss_params[-1]
         # add poisson drive with near-uniform spatial spread
         net.add_poisson_drive(name='poisson_drive',
@@ -295,16 +302,20 @@ def err_spike_rates_logdiff(net, sim_time, burn_in_time,
     avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
                                                    tstop=sim_time,
                                                    gid_ranges=net.gid_ranges)
+    avg_spike_rates_grouped = dict()
+    for cell_label, cell_types in cell_groups.items():
+        avg_rates = [avg_spike_rates[cell_type] for cell_type in cell_types]
+        avg_spike_rates_grouped[cell_label] = np.mean(avg_rates)
 
     spike_rate_diffs = list()
-    for cell_type in target_avg_spike_rates.keys():
+    for cell_label in cell_groups.keys():
         # convert to log_10 scale to amplify distances close to zero
         # add distance to a number close to 0 to avoid instability as diff -> 0
-        log_diff = np.log10(1e-6 + (target_avg_spike_rates[cell_type] -
-                            avg_spike_rates[cell_type]) ** 2)
+        log_diff = np.log10(1e-6 + (target_avg_spike_rates[cell_label] -
+                            avg_spike_rates_grouped[cell_label]) ** 2)
         spike_rate_diffs.append(log_diff)
-        # spike_rate_diffs.append(target_avg_spike_rates[cell_type] -
-        #                         avg_spike_rates[cell_type])
+        # spike_rate_diffs.append(target_avg_spike_rates[cell_label] -
+        #                         avg_spike_rates_grouped[cell_label])
 
     # return np.linalg.norm(spike_rate_diffs)
     min_log_diff = -6 * len(target_avg_spike_rates)  # theoretic minimum
@@ -321,13 +332,19 @@ def err_spike_rates_conn(net, sim_time, burn_in_time,
     avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
                                                    tstop=sim_time,
                                                    gid_ranges=net.gid_ranges)
+    
+    avg_spike_rates_grouped = dict()
+    for cell_label, cell_types in cell_groups.items():
+        avg_rates = [avg_spike_rates[cell_type] for cell_type in cell_types]
+        avg_spike_rates_grouped[cell_label] = np.mean(avg_rates)
 
     # main term: distance between observed and desired mean spike rates
     # across cell types
     spike_rate_diffs = list()
     max_spike_rate_diff = 0.1
-    for cell_type in target_avg_spike_rates.keys():
-        diff = target_avg_spike_rates[cell_type] - avg_spike_rates[cell_type]
+    for cell_type in cell_groups.keys():
+        diff = (target_avg_spike_rates[cell_type] -
+                avg_spike_rates_grouped[cell_type])
         spike_rate_diffs.append(diff)
     spike_rate_diff_norm = (np.linalg.norm(spike_rate_diffs) /
                             (np.sqrt(len(spike_rate_diffs) *
