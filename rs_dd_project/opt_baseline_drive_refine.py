@@ -24,7 +24,7 @@ n_procs = 10
 sim_time = 2300
 burn_in_time = 300
 n_trials = 1
-clear_conn = True
+clear_conn = False
 connect_layer_6 = True
 rng = np.random.default_rng(1234)
 
