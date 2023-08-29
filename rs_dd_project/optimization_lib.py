@@ -55,7 +55,15 @@ def plot_net_response(dpls, net):
     net.cell_response.plot_spikes_hist(ax=axes[0], bin_width=1.0, show=False)
     plot_dipole(dpls, ax=axes[1:5], layer=['L2', 'L5', 'L6', 'agg'],
                 show=False)
-    net.cell_response.plot_spikes_raster(ax=axes[5], show=False)
+
+    spike_types = {'L2/3i': ['L2i_1', 'L2i_2'],
+                   'L2/3e': ['L2e_1', 'L2e_2'],
+                   'L5i': ['L5i'],
+                   'L5e': ['L5e'],
+                   'L6i': ['L6i_1', 'L6i_2'],
+                   'L6e': ['L6e_1', 'L6e_2']}
+    net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=spike_types,
+                                         show=False)
     return fig
 
 
@@ -66,38 +74,37 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates_1,
 
     fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
-    layer_by_cell_type = {'L2_basket': 'L2/3',
-                          'L2_pyramidal': 'L2/3',
-                          'L5_basket': 'L5',
-                          'L5_pyramidal': 'L5',
-                          'L6_basket': 'L6',
-                          'L6_pyramidal': 'L6'}
+    cell_type_by_layer = {'L2/3': ['L2e_1', 'L2e_2', 'L2i_1', 'L2i_2'],
+                          'L5': ['L5e', 'L5i'],
+                          'L6': ['L6e_1', 'L6e_2', 'L6i_1', 'L6i_2']}
+
+    # collapse across trials
+    n_trials = len(net.cell_response.spike_gids)
+    spike_gids = np.concatenate(net.cell_response.spike_gids).flatten()
+    spike_times = np.concatenate(net.cell_response.spike_times).flatten()
 
     pop_layer = list()
     pop_cell_type = list()
     pop_spike_rates = list()
     pop_targets_1 = list()
     pop_targets_2 = list()
-    for cell_type in net.cell_types:
-        if 'basket' in cell_type:
-            cell_type_ei = 'I'
-        else:
-            cell_type_ei = 'E'
-        # collapse across trials
-        n_trials = len(net.cell_response.spike_gids)
-        spike_gids = np.concatenate(net.cell_response.spike_gids).flatten()
-        spike_times = np.concatenate(net.cell_response.spike_times).flatten()
+    for layer, cell_types in cell_type_by_layer.items():
+        for cell_type in cell_types:
+            if 'i_' in cell_type:
+                cell_type_ei = 'I'
+            else:
+                cell_type_ei = 'E'
 
-        for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
-            gids_after_burn_in = np.array(spike_gids)[spike_times >
-                                                      burn_in_time]
-            n_spikes = np.sum(gids_after_burn_in == gid)
-            pop_layer.append(layer_by_cell_type[cell_type])
-            pop_cell_type.append(cell_type_ei)
-            pop_spike_rates.append((n_spikes / n_trials /
-                                    ((sim_time - burn_in_time) * 1e-3)))
-            pop_targets_1.append(target_spike_rates_1[cell_type])
-            pop_targets_2.append(target_spike_rates_2[cell_type])
+            for gid_idx, gid in enumerate(net.gid_ranges[cell_type]):
+                gids_after_burn_in = np.array(spike_gids)[spike_times >
+                                                          burn_in_time]
+                n_spikes = np.sum(gids_after_burn_in == gid)
+                pop_layer.append(layer)
+                pop_cell_type.append(cell_type_ei)
+                pop_spike_rates.append((n_spikes / n_trials /
+                                        ((sim_time - burn_in_time) * 1e-3)))
+                pop_targets_1.append(target_spike_rates_1[cell_type])
+                pop_targets_2.append(target_spike_rates_2[cell_type])
 
     spiking_df = pd.DataFrame({'layer': pop_layer, 'cell type': pop_cell_type,
                                'spike rate': pop_spike_rates,

@@ -427,21 +427,18 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     if not isinstance(spike_types, dict):
         raise TypeError('spike_types should be str, list, dict, or None')
 
-    spike_types_valid = list()
-    spike_times_by_label = {label: list() for label in spike_types.keys()}
+    spike_labels = dict()
     for spike_label, spike_type_list in spike_types.items():
         for spike_type in spike_type_list:
             n_found = 0
             for unique_type in unique_types:
                 if unique_type.startswith(spike_type):
-                    if unique_type in spike_types_valid:
+                    if unique_type in spike_labels:
                         raise ValueError(f'Elements of spike_types must map to'
                                          f' mutually exclusive input types.'
                                          f' {unique_type} is found more than'
                                          f' once.')
-                    spike_types_valid.append(unique_type)
-                    spike_times_by_label[spike_label].extend(
-                        spike_times[spike_types_mask[unique_type]])
+                    spike_labels[unique_type] = spike_label
                     n_found += 1
             if n_found == 0:
                 raise ValueError(f'No input types found for {spike_type}')
@@ -500,7 +497,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
 
 
 def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
-                       show=True):
+                       cell_types=None, show=True):
     """Plot the aggregate spiking activity according to cell type.
 
     Parameters
@@ -542,10 +539,13 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
         spike_types = np.array([])
         spike_gids = np.array([])
 
-    cell_types = cell_response._cell_type_names
-    cell_type_colors = {'L5_pyramidal': 'r', 'L5_basket': 'y',
-                        'L2_pyramidal': 'g', 'L2_basket': 'orange',
-                        'L6_pyramidal': 'c', 'L6_basket': 'm'}
+    if cell_types is None:
+        spike_types = {cell_type: [cell_type] for cell_type in
+                       cell_response._cell_type_names}
+
+    cell_type_colors = {'L2/3e': 'r', 'L2/3i': 'y',
+                        'L5e': 'g', 'L5i': 'orange',
+                        'L6e': 'c', 'L6i': 'm'}
 
     if ax is None:
         _, ax = plt.subplots(1, 1, constrained_layout=True)
@@ -553,23 +553,25 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
     ypos = 0
     linelength = 5
     events = list()
-    for cell_type in cell_types:
+    for cell_label, cell_types_list in cell_types.items():
         cell_type_times, cell_type_ypos = list(), list()
-        if cell_response._gid_ranges is None:
-            cell_type_gids = np.unique(spike_gids[spike_types == cell_type])
-        else:
-            cell_type_gids = cell_response._gid_ranges[cell_type]
-        for gid in cell_type_gids:
-            gid_time = spike_times[spike_gids == gid]
-            cell_type_times.append(gid_time)
-            cell_type_ypos.append(ypos)
-            ypos -= 1
+        for cell_type in cell_types_list:
+
+            if cell_response._gid_ranges is None:
+                cell_type_gids = np.unique(spike_gids[spike_types == cell_type])
+            else:
+                cell_type_gids = cell_response._gid_ranges[cell_type]
+            for gid in cell_type_gids:
+                gid_time = spike_times[spike_gids == gid]
+                cell_type_times.append(gid_time)
+                cell_type_ypos.append(ypos)
+                ypos -= 1
 
         if cell_type_times:
             events.append(
                 ax.eventplot(cell_type_times, lineoffsets=cell_type_ypos,
-                             color=cell_type_colors[cell_type],
-                             label=cell_type, linelengths=linelength))
+                             color=cell_type_colors[cell_label],
+                             label=cell_label, linelengths=linelength))
 
     ax.legend(handles=[e[0] for e in events], loc=1)
     ax.set_facecolor('k')
