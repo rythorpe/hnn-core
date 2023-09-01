@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 import hnn_core
-from hnn_core import simulate_dipole, MPIBackend, JoblibBackend, read_dipole
+from hnn_core import simulate_dipole, MPIBackend, read_dipole
 from hnn_core.network_models import L6_model
 from hnn_core.viz import plot_dipole
-from optimization_lib import plot_spikerate_hist
+from optimization_lib import (cell_groups, special_groups, poiss_drive_params,
+                              simulate_network)
 
 ###############################################################################
 # Read in empirical data to compare to simulated data
@@ -28,6 +29,10 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 
 ###############################################################################
 # Define user parameters
+# general sim parameters
+n_procs = 10
+burn_in_time = 300.0
+
 # Hyperparameters of repetitive drive sequence
 reps = 4
 stim_interval = 100.  # in ms; 10 Hz
@@ -62,23 +67,27 @@ net = L6_model(connect_layer_6=True)
 # undergo synaptic depletion
 
 # prox drive weights and delays
-weights_ampa_prox = {'L2_basket': 0.100, 'L2_pyramidal': 0.200,
-                     'L5_basket': 0.030, 'L5_pyramidal': 0.008,
-                     'L6_pyramidal': 0.01}
-synaptic_delays_prox = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
-                        'L5_basket': 1., 'L5_pyramidal': 1.,
-                        'L6_pyramidal': 0.1}
-# dist drive weights and delays
-weights_ampa_dist = {'L2_basket': 0.006, 'L2_pyramidal': 0.100,
-                     'L5_pyramidal': 0.100}
-weights_nmda_dist = {'L2_basket': 0.004, 'L2_pyramidal': 0.003,
-                     'L5_pyramidal': 0.080}
-synaptic_delays_dist = {'L2_basket': 0.1, 'L2_pyramidal': 0.1,
-                        'L5_pyramidal': 0.1}
+weights_ampa_prox = {'L2i_1': 0.100, 'L2i_2': 0.100,
+                     'L2e_1': 0.200, 'L2e_2': 0.200,
+                     'L5i': 0.030, 'L5e': 0.008,
+                     'L6e_1': 0.01, 'L6e_2': 0.01}
+synaptic_delays_prox = {'L2i_1': 0.1, 'L2i_2': 0.1,
+                        'L2e_1': 0.1, 'L2e_2': 0.1,
+                        'L5i': 1., 'L5e': 1.,
+                        'L6e_1': 0.1, 'L6e_2': 0.1}
+weights_ampa_dist = {'L2i_1': 0.006, 'L2i_2': 0.006,
+                     'L2e_1': 0.100, 'L2e_2': 0.100,
+                     'L5e': 0.100}
+weights_nmda_dist = {'L2i_1': 0.004, 'L2i_2': 0.004,
+                     'L2e_1': 0.003, 'L2e_2': 0.003,
+                     'L5e': 0.080}
+synaptic_delays_dist = {'L2i_1': 0.1, 'L2i_2': 0.1,
+                        'L2e_1': 0.1, 'L2e_2': 0.1,
+                        'L5e': 0.1}
 
 # set drive rep start times from user-defined parameters
-tstop = reps * max(stim_interval, rep_duration)
-rep_start_times = np.arange(0, tstop, stim_interval)
+tstop = burn_in_time + reps * max(stim_interval, rep_duration)
+rep_start_times = np.arange(burn_in_time, tstop, stim_interval)
 
 for rep_idx, rep_time in enumerate(rep_start_times):
 
@@ -113,9 +122,11 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 
 ###############################################################################
 # Now let's simulate the dipole
-with MPIBackend(n_procs=10):
-#with JoblibBackend(n_jobs=1):
-    dpls = simulate_dipole(net, tstop=tstop, n_trials=1)
+net, dpls = simulate_network(net, sim_time=tstop, burn_in_time=burn_in_time,
+                             n_trials=1, n_procs=n_procs,
+                             poiss_params=poiss_drive_params)
+# with MPIBackend(n_procs=10):
+#     dpls = simulate_dipole(net, tstop=tstop, n_trials=1)
 
 window_len, scaling_factor = 30, 2000
 for dpl in dpls:
@@ -157,13 +168,17 @@ for rep_time in rep_start_times:
     axes[4].axvline(rep_time, c='k')
     axes[5].axvline(rep_time, c='w')
 
-spike_types = [['L2_basket', 'L2_pyramidal'],
-               [{'L4E': ['evprox']}],
-               ['L5_basket', 'L5_pyramidal'],
-               ['L6_basket', 'L6_pyramidal']]
+spike_types = [{'L2/3i': ['L2i_1', 'L2i_2'], 'L2/3e': ['L2e_1', 'L2e_2']},
+               {'L4e': ['evprox']},
+               {'L5i': ['L5i'], 'L5e': ['L5e']},
+               {'L6i': ['L6i_1', 'L6i_2'], 'L6e': ['L6e_1', 'L6e_2']}]
+cell_type_colors = {'L2/3e': 'g', 'L2/3i': 'orange',
+                    'L4e': 'gray',
+                    'L5e': 'r', 'L5i': 'y',
+                    'L6e': 'c', 'L6i': 'm'}
 for layer_idx, layer_spike_types in enumerate(spike_types):
-    for spike_type in layer_spike_types:
-        if 'L4E' in spike_type:
+    for spike_type, spike_type_groups in layer_spike_types.items():
+        if 'L4e' in spike_type:
             # this is spiking activity of the proximal drives
             # count artifical drive cells from only one rep
             # (note that each drive has it's own set of artificial cell gids,
@@ -172,12 +187,16 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
             n_cells_of_type = \
                 net.external_drives['evprox_rep0']['n_drive_cells']
         else:
-            n_cells_of_type = len(net.gid_ranges[spike_type])
+            n_cells_of_type = 0
+            for spike_type_group in spike_type_groups:
+                n_cells_of_type += len(net.gid_ranges[spike_type_group])
         rate_factor = 1 / n_cells_of_type
-        net.cell_response.plot_spikes_hist(ax=axes[layer_idx + 1],
-                                           bin_width=5,
-                                           spike_types=spike_type,
-                                           rate=rate_factor, show=False)
+        net.cell_response.plot_spikes_hist(
+            ax=axes[layer_idx + 1],
+            bin_width=5,
+            spike_types={spike_type: spike_type_groups},
+            color=cell_type_colors[spike_type],
+            rate=rate_factor, show=False)
 
 axes[1].set_ylabel('mean single-unit\nspikes/s')
 axes[1].set_ylim([0, 150])
@@ -204,12 +223,16 @@ axes[4].legend(handles, ['L6I', 'L6E'], ncol=2, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 
-net.cell_response.plot_spikes_raster(ax=axes[5], show=False)
+
+spike_types = cell_groups.copy()
+spike_types.update(special_groups)
+net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=spike_types,
+                                     show=False)
 axes[5].spines[['right', 'top']].set_visible(True)
 axes[5].get_legend().remove()
-axes[5].set_xlim([0, tstop])
-xticks = np.arange(0, tstop + 1, 50)
-xticks_labels = (xticks - rep_start_times[-1]).astype(int).astype(str)
+axes[5].set_xlim([burn_in_time - 100, tstop])
+xticks = np.arange(burn_in_time - 100, tstop + 1, 50)
+xticks_labels = (xticks - rep_start_times[0]).astype(int).astype(str)
 axes[5].set_xticks(xticks)
 axes[5].set_xticklabels(xticks_labels)
 axes[5].set_xlabel('time (ms)')

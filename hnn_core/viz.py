@@ -543,8 +543,8 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
         spike_types = {cell_type: [cell_type] for cell_type in
                        cell_response._cell_type_names}
 
-    cell_type_colors = {'L2/3e': 'r', 'L2/3i': 'y',
-                        'L5e': 'g', 'L5i': 'orange',
+    cell_type_colors = {'L2/3e': 'g', 'L2/3i': 'orange',
+                        'L5e': 'r', 'L5i': 'y',
                         'L6e': 'c', 'L6i': 'm', 'L6i_cross': 'w'}
 
     if ax is None:
