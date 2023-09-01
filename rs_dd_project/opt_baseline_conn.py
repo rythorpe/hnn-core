@@ -194,7 +194,7 @@ plt.tight_layout()
 fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 
 # pre-optimization
-net_0, dpls_0 = simulate_network(net_original, sim_time, burn_in_time,
+net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
                                  n_procs=n_procs,
                                  poiss_params=poiss_params,
                                  clear_conn=False,
@@ -212,7 +212,7 @@ plt.tight_layout()
 fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 
 # post-optimization
-net, dpls = simulate_network(net_updated, sim_time, burn_in_time,
+net, dpls = simulate_network(net_updated.copy(), sim_time, burn_in_time,
                              n_procs=n_procs,
                              poiss_params=poiss_params,
                              clear_conn=False,

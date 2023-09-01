@@ -144,7 +144,7 @@ fig_objective.savefig(op.join(output_dir, 'surrogate_objective_func.png'))
 # pre-optimization
 poiss_params_init = np.append(opt_params_0, poiss_rate)
 rng = np.random.default_rng(1234)
-net_0, dpls_0 = simulate_network(net_original, sim_time, burn_in_time,
+net_0, dpls_0 = simulate_network(net_original.copy(), sim_time, burn_in_time,
                                  n_procs=n_procs,
                                  poiss_params=poiss_params_init,
                                  clear_conn=True,
@@ -164,7 +164,7 @@ fig_sr_profiles.savefig(op.join(output_dir, 'pre_opt_spikerate_profile.png'))
 # post-optimization
 poiss_params = np.append(opt_params, poiss_rate)
 rng = np.random.default_rng(1234)
-net, dpls = simulate_network(net_original, sim_time, burn_in_time,
+net, dpls = simulate_network(net_original.copy(), sim_time, burn_in_time,
                              n_procs=n_procs, poiss_params=poiss_params,
                              clear_conn=True,
                              rng=rng)

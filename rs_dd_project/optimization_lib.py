@@ -13,6 +13,15 @@ import seaborn as sns
 from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.viz import plot_dipole
 
+# poisson drive parameters
+poiss_drive_params = [5.82e-04,
+                      8.80e-04,
+                      9.61e-04,
+                      29.01e-04,
+                      6.85e-04,
+                      9.30e-04,
+                      1e1]
+
 # order matters!!!
 cell_groups = {'L2/3i': ['L2i_1', 'L2i_2'],
                'L2/3e': ['L2e_1', 'L2e_2'],
@@ -247,7 +256,7 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
 def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
                      poiss_params=None, clear_conn=False, rng=None):
     """Add poisson drive to empty network and run simulation."""
-    net = net.copy()
+
     # induce variation between simulations (aside from parameter exploration)
     if rng is None:
         # define new generator with default seed
@@ -332,7 +341,7 @@ def err_spike_rates_conn(net, sim_time, burn_in_time,
     avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
                                                    tstop=sim_time,
                                                    gid_ranges=net.gid_ranges)
-    
+
     avg_spike_rates_grouped = dict()
     for cell_label, cell_types in cell_groups.items():
         avg_rates = [avg_spike_rates[cell_type] for cell_type in cell_types]
@@ -402,7 +411,7 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
     # convert weight param back from log_10 scale
     #poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
     poiss_params = np.append(opt_params, poiss_rate)
-    net_disconn, _ = simulate_network(net,
+    net_disconn, _ = simulate_network(net.copy(),
                                       sim_time=sim_time,
                                       burn_in_time=burn_in_time,
                                       n_procs=n_procs,
@@ -432,7 +441,7 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     scaling_fctrs = [10.0 ** exp for exp in opt_params]
     scale_conn_weights(net_scaled, scaling_factors=scaling_fctrs,
                        which_conn_idxs=which_conn_idxs)
-    net_connected, _ = simulate_network(net_scaled,
+    net_connected, _ = simulate_network(net_scaled.copy(),
                                         sim_time=sim_time,
                                         burn_in_time=burn_in_time,
                                         n_procs=n_procs,
