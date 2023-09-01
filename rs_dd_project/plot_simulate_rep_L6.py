@@ -38,7 +38,7 @@ reps = 4
 stim_interval = 100.  # in ms; 10 Hz
 rep_duration = 100.  # 170 ms for human M/EEG
 
-syn_depletion_factor = 0.85  # used to simulate successive synaptic depression
+syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
 
 t_prox = 34.  # time (ms) of the proximal drive relative to stimulus rep
 t_dist = 65.  # time (ms) of the distal drive relative to stimulus rep
@@ -160,22 +160,32 @@ axes[0].set_ylim([0, arrow_height])
 axes[0].set_yticks([0, arrow_height])
 axes[0].set_ylabel('drive\nstrength')
 
+# vertical lines separating reps
 for rep_time in rep_start_times:
-    axes[0].axvline(rep_time, c='k')
-    axes[1].axvline(rep_time, c='k')
-    axes[2].axvline(rep_time, c='k')
-    axes[3].axvline(rep_time, c='k')
-    axes[4].axvline(rep_time, c='k')
-    axes[5].axvline(rep_time, c='w')
+    axes[0].axvline(rep_time, c='k', alpha=0.5)
+    axes[1].axvline(rep_time, c='k', alpha=0.5)
+    axes[2].axvline(rep_time, c='k', alpha=0.5)
+    axes[3].axvline(rep_time, c='k', alpha=0.5)
+    axes[4].axvline(rep_time, c='k', alpha=0.5)
+    axes[5].axvline(rep_time, c='w', alpha=0.5)
 
-spike_types = [{'L2/3i': ['L2i_1', 'L2i_2'], 'L2/3e': ['L2e_1', 'L2e_2']},
+# horizontal lines separating layers
+layer_separators = list()
+for layer in ['L2', 'L5']:
+    greatest_gid = 0
+    for cell_name, gid_range in net.gid_ranges.items():
+        if layer in cell_name and (gid := max(gid_range)) > greatest_gid:
+            greatest_gid = gid
+    axes[5].axhline(-greatest_gid, c='w', alpha=0.5)
+
+# cell groups are separtated in responders (R) and non-responders (NR)
+spike_types = [{'L2/3e': ['L2e_1', 'L2e_2'], 'R': ['L2e_1'], 'NR': ['L2e_2']},
                {'L4e': ['evprox']},
-               {'L5i': ['L5i'], 'L5e': ['L5e']},
-               {'L6i': ['L6i_1', 'L6i_2'], 'L6e': ['L6e_1', 'L6e_2']}]
-cell_type_colors = {'L2/3e': 'g', 'L2/3i': 'orange',
-                    'L4e': 'gray',
-                    'L5e': 'r', 'L5i': 'y',
-                    'L6e': 'c', 'L6i': 'm'}
+               {'L5e': ['L5e']},
+               {'L6e': ['L6e_1', 'L6e_2'], 'R': ['L6e_1'], 'NR': ['L6e_2']}]
+cell_type_colors = {'L2/3e': 'm', 'R': 'r', 'NR': 'b',
+                    'L4e': 'gray', 'L5e': 'gray',
+                    'L6e': 'm'}
 for layer_idx, layer_spike_types in enumerate(spike_types):
     for spike_type, spike_type_groups in layer_spike_types.items():
         if 'L4e' in spike_type:
@@ -201,33 +211,40 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
 axes[1].set_ylabel('mean single-unit\nspikes/s')
 axes[1].set_ylim([0, 150])
 handles, _ = axes[1].get_legend_handles_labels()
-axes[1].legend(handles, ['L2/3I', 'L2/3E'], ncol=2, loc='lower center',
+axes[1].legend(handles, ['L2/3e R+NR', 'R', 'NR'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[2].set_ylabel('')
 axes[2].set_ylim([0, 150])
 handles, _ = axes[2].get_legend_handles_labels()
-axes[2].legend(handles, ['L4E (proximal drive)'], ncol=2, loc='lower center',
+axes[2].legend(handles, ['L4e (proximal drive)'], ncol=1, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[3].set_ylabel('')
 axes[3].set_ylim([0, 150])
 handles, _ = axes[3].get_legend_handles_labels()
-axes[3].legend(handles, ['L5I', 'L5E'], ncol=2, loc='lower center',
+axes[3].legend(handles, ['L5e'], ncol=1, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[4].set_ylabel('')
 axes[4].set_ylim([0, 150])
 handles, _ = axes[4].get_legend_handles_labels()
-axes[4].legend(handles, ['L6I', 'L6E'], ncol=2, loc='lower center',
+axes[4].legend(handles, ['L6e R+NR', 'R', 'NR'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 
-
-spike_types = cell_groups.copy()
-spike_types.update(special_groups)
+spike_types = {'L2i': ['L2i_1', 'L2i_2'],
+               'L2e_1': ['L2e_1'], 'L2e_2': ['L2e_2'],
+               'L5i': ['L5i'], 'L5e': ['L5e'],
+               'L6i': ['L6i_1', 'L6i_2'],
+               'L6e_1': ['L6e_1'], 'L6e_2': ['L6e_2'],
+               'L6i_cross1': ['L6i_cross1'], 'L6i_cross2': ['L6i_cross2']}
+spike_type_colors = {'L2e_1': 'r', 'L2e_2': 'b', 'L2i': 'orange',
+                     'L5e': 'gray', 'L5i': 'orange',
+                     'L6e_1': 'r', 'L6e_2': 'b', 'L6i': 'orange',
+                     'L6i_cross1': 'orange', 'L6i_cross2': 'orange'}
 net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=spike_types,
-                                     show=False)
+                                     color=spike_type_colors, show=False)
 axes[5].spines[['right', 'top']].set_visible(True)
 axes[5].get_legend().remove()
 axes[5].set_xlim([burn_in_time - 100, tstop])
