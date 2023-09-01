@@ -66,41 +66,35 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     pos_dict['L5e'] = [
         pos for pos in it.product(xxrange, yyrange, [0])]
 
-    # PYRAMIDAL CELLS L2/3
-    # Group 1
-    xxrange = np.arange(0, n_pyr_x, 2) * inplane_distance
-    yyrange = np.arange(0, n_pyr_y, 2) * inplane_distance
-    pos_dict['L2e_1'] = [
-        pos for pos in it.product(xxrange, yyrange, [zdiff])]
-    # Group 2
-    xxrange = np.arange(1, n_pyr_x, 2) * inplane_distance
-    yyrange = np.arange(1, n_pyr_y, 2) * inplane_distance
-    pos_dict['L2e_2'] = [
-        pos for pos in it.product(xxrange, yyrange, [zdiff])]
+    # Create checkerboard pattern for L2/3 and L6
+    checker_light = list()
+    checker_dark = list()
+    for x in range(0, n_pyr_x, 1):
+        for y in range(x % 2, n_pyr_y, 2):
+            checker_light.append((x * inplane_distance, y * inplane_distance,
+                                  zdiff))
+        for y in range((x + 1) % 2, n_pyr_y, 2):
+            checker_dark.append((x * inplane_distance, y * inplane_distance,
+                                 zdiff))
 
+    # PYRAMIDAL CELLS L2/3
+    pos_dict['L2e_1'] = checker_light
+    pos_dict['L2e_2'] = checker_dark
     # PYRAMIDAL CELLS L6
     # L6 will be placed below L5 at half the distance between L5 and L2/
-    # Group 1
-    xxrange = np.arange(0, n_pyr_x, 2) * inplane_distance
-    yyrange = np.arange(0, n_pyr_y, 2) * inplane_distance
-    pos_dict['L6e_1'] = [
-        pos for pos in it.product(xxrange, yyrange, [-zdiff / 2])]
-    # Group 2
-    xxrange = np.arange(1, n_pyr_x, 2) * inplane_distance
-    yyrange = np.arange(1, n_pyr_y, 2) * inplane_distance
-    pos_dict['L6e_2'] = [
-        pos for pos in it.product(xxrange, yyrange, [-zdiff / 2])]
+    pos_dict['L6e_1'] = [(x, y, -zdiff / 2) for x, y, z in checker_light]
+    pos_dict['L6e_2'] = [(x, y, -zdiff / 2) for x, y, z in checker_dark]
 
     # BASKET CELLS
     xzero = np.arange(0, n_pyr_x, 3) * inplane_distance
-    xone = np.arange(1, n_pyr_x, 3) * inplane_distance
+    xone = np.arange(2, n_pyr_x, 3) * inplane_distance
     # split even and odd y vals
     yeven = np.arange(0, n_pyr_y, 2) * inplane_distance
     yodd = np.arange(1, n_pyr_y, 2) * inplane_distance
     # create general list of x,y coords and sort it
     coords = [pos for pos in it.product(
         xzero, yeven)] + [pos for pos in it.product(xone, yodd)]
-    coords_sorted = sorted(coords, key=lambda pos: pos[1])
+    coords_sorted = sorted(coords, key=lambda pos: pos[0])
     # append the z value for position for L2 and L5
     # print(len(coords_sorted))
 
