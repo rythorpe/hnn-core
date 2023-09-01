@@ -40,8 +40,8 @@ rep_duration = 100.  # 170 ms for human M/EEG
 
 syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
 
-t_prox = 34.  # time (ms) of the proximal drive relative to stimulus rep
-t_dist = 65.  # time (ms) of the distal drive relative to stimulus rep
+t_prox = 20.  # time (ms) of the proximal drive relative to stimulus rep
+t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 
 prox_conn_prob = 1.
 dist_conn_prob = 1.
@@ -68,8 +68,8 @@ net = L6_model(connect_layer_6=True)
 
 # prox drive weights and delays
 weights_ampa_prox = {'L2i_1': 0.100, 'L2i_2': 0.100,
-                     'L2e_1': 0.200, 'L2e_2': 0.200,
-                     'L5i': 0.030, 'L5e': 0.008,
+                     'L2e_1': 0.100, 'L2e_2': 0.100,
+                     'L5i': 0.030, 'L5e': 0.005,
                      'L6e_1': 0.01, 'L6e_2': 0.01}
 synaptic_delays_prox = {'L2i_1': 0.1, 'L2i_2': 0.1,
                         'L2e_1': 0.1, 'L2e_2': 0.1,
@@ -148,7 +148,9 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     if rep_idx == reps - 1:  # last rep
         depression_factor = 1
     else:
-        depression_factor = syn_depletion_factor ** rep_idx
+        # XXX for now, don't change arrow height
+        # depression_factor = syn_depletion_factor ** rep_idx
+        depression_factor = 1
     axes[0].arrow(rep_time + t_prox, 0, 0, arrow_height * depression_factor,
                   fc='k', ec=None,
                   alpha=1., width=3, head_width=head_width,
@@ -206,7 +208,7 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
             bin_width=5,
             spike_types={spike_type: spike_type_groups},
             color=cell_type_colors[spike_type],
-            rate=rate_factor, show=False)
+            rate=rate_factor, sliding_bin=True, show=False)
 
 axes[1].set_ylabel('mean single-unit\nspikes/s')
 axes[1].set_ylim([0, 150])

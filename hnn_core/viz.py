@@ -323,7 +323,8 @@ def plot_dipole(dpl, tmin=None, tmax=None, ax=None, layer='agg', decim=None,
 
 
 def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
-                     color=None, bin_width=5, rate=None, show=True):
+                     color=None, bin_width=5, rate=None, sliding_bin=False,
+                     show=True):
     """Plot the histogram of spiking activity across trials.
 
     Parameters
@@ -400,7 +401,6 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         spike_times = np.array([])
         spike_types_data = np.array([])
 
-    #unique_types = np.unique(spike_types_data)
     unique_types = list(cell_response._gid_ranges.keys())
     spike_types_mask = {s_type: np.in1d(spike_types_data, s_type)
                         for s_type in unique_types}
@@ -487,8 +487,21 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         weights = np.ones(len(plot_data))
         if rate:
             weights *= rate / (bin_width * 1e-3)
-        ax.hist(plot_data, bins=bins, weights=weights, label=spike_label,
-                color=hist_color, histtype='step')
+        if sliding_bin:
+            # 1 kH sampling rate
+            times = np.arange(bin_width / 2, bins[-1] - bin_width / 2, 1.0)
+            spike_rates = np.zeros_like(times)
+            for t_idx in range(0, len(times)):
+                t_win = times[t_idx] + np.array([-bin_width / 2,
+                                                 bin_width / 2])
+                spikes_in_win = np.logical_and(plot_data > t_win[0],
+                                               plot_data <= t_win[1])
+                spike_rates[t_idx] = (np.sum(spikes_in_win) *
+                                      rate / (bin_width * 1e-3))
+            ax.plot(times, spike_rates, label=spike_label, color=hist_color)
+        else:
+            ax.hist(plot_data, bins=bins, weights=weights, label=spike_label,
+                    color=hist_color, histtype='step')
     ax.set_ylabel("Counts")
     ax.legend()
 
