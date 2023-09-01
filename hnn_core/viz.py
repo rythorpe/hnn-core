@@ -497,7 +497,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
 
 
 def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
-                       cell_types=None, show=True):
+                       cell_types=None, color=None, show=True):
     """Plot the aggregate spiking activity according to cell type.
 
     Parameters
@@ -543,9 +543,10 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
         spike_types = {cell_type: [cell_type] for cell_type in
                        cell_response._cell_type_names}
 
-    cell_type_colors = {'L2/3e': 'g', 'L2/3i': 'orange',
-                        'L5e': 'r', 'L5i': 'y',
-                        'L6e': 'c', 'L6i': 'm', 'L6i_cross': 'w'}
+    if color is None:
+        color = {'L2/3e': 'g', 'L2/3i': 'orange',
+                 'L5e': 'r', 'L5i': 'y',
+                 'L6e': 'c', 'L6i': 'm', 'L6i_cross': 'w'}
 
     if ax is None:
         _, ax = plt.subplots(1, 1, constrained_layout=True)
@@ -570,7 +571,7 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
         if cell_type_times:
             events.append(
                 ax.eventplot(cell_type_times, lineoffsets=cell_type_ypos,
-                             color=cell_type_colors[cell_label],
+                             color=color[cell_label],
                              label=cell_label, linelengths=linelength))
 
     ax.legend(handles=[e[0] for e in events], loc=1)
