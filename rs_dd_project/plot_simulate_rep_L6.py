@@ -48,8 +48,11 @@ t_dist = 25.  # time (ms) of the distal drive relative to stimulus rep
 # connection probability controls the proportion of the circuit gets directly
 # activated through afferent drive (increase or decrease this value on the
 # deviant rep)
-prox_conn_prob = 0.75
-dist_conn_prob = 0.75
+prox_conn_prob_std = 0.75
+prox_conn_prob_dev = 0.50  # THIS EVOKES THE DEVIANT!!!!
+dist_conn_prob_std = 0.75
+dist_conn_prob_dev = 0.75
+
 
 event_seed = 1
 conn_seed = 1
@@ -95,9 +98,14 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     # attenuate syn weight values as a function of # of reps
     depression_factor = syn_depletion_factor ** rep_idx
 
+    # determine if this is the DEV or STD trial...
     if rep_idx == len(rep_start_times) - 1:  # last rep
         # THIS EVOKES THE DEVIANT!!!!
-        prox_conn_prob = 0.5
+        prox_strength = prox_conn_prob_dev
+        dist_strength = dist_conn_prob_dev
+    else:
+        prox_strength = prox_conn_prob_std
+        dist_strength = dist_conn_prob_std
 
     # weights_ampa_prox_depr = {key: val * depression_factor
     #                           for key, val in weights_ampa_prox.items()}
@@ -110,7 +118,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         f'evprox_rep{rep_idx}', mu=rep_time + t_prox, sigma=2.47, numspikes=1,
         weights_ampa=weights_ampa_prox, weights_nmda=None,
         location='proximal', synaptic_delays=synaptic_delays_prox,
-        probability=prox_conn_prob * depression_factor,
+        probability=prox_strength * depression_factor,
         conn_seed=conn_seed, event_seed=event_seed)
 
     # dist drive
@@ -118,7 +126,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         f'evdist_rep{rep_idx}', mu=rep_time + t_dist, sigma=3.85, numspikes=1,
         weights_ampa=weights_ampa_dist, weights_nmda=weights_nmda_dist,
         location='distal', synaptic_delays=synaptic_delays_dist,
-        probability=dist_conn_prob,
+        probability=dist_strength,
         conn_seed=conn_seed, event_seed=event_seed)
 
 ###############################################################################
@@ -141,26 +149,30 @@ gridspec = {'width_ratios': [1], 'height_ratios': [1, 1, 1, 1, 1, 3]}
 fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 6),
                          gridspec_kw=gridspec, constrained_layout=True)
 
-# plot arrow for each drive
-arrow_height = 1.0
+# plot drive strength
+arrow_height_max = 1.0
 head_length = 0.2
-head_width = 10.0
+head_width = 12.0
 for rep_idx, rep_time in enumerate(rep_start_times):
-    if rep_idx == reps - 1:  # last rep
-        depression_factor = 1
+
+    # determine if this is the DEV or STD trial...
+    if rep_idx == len(rep_start_times) - 1:  # last rep
+        # THIS EVOKES THE DEVIANT!!!!
+        prox_strength = prox_conn_prob_dev
+        dist_strength = dist_conn_prob_dev
     else:
-        # XXX for now, don't change arrow height
-        # depression_factor = syn_depletion_factor ** rep_idx
-        depression_factor = 1
-    axes[0].arrow(rep_time + t_prox, 0, 0, arrow_height * depression_factor,
-                  fc='k', ec=None,
-                  alpha=1., width=4, head_width=head_width,
+        prox_strength = prox_conn_prob_std
+        dist_strength = dist_conn_prob_std
+
+    # plot arrows for each drive
+    axes[0].arrow(rep_time + t_prox, 0, 0, arrow_height_max * prox_strength,
+                  fc='k', ec=None, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
-    axes[0].arrow(rep_time + t_dist, 1, 0, -arrow_height, fc='k', ec=None,
-                  alpha=1., width=4, head_width=head_width,
+    axes[0].arrow(rep_time + t_dist, dist_strength, 0, -dist_strength,
+                  fc='k', ec=None, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
-axes[0].set_ylim([0, arrow_height])
-axes[0].set_yticks([0, arrow_height])
+axes[0].set_ylim([0, arrow_height_max])
+axes[0].set_yticks([0, arrow_height_max])
 axes[0].set_ylabel('drive\nstrength')
 
 # vertical lines separating reps
@@ -220,7 +232,6 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
             show=False)
 
         # finally, plot a horizontal line at the peak agg. spike rate per/rep
-        print(axes[layer_idx + 1].get_xlim())
         if 'P' not in spike_type:
             sr_times = np.array(spike_rates['times'])
             sr = np.array(spike_rates[spike_type])
@@ -279,5 +290,6 @@ xticks_labels = (xticks - rep_start_times[0]).astype(int).astype(str)
 axes[5].set_xticks(xticks)
 axes[5].set_xticklabels(xticks_labels)
 axes[5].set_xlabel('time (ms)')
+axes[5].set_ylabel('cell #')
 # plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()
