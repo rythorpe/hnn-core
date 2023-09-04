@@ -324,7 +324,7 @@ def plot_dipole(dpl, tmin=None, tmax=None, ax=None, layer='agg', decim=None,
 
 def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
                      color=None, bin_width=5, rate=None, sliding_bin=False,
-                     show=True):
+                     fill_between=False, show=True):
     """Plot the histogram of spiking activity across trials.
 
     Parameters
@@ -498,7 +498,12 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
                                                plot_data <= t_win[1])
                 spike_rates[t_idx] = (np.sum(spikes_in_win) *
                                       rate / (bin_width * 1e-3))
-            ax.plot(times, spike_rates, label=spike_label, color=hist_color)
+            if not fill_between:
+                ax.plot(times, spike_rates, label=spike_label,
+                        color=hist_color)
+            else:
+                ax.fill_between(times, spike_rates, label=spike_label,
+                                color=hist_color, alpha=0.5)
         else:
             ax.hist(plot_data, bins=bins, weights=weights, label=spike_label,
                     color=hist_color, histtype='step')

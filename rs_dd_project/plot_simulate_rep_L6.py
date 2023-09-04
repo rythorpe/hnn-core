@@ -40,8 +40,8 @@ rep_duration = 100.  # 170 ms for human M/EEG
 
 syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
 
-t_prox = 20.  # time (ms) of the proximal drive relative to stimulus rep
-t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
+t_prox = 12.  # time (ms) of the proximal drive relative to stimulus rep
+t_dist = 25.  # time (ms) of the distal drive relative to stimulus rep
 
 prox_conn_prob = 1.
 dist_conn_prob = 1.
@@ -164,11 +164,11 @@ axes[0].set_ylabel('drive\nstrength')
 
 # vertical lines separating reps
 for rep_time in rep_start_times:
-    axes[0].axvline(rep_time, c='k', alpha=0.5)
-    axes[1].axvline(rep_time, c='k', alpha=0.5)
-    axes[2].axvline(rep_time, c='k', alpha=0.5)
-    axes[3].axvline(rep_time, c='k', alpha=0.5)
-    axes[4].axvline(rep_time, c='k', alpha=0.5)
+    axes[0].axvline(rep_time, c='k')
+    axes[1].axvline(rep_time, c='k')
+    axes[2].axvline(rep_time, c='k')
+    axes[3].axvline(rep_time, c='k')
+    axes[4].axvline(rep_time, c='k')
     axes[5].axvline(rep_time, c='w', alpha=0.5)
 
 # horizontal lines separating layers
@@ -181,11 +181,11 @@ for layer in ['L2', 'L5']:
     axes[5].axhline(-greatest_gid, c='w', alpha=0.5)
 
 # cell groups are separtated in responders (R) and non-responders (NR)
-spike_types = [{'L2/3e': ['L2e_1', 'L2e_2'], 'R': ['L2e_1'], 'NR': ['L2e_2']},
+spike_types = [{'L2/3e': ['L2e_1', 'L2e_2'], 'P': ['L2e_1'], 'NP': ['L2e_2']},
                {'L4e': ['evprox']},
                {'L5e': ['L5e']},
-               {'L6e': ['L6e_1', 'L6e_2'], 'R': ['L6e_1'], 'NR': ['L6e_2']}]
-cell_type_colors = {'L2/3e': 'm', 'R': 'r', 'NR': 'b',
+               {'L6e': ['L6e_1', 'L6e_2'], 'P': ['L6e_1'], 'NP': ['L6e_2']}]
+cell_type_colors = {'L2/3e': 'm', 'P': 'r', 'NP': 'b',
                     'L4e': 'gray', 'L5e': 'gray',
                     'L6e': 'm'}
 for layer_idx, layer_spike_types in enumerate(spike_types):
@@ -203,17 +203,23 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
             for spike_type_group in spike_type_groups:
                 n_cells_of_type += len(net.gid_ranges[spike_type_group])
         rate_factor = 1 / n_cells_of_type
+
+        # fill area under curve only for aggregate spike rates
+        fill_between = True
+        if 'P' in spike_type:
+            fill_between = False
         net.cell_response.plot_spikes_hist(
             ax=axes[layer_idx + 1],
             bin_width=5,
             spike_types={spike_type: spike_type_groups},
             color=cell_type_colors[spike_type],
-            rate=rate_factor, sliding_bin=True, show=False)
+            rate=rate_factor, sliding_bin=True, fill_between=fill_between,
+            show=False)
 
 axes[1].set_ylabel('mean single-unit\nspikes/s')
 axes[1].set_ylim([0, 150])
 handles, _ = axes[1].get_legend_handles_labels()
-axes[1].legend(handles, ['L2/3e R+NR', 'R', 'NR'], ncol=3, loc='lower center',
+axes[1].legend(handles, ['L2/3e R+NR', 'P', 'NP'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[2].set_ylabel('')
@@ -231,7 +237,7 @@ axes[3].legend(handles, ['L5e'], ncol=1, loc='lower center',
 axes[4].set_ylabel('')
 axes[4].set_ylim([0, 150])
 handles, _ = axes[4].get_legend_handles_labels()
-axes[4].legend(handles, ['L6e R+NR', 'R', 'NR'], ncol=3, loc='lower center',
+axes[4].legend(handles, ['L6e R+NR', 'P', 'NP'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 
