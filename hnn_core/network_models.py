@@ -368,6 +368,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5i_ampa": 0.00047,
                     "L5i_L5i_gabaa": 0.02}
     lamtha = 4.0
+    lamtha_L6_cross = 8.0
     delay = net.delay
     prob_e = 0.3  # e->e
     # inhibition within and between groups is constant
@@ -506,7 +507,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                receptor='gabaa',
                                weight=0.0005,
                                delay=delay,
-                               lamtha=lamtha,
+                               lamtha=lamtha_L6_cross,
                                probability=prob_i,
                                conn_seed=conn_seed)
 
@@ -517,7 +518,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                receptor='gabaa',
                                weight=0.02,
                                delay=delay,
-                               lamtha=lamtha,
+                               lamtha=lamtha_L6_cross,
                                probability=prob_i,
                                conn_seed=conn_seed)
 
@@ -663,25 +664,25 @@ def L6_model(params=None, add_drives_from_params=False,
 
                 # these src types only apply to cross-group connections
                 if not different_groups:
-                    # layer6 Bask -> layer2 Pyr
+                    # layer6 cross-laminar Bask -> layer2 Pyr
                     net.add_connection(src_gids=f'L6i_cross{src_group}',
                                        target_gids=f'L2e_{targ_group}',
                                        loc='soma',
                                        receptor='gabaa',
                                        weight=0.001,
                                        delay=delay,
-                                       lamtha=lamtha,
+                                       lamtha=lamtha_L6_cross,
                                        probability=prob_i,
                                        conn_seed=conn_seed)
 
-                    # layer6 Bask -> layer2 Bask
+                    # layer6 cross-laminar Bask -> layer2 Bask
                     net.add_connection(src_gids=f'L6i_cross{src_group}',
                                        target_gids=f'L2i_{targ_group}',
                                        loc='soma',
                                        receptor='gabaa',
                                        weight=0.02,
                                        delay=delay,
-                                       lamtha=lamtha,
+                                       lamtha=lamtha_L6_cross,
                                        probability=prob_i,
                                        conn_seed=conn_seed)
 
