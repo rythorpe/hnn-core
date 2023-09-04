@@ -32,6 +32,15 @@ cell_groups = {'L2/3i': ['L2i_1', 'L2i_2'],
 special_groups = {'L6i_cross': ['L6i_cross1', 'L6i_cross2']}
 
 
+def layertype_to_grouptype(weights_or_delays, cell_groups):
+    """Convert layer-specific cell profiles into separate identical groups."""
+    group_types = dict()
+    for layer_type, val in weights_or_delays.items():
+        group_types.update({group_type: val for group_type in
+                            cell_groups[layer_type]})
+    return group_types
+
+
 def get_conn_params(net, param_type):
     """Get list of lamtha or weight parameters for all network connections."""
     conn_params = list()

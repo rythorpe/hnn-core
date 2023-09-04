@@ -15,7 +15,8 @@ import hnn_core
 from hnn_core import simulate_dipole, MPIBackend, read_dipole
 from hnn_core.network_models import L6_model
 from hnn_core.viz import plot_dipole
-from optimization_lib import (cell_groups, special_groups, poiss_drive_params,
+from optimization_lib import (cell_groups, special_groups,
+                              layertype_to_grouptype, poiss_drive_params,
                               simulate_network)
 
 ###############################################################################
@@ -40,6 +41,7 @@ rep_duration = 100.  # 170 ms for human M/EEG
 
 syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
 
+# see Constantinople and Bruno (2013) for experimental values
 t_prox = 12.  # time (ms) of the proximal drive relative to stimulus rep
 t_dist = 25.  # time (ms) of the distal drive relative to stimulus rep
 
@@ -67,23 +69,18 @@ net = L6_model(connect_layer_6=True)
 # undergo synaptic depletion
 
 # prox drive weights and delays
-weights_ampa_prox = {'L2i_1': 0.100, 'L2i_2': 0.100,
-                     'L2e_1': 0.100, 'L2e_2': 0.100,
-                     'L5i': 0.030, 'L5e': 0.005,
-                     'L6e_1': 0.01, 'L6e_2': 0.01}
-synaptic_delays_prox = {'L2i_1': 0.1, 'L2i_2': 0.1,
-                        'L2e_1': 0.1, 'L2e_2': 0.1,
-                        'L5i': 1., 'L5e': 1.,
-                        'L6e_1': 0.1, 'L6e_2': 0.1}
-weights_ampa_dist = {'L2i_1': 0.006, 'L2i_2': 0.006,
-                     'L2e_1': 0.100, 'L2e_2': 0.100,
-                     'L5e': 0.100}
-weights_nmda_dist = {'L2i_1': 0.004, 'L2i_2': 0.004,
-                     'L2e_1': 0.003, 'L2e_2': 0.003,
-                     'L5e': 0.080}
-synaptic_delays_dist = {'L2i_1': 0.1, 'L2i_2': 0.1,
-                        'L2e_1': 0.1, 'L2e_2': 0.1,
-                        'L5e': 0.1}
+weights_ampa_prox = layertype_to_grouptype(
+    {'L2/3i': 0.100, 'L2/3e': 0.100, 'L5i': 0.030, 'L5e': 0.005, 'L6e': 0.01},
+    cell_groups)
+synaptic_delays_prox = layertype_to_grouptype(
+    {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5i': 1., 'L5e': 1., 'L6e': 0.1},
+    cell_groups)
+weights_ampa_dist = layertype_to_grouptype(
+    {'L2/3i': 0.006, 'L2/3e': 0.100, 'L5e': 0.100}, cell_groups)
+weights_nmda_dist = layertype_to_grouptype(
+    {'L2/3i': 0.004, 'L2/3e': 0.003, 'L5e': 0.080}, cell_groups)
+synaptic_delays_dist = layertype_to_grouptype(
+    {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}, cell_groups)
 
 # set drive rep start times from user-defined parameters
 tstop = burn_in_time + reps * max(stim_interval, rep_duration)
@@ -101,7 +98,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     #weights_ampa_prox_depr = {key: val * depression_factor
     #                          for key, val in weights_ampa_prox.items()}
     #weights_ampa_L6_depr = {key: val * depression_factor
-    #                        for key, val in weights_ampa_L6.items()}
+    #                        for key, val in weights_ampa_L6.items()}    
 
     # prox drive: attenuate conn probability at each repetition
     # note that all NMDA weights are zero
@@ -153,10 +150,10 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         depression_factor = 1
     axes[0].arrow(rep_time + t_prox, 0, 0, arrow_height * depression_factor,
                   fc='k', ec=None,
-                  alpha=1., width=3, head_width=head_width,
+                  alpha=1., width=4, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
     axes[0].arrow(rep_time + t_dist, 1, 0, -arrow_height, fc='k', ec=None,
-                  alpha=1., width=3, head_width=head_width,
+                  alpha=1., width=4, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
 axes[0].set_ylim([0, arrow_height])
 axes[0].set_yticks([0, arrow_height])
@@ -186,7 +183,7 @@ spike_types = [{'L2/3e': ['L2e_1', 'L2e_2'], 'P': ['L2e_1'], 'NP': ['L2e_2']},
                {'L5e': ['L5e']},
                {'L6e': ['L6e_1', 'L6e_2'], 'P': ['L6e_1'], 'NP': ['L6e_2']}]
 cell_type_colors = {'L2/3e': 'm', 'P': 'r', 'NP': 'b',
-                    'L4e': 'gray', 'L5e': 'gray',
+                    'L4e': 'gray', 'L5e': 'm',
                     'L6e': 'm'}
 for layer_idx, layer_spike_types in enumerate(spike_types):
     for spike_type, spike_type_groups in layer_spike_types.items():
@@ -204,17 +201,34 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
                 n_cells_of_type += len(net.gid_ranges[spike_type_group])
         rate_factor = 1 / n_cells_of_type
 
+        # compute and plot histogram
         # fill area under curve only for aggregate spike rates
         fill_between = True
         if 'P' in spike_type:
             fill_between = False
-        net.cell_response.plot_spikes_hist(
+        # modified to return spike rates as well as create plot
+        _, spike_rates = net.cell_response.plot_spikes_hist(
             ax=axes[layer_idx + 1],
             bin_width=5,
             spike_types={spike_type: spike_type_groups},
             color=cell_type_colors[spike_type],
             rate=rate_factor, sliding_bin=True, fill_between=fill_between,
             show=False)
+
+        # finally, plot a horizontal line at the peak agg. spike rate per/rep
+        print(axes[layer_idx + 1].get_xlim())
+        if 'P' not in spike_type:
+            sr_times = np.array(spike_rates['times'])
+            sr = np.array(spike_rates[spike_type])
+            for rep_time in rep_start_times:
+                rep_time_stop = rep_time + stim_interval
+                rep_mask = np.logical_and(sr_times >= rep_time,
+                                          sr_times < rep_time_stop)
+                peak = sr[rep_mask].max()
+                axes[layer_idx + 1].hlines(y=peak, xmin=rep_time,
+                                           xmax=rep_time_stop,
+                                           colors=cell_type_colors[spike_type],
+                                           linestyle=':')
 
 axes[1].set_ylabel('mean single-unit\nspikes/s')
 axes[1].set_ylim([0, 150])
@@ -248,7 +262,7 @@ spike_types = {'L2i': ['L2i_1', 'L2i_2'],
                'L6e_1': ['L6e_1'], 'L6e_2': ['L6e_2'],
                'L6i_cross1': ['L6i_cross1'], 'L6i_cross2': ['L6i_cross2']}
 spike_type_colors = {'L2e_1': 'r', 'L2e_2': 'b', 'L2i': 'orange',
-                     'L5e': 'gray', 'L5i': 'orange',
+                     'L5e': 'm', 'L5i': 'orange',
                      'L6e_1': 'r', 'L6e_2': 'b', 'L6i': 'orange',
                      'L6i_cross1': 'orange', 'L6i_cross2': 'orange'}
 net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=spike_types,

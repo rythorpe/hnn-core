@@ -480,7 +480,9 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         spike_type_times[spike_label].extend(
             spike_times[spike_types_mask[spike_type]])
 
-    # Plot aggregated spike_times
+    spike_rates = dict()  # store sliding bin spike rates if applicable
+
+    # compute and plot aggregated spike_times
     for spike_label, plot_data in spike_type_times.items():
         hist_color = spike_color[spike_label]
         # set weights uniformly across bins; used for calculating spike rates
@@ -490,28 +492,34 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         if sliding_bin:
             # 1 kH sampling rate
             times = np.arange(bin_width / 2, bins[-1] - bin_width / 2, 1.0)
-            spike_rates = np.zeros_like(times)
+            spike_rate = np.zeros_like(times)
             for t_idx in range(0, len(times)):
                 t_win = times[t_idx] + np.array([-bin_width / 2,
                                                  bin_width / 2])
                 spikes_in_win = np.logical_and(plot_data > t_win[0],
                                                plot_data <= t_win[1])
-                spike_rates[t_idx] = (np.sum(spikes_in_win) *
-                                      rate / (bin_width * 1e-3))
+                spike_rate[t_idx] = (np.sum(spikes_in_win) *
+                                     rate / (bin_width * 1e-3))
+            spike_rates[spike_label] = spike_rate
             if not fill_between:
-                ax.plot(times, spike_rates, label=spike_label,
+                ax.plot(times, spike_rate, label=spike_label,
                         color=hist_color)
             else:
-                ax.fill_between(times, spike_rates, label=spike_label,
+                ax.fill_between(times, spike_rate, label=spike_label,
                                 color=hist_color, alpha=0.5)
         else:
             ax.hist(plot_data, bins=bins, weights=weights, label=spike_label,
                     color=hist_color, histtype='step')
+
     ax.set_ylabel("Counts")
     ax.legend()
-
     plt_show(show)
-    return ax.get_figure()
+
+    if len(spike_rates) > 0:
+        spike_rates['times'] = times
+        return ax.get_figure, spike_rates
+    else:
+        return ax.get_figure()
 
 
 def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
