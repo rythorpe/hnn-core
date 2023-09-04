@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 import hnn_core
-from hnn_core import simulate_dipole, MPIBackend, read_dipole
+from hnn_core import read_dipole
 from hnn_core.network_models import L6_model
 from hnn_core.viz import plot_dipole
 from optimization_lib import (cell_groups, special_groups,
@@ -23,10 +23,10 @@ from optimization_lib import (cell_groups, special_groups,
 # Read in empirical data to compare to simulated data
 data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
             'data/MEG_detection_data/S1_SupraT.txt')
-#urlretrieve(data_url, 'S1_SupraT.txt')
-#hnn_core_root = op.join(op.dirname(hnn_core.__file__))
-#emp_dpl = read_dipole('yes_trial_S1_ERP_all_avg.txt')
-#emp_dpl = read_dipole('S1_SupraT.txt')
+# urlretrieve(data_url, 'S1_SupraT.txt')
+# hnn_core_root = op.join(op.dirname(hnn_core.__file__))
+# emp_dpl = read_dipole('yes_trial_S1_ERP_all_avg.txt')
+# emp_dpl = read_dipole('S1_SupraT.txt')
 
 ###############################################################################
 # Define user parameters
@@ -55,13 +55,13 @@ conn_seed = 1
 # Let us first create our default network and visualize the cells
 # inside it.
 net = L6_model(connect_layer_6=True)
-#net.plot_cells()
-#fig = plt.figure(figsize=(6, 6), constrained_layout=True)
-#for cell_type_idx, cell_type in enumerate(net.cell_types):
+# net.plot_cells()
+# fig = plt.figure(figsize=(6, 6), constrained_layout=True)
+# for cell_type_idx, cell_type in enumerate(net.cell_types):
 #    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
 #                         projection='3d')
-    #net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
-#plt.show()
+#     net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
+# plt.show()
 
 ###############################################################################
 # Add drives
@@ -95,10 +95,10 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     else:
         # attenuate syn weight values as a function of # of reps
         depression_factor = syn_depletion_factor ** rep_idx
-    #weights_ampa_prox_depr = {key: val * depression_factor
-    #                          for key, val in weights_ampa_prox.items()}
-    #weights_ampa_L6_depr = {key: val * depression_factor
-    #                        for key, val in weights_ampa_L6.items()}    
+    # weights_ampa_prox_depr = {key: val * depression_factor
+    #                           for key, val in weights_ampa_prox.items()}
+    # weights_ampa_L6_depr = {key: val * depression_factor
+    #                         for key, val in weights_ampa_L6.items()}
 
     # prox drive: attenuate conn probability at each repetition
     # note that all NMDA weights are zero
@@ -275,5 +275,5 @@ xticks_labels = (xticks - rep_start_times[0]).astype(int).astype(str)
 axes[5].set_xticks(xticks)
 axes[5].set_xticklabels(xticks_labels)
 axes[5].set_xlabel('time (ms)')
-#plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
+# plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()
