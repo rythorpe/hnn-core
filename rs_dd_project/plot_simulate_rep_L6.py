@@ -45,8 +45,11 @@ syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
 t_prox = 12.  # time (ms) of the proximal drive relative to stimulus rep
 t_dist = 25.  # time (ms) of the distal drive relative to stimulus rep
 
-prox_conn_prob = 1.
-dist_conn_prob = 1.
+# connection probability controls the proportion of the circuit gets directly
+# activated through afferent drive (increase or decrease this value on the
+# deviant rep)
+prox_conn_prob = 0.75
+dist_conn_prob = 0.75
 
 event_seed = 1
 conn_seed = 1
@@ -88,13 +91,14 @@ rep_start_times = np.arange(burn_in_time, tstop, stim_interval)
 
 for rep_idx, rep_time in enumerate(rep_start_times):
 
-    # downscale syn weights for each successive prox drive, except on last rep
-    if rep_idx == reps - 1:  # last rep
-        # no depression
-        depression_factor = 1
-    else:
-        # attenuate syn weight values as a function of # of reps
-        depression_factor = syn_depletion_factor ** rep_idx
+    # downscale syn weights for each successive prox drive
+    # attenuate syn weight values as a function of # of reps
+    depression_factor = syn_depletion_factor ** rep_idx
+
+    if rep_idx == len(rep_start_times) - 1:  # last rep
+        # THIS EVOKES THE DEVIANT!!!!
+        prox_conn_prob = 0.5
+
     # weights_ampa_prox_depr = {key: val * depression_factor
     #                           for key, val in weights_ampa_prox.items()}
     # weights_ampa_L6_depr = {key: val * depression_factor
