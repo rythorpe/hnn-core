@@ -360,12 +360,12 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L2i_L2i_gabaa": 0.02,
                     "L2e_L5e_ampa": 0.00020,
                     "L2i_L5e_gabaa": 0.001,
-                    "L5e_L5e_ampa": 0.00080,
-                    "L5e_L5e_nmda": 0.00015,
-                    "L5i_L5e_gabaa": 0.024,
-                    "L5i_L5e_gabab": 0.0055,  # changed from jones09
+                    "L5e_L5e_ampa": 0.00076,  # 0.00077
+                    "L5e_L5e_nmda": 0.00011,
+                    "L5i_L5e_gabaa": 0.0207,  # 0.018
+                    "L5i_L5e_gabab": 0.0035,  # changed from jones09
                     "L2e_L5i_ampa": 0.00020,
-                    "L5e_L5i_ampa": 0.00047,
+                    "L5e_L5i_ampa": 0.00036,  # 0.00043
                     "L5i_L5i_gabaa": 0.02}
     lamtha = 4.0
     lamtha_L6_cross = 8.0
