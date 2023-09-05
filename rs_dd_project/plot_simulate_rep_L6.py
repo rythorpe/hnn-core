@@ -76,15 +76,15 @@ net = L6_model(connect_layer_6=True)
 
 # prox drive weights and delays
 weights_ampa_prox = layertype_to_grouptype(
-    {'L2/3i': 0.100, 'L2/3e': 0.100, 'L5i': 0.030, 'L5e': 0.005, 'L6e': 0.01},
+    {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5i': 0.0, 'L5e': 0.0025, 'L6e': 0.01},
     cell_groups)
 synaptic_delays_prox = layertype_to_grouptype(
     {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5i': 1., 'L5e': 1., 'L6e': 0.1},
     cell_groups)
 weights_ampa_dist = layertype_to_grouptype(
-    {'L2/3i': 0.006, 'L2/3e': 0.100, 'L5e': 0.100}, cell_groups)
+    {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5e': 0.0025}, cell_groups)
 weights_nmda_dist = layertype_to_grouptype(
-    {'L2/3i': 0.004, 'L2/3e': 0.003, 'L5e': 0.080}, cell_groups)
+    {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}, cell_groups)
 synaptic_delays_dist = layertype_to_grouptype(
     {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}, cell_groups)
 
