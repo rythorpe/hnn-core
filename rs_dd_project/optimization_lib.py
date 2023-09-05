@@ -32,12 +32,23 @@ cell_groups = {'L2/3i': ['L2i_1', 'L2i_2'],
 special_groups = {'L6i_cross': ['L6i_cross1', 'L6i_cross2']}
 
 
-def layertype_to_grouptype(weights_or_delays, cell_groups):
+def layertype_to_grouptype(weights_or_delays, cell_groups, selected_group=None,
+                           omitted_group=None):
     """Convert layer-specific cell profiles into separate identical groups."""
     group_types = dict()
     for layer_type, val in weights_or_delays.items():
-        group_types.update({group_type: val for group_type in
-                            cell_groups[layer_type]})
+        if selected_group is None and omitted_group is None:
+            group_types.update({group_type: val for group_type in
+                                cell_groups[layer_type]})
+        else:
+            for group_type in cell_groups[layer_type]:
+                # keep subsets that are selected
+                if selected_group is not None and selected_group in group_type:
+                    group_types.update({group_type: val})
+                # keep subsets that are not omitted
+                if omitted_group is not None and (omitted_group
+                                                  not in group_type):
+                    group_types.update({group_type: val})
     return group_types
 
 
