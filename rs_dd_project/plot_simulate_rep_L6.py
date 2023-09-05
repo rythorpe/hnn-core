@@ -42,16 +42,17 @@ rep_duration = 100.  # 170 ms for human M/EEG
 syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
 
 # see Constantinople and Bruno (2013) for experimental values
+# see Sachidhanandam (2013) for a discusson on feedback drive timing
 t_prox = 12.  # time (ms) of the proximal drive relative to stimulus rep
-t_dist = 25.  # time (ms) of the distal drive relative to stimulus rep
+t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 
 # connection probability controls the proportion of the circuit gets directly
 # activated through afferent drive (increase or decrease this value on the
 # deviant rep)
-prox_conn_prob_std = 0.75
-prox_conn_prob_dev = 0.50  # THIS EVOKES THE DEVIANT!!!!
-dist_conn_prob_std = 0.75
-dist_conn_prob_dev = 0.75
+prox_conn_prob_std = 0.20  # maybe try 0.15 based on Sachidhanandam (2013)?
+prox_conn_prob_dev = 0.10  # THIS EVOKES THE DEVIANT!!!!
+dist_conn_prob_std = 0.20
+dist_conn_prob_dev = 0.20
 
 
 event_seed = 1
@@ -82,7 +83,7 @@ synaptic_delays_prox = layertype_to_grouptype(
     {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5i': 1., 'L5e': 1., 'L6e': 0.1},
     cell_groups)
 weights_ampa_dist = layertype_to_grouptype(
-    {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5e': 0.0025}, cell_groups)
+    {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5e': 0.0023}, cell_groups)
 weights_nmda_dist = layertype_to_grouptype(
     {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}, cell_groups)
 synaptic_delays_dist = layertype_to_grouptype(
