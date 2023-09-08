@@ -49,10 +49,10 @@ t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 # connection probability controls the proportion of the circuit gets directly
 # activated through afferent drive (increase or decrease this value on the
 # deviant rep)
-prox_conn_prob_std = 0.20  # maybe try 0.15 based on Sachidhanandam (2013)?
-prox_conn_prob_dev = 0.10  # THIS EVOKES THE DEVIANT!!!!
-dist_conn_prob_std = 0.20
-dist_conn_prob_dev = 0.20
+prox_conn_prob_std = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
+prox_conn_prob_dev = 0.40  # THIS EVOKES THE DEVIANT!!!!
+dist_conn_prob_std = 0.50
+dist_conn_prob_dev = 0.50
 
 
 event_seed = 1
@@ -76,18 +76,17 @@ net = L6_model(connect_layer_6=True)
 # undergo synaptic depletion
 
 # prox drive weights and delays
-weights_ampa_prox = layertype_to_grouptype(
-    {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5i': 0.0, 'L5e': 0.0025, 'L6e': 0.01},
-    cell_groups)
-synaptic_delays_prox = layertype_to_grouptype(
-    {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5i': 1., 'L5e': 1., 'L6e': 0.1},
-    cell_groups)
-weights_ampa_dist = layertype_to_grouptype(
-    {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5e': 0.0023}, cell_groups)
-weights_nmda_dist = layertype_to_grouptype(
-    {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}, cell_groups)
-synaptic_delays_dist = layertype_to_grouptype(
-    {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}, cell_groups)
+weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.009,
+                     'L5i': 0.0, 'L5e': 0.0027, 'L6e': 0.01}
+synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
+                        'L5i': 1., 'L5e': 1., 'L6e': 0.1}
+weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5e': 0.0023}
+weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
+synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
+
+target_groups = [{'selected_groups': ['_1']},
+                 {'selected_groups': ['_2']},
+                 {'omitted_groups': ['_1', '_2']}]
 
 # set drive rep start times from user-defined parameters
 tstop = burn_in_time + reps * max(stim_interval, rep_duration)
@@ -115,20 +114,49 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 
     # prox drive: attenuate conn probability at each repetition
     # note that all NMDA weights are zero
-    net.add_evoked_drive(
-        f'evprox_rep{rep_idx}', mu=rep_time + t_prox, sigma=2.47, numspikes=1,
-        weights_ampa=weights_ampa_prox, weights_nmda=None,
-        location='proximal', synaptic_delays=synaptic_delays_prox,
-        probability=prox_strength * depression_factor,
-        conn_seed=conn_seed, event_seed=event_seed)
+    for target_group in target_groups:
 
-    # dist drive
-    net.add_evoked_drive(
-        f'evdist_rep{rep_idx}', mu=rep_time + t_dist, sigma=3.85, numspikes=1,
-        weights_ampa=weights_ampa_dist, weights_nmda=weights_nmda_dist,
-        location='distal', synaptic_delays=synaptic_delays_dist,
-        probability=dist_strength,
-        conn_seed=conn_seed, event_seed=event_seed)
+        if 'omitted_groups' in target_group:
+            group_name = '_L5'
+        else:
+            group_name = list(target_group.values())[0]
+
+        weights_ampa_prox_group = layertype_to_grouptype(weights_ampa_prox,
+                                                         cell_groups,
+                                                         **target_group)
+        synaptic_delays_prox_group = layertype_to_grouptype(
+            synaptic_delays_prox, cell_groups, **target_group)
+        print(weights_ampa_prox_group)
+        print(synaptic_delays_prox_group)
+        net.add_evoked_drive(
+            f'evprox_rep{rep_idx}{group_name}', mu=rep_time + t_prox,
+            sigma=2.47, numspikes=1, weights_ampa=weights_ampa_prox_group,
+            weights_nmda=None,
+            location='proximal', synaptic_delays=synaptic_delays_prox_group,
+            probability=prox_strength * depression_factor,
+            conn_seed=conn_seed, event_seed=event_seed)
+
+        weights_ampa_dist_group = layertype_to_grouptype(weights_ampa_dist,
+                                                         cell_groups,
+                                                         **target_group)
+        weights_nmda_dist_group = layertype_to_grouptype(weights_nmda_dist,
+                                                         cell_groups,
+                                                         **target_group)
+        synaptic_delays_dist_group = layertype_to_grouptype(
+            synaptic_delays_dist, cell_groups, **target_group)
+        
+        print(weights_ampa_dist_group)
+        print(weights_nmda_dist_group)
+        print(synaptic_delays_dist_group)
+
+        # dist drive
+        net.add_evoked_drive(
+            f'evdist_rep{rep_idx}{group_name}', mu=rep_time + t_dist,
+            sigma=3.85, numspikes=1, weights_ampa=weights_ampa_dist_group,
+            weights_nmda=weights_nmda_dist_group,
+            location='distal', synaptic_delays=synaptic_delays_dist_group,
+            probability=dist_strength,
+            conn_seed=conn_seed, event_seed=event_seed)
 
 ###############################################################################
 # Now let's simulate the dipole
@@ -161,13 +189,15 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         # THIS EVOKES THE DEVIANT!!!!
         prox_strength = prox_conn_prob_dev
         dist_strength = dist_conn_prob_dev
+        c_prox = 'r'
     else:
         prox_strength = prox_conn_prob_std
         dist_strength = dist_conn_prob_std
+        c_prox = 'k'
 
     # plot arrows for each drive
     axes[0].arrow(rep_time + t_prox, 0, 0, arrow_height_max * prox_strength,
-                  fc='k', ec=None, alpha=1., width=5, head_width=head_width,
+                  fc=c_prox, ec=None, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
     axes[0].arrow(rep_time + t_dist, dist_strength, 0, -dist_strength,
                   fc='k', ec=None, alpha=1., width=5, head_width=head_width,
@@ -247,25 +277,25 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
                                            linestyle=':')
 
 axes[1].set_ylabel('mean single-unit\nspikes/s')
-axes[1].set_ylim([0, 150])
+axes[1].set_ylim([0, 100])
 handles, _ = axes[1].get_legend_handles_labels()
 axes[1].legend(handles, ['L2/3e R+NR', 'P', 'NP'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[2].set_ylabel('')
-axes[2].set_ylim([0, 150])
+axes[2].set_ylim([0, 100])
 handles, _ = axes[2].get_legend_handles_labels()
 axes[2].legend(handles, ['L4e (proximal drive)'], ncol=1, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[3].set_ylabel('')
-axes[3].set_ylim([0, 150])
+axes[3].set_ylim([0, 100])
 handles, _ = axes[3].get_legend_handles_labels()
 axes[3].legend(handles, ['L5e'], ncol=1, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[4].set_ylabel('')
-axes[4].set_ylim([0, 150])
+axes[4].set_ylim([0, 100])
 handles, _ = axes[4].get_legend_handles_labels()
 axes[4].legend(handles, ['L6e R+NR', 'P', 'NP'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,

@@ -32,23 +32,32 @@ cell_groups = {'L2/3i': ['L2i_1', 'L2i_2'],
 special_groups = {'L6i_cross': ['L6i_cross1', 'L6i_cross2']}
 
 
-def layertype_to_grouptype(weights_or_delays, cell_groups, selected_group=None,
-                           omitted_group=None):
+def layertype_to_grouptype(weights_or_delays, cell_groups,
+                           selected_groups=None, omitted_groups=None):
     """Convert layer-specific cell profiles into separate identical groups."""
     group_types = dict()
     for layer_type, val in weights_or_delays.items():
-        if selected_group is None and omitted_group is None:
+        if selected_groups is None and omitted_groups is None:
             group_types.update({group_type: val for group_type in
                                 cell_groups[layer_type]})
         else:
+            # compile group_types based on user specifications
             for group_type in cell_groups[layer_type]:
                 # keep subsets that are selected
-                if selected_group is not None and selected_group in group_type:
-                    group_types.update({group_type: val})
+                if selected_groups is not None:
+                    for selected_group in selected_groups:
+                        if selected_group in group_type:
+                            group_types.update({group_type: val})
+                    # check to make sure user didn't select groups and omit
+                    # groups at the same time
+                    if omitted_groups is not None:
+                        raise ValueError('cannot specify selected_groups and '
+                                         'omitted_groups at the same time')
                 # keep subsets that are not omitted
-                if omitted_group is not None and (omitted_group
-                                                  not in group_type):
-                    group_types.update({group_type: val})
+                else:
+                    for omitted_group in omitted_groups:
+                        if omitted_group not in group_type:
+                            group_types.update({group_type: val})
     return group_types
 
 
