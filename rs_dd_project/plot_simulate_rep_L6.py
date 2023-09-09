@@ -46,14 +46,11 @@ syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
 t_prox = 12.  # time (ms) of the proximal drive relative to stimulus rep
 t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 
-# connection probability controls the proportion of the circuit gets directly
-# activated through afferent drive (increase or decrease this value on the
-# deviant rep)
-prox_conn_prob_std = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
-prox_conn_prob_dev = 0.40  # THIS EVOKES THE DEVIANT!!!!
-dist_conn_prob_std = 0.50
-dist_conn_prob_dev = 0.50
-
+# avg connection probability (across groups 1 and 2) controls the proportion of
+# the total circuit that gets directly activated through afferent drive (an
+# increase or decrease of this value drives deviance detection)
+prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
+dev_delta = -0.1
 
 event_seed = 1
 conn_seed = 1
@@ -84,9 +81,18 @@ weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5e': 0.0023}
 weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
 synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
-target_groups = [{'selected_groups': ['_1']},
-                 {'selected_groups': ['_2']},
-                 {'omitted_groups': ['_1', '_2']}]
+# convert each dictionary to a more granular version with specific cell types
+# for each group (e.g., L2e_1 and L2e_2)
+weights_ampa_prox_group = layertype_to_grouptype(
+    weights_ampa_prox, cell_groups)
+synaptic_delays_prox_group = layertype_to_grouptype(
+    synaptic_delays_prox, cell_groups)
+weights_ampa_dist_group = layertype_to_grouptype(
+    weights_ampa_dist, cell_groups)
+weights_nmda_dist_group = layertype_to_grouptype(
+    weights_nmda_dist, cell_groups)
+synaptic_delays_dist_group = layertype_to_grouptype(
+    synaptic_delays_dist, cell_groups)
 
 # set drive rep start times from user-defined parameters
 tstop = burn_in_time + reps * max(stim_interval, rep_duration)
@@ -100,12 +106,35 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 
     # determine if this is the DEV or STD trial...
     if rep_idx == len(rep_start_times) - 1:  # last rep
-        # THIS EVOKES THE DEVIANT!!!!
-        prox_strength = prox_conn_prob_dev
-        dist_strength = dist_conn_prob_dev
+        # determines the magnitude and direction of the deviant
+        prob_delta = dev_delta
     else:
-        prox_strength = prox_conn_prob_std
-        dist_strength = dist_conn_prob_std
+        prob_delta = 0.0
+
+    prob_prox = dict()
+    for layer_type in synaptic_delays_prox.keys():
+        for group_type in cell_groups[layer_type]:
+            if '1' in group_type:
+                prob_prox[group_type] = (4 / 3 * (prob_avg + prob_delta) *
+                                         depression_factor)
+            elif '2' in group_type:
+                prob_prox[group_type] = (2 / 3 * (prob_avg + prob_delta) *
+                                         depression_factor)
+            else:
+                prob_prox[group_type] = ((prob_avg + prob_delta) *
+                                         depression_factor)
+    print()
+
+    # note: the distal drive doesn't change during deviant
+    prob_dist = dict()
+    for layer_type in synaptic_delays_dist.keys():
+        for group_type in cell_groups[layer_type]:
+            if '1' in group_type:
+                prob_dist[group_type] = 4 / 3 * prob_avg * depression_factor
+            elif '2' in group_type:
+                prob_dist[group_type] = 2 / 3 * prob_avg * depression_factor
+            else:
+                prob_dist[group_type] = prob_avg * depression_factor
 
     # weights_ampa_prox_depr = {key: val * depression_factor
     #                           for key, val in weights_ampa_prox.items()}
@@ -114,49 +143,22 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 
     # prox drive: attenuate conn probability at each repetition
     # note that all NMDA weights are zero
-    for target_group in target_groups:
+    net.add_evoked_drive(
+        f'evprox_rep{rep_idx}', mu=rep_time + t_prox,
+        sigma=2.47, numspikes=1, weights_ampa=weights_ampa_prox_group,
+        weights_nmda=None,
+        location='proximal', synaptic_delays=synaptic_delays_prox_group,
+        probability=prob_prox,
+        conn_seed=conn_seed, event_seed=event_seed)
 
-        if 'omitted_groups' in target_group:
-            group_name = '_L5'
-        else:
-            group_name = list(target_group.values())[0]
-
-        weights_ampa_prox_group = layertype_to_grouptype(weights_ampa_prox,
-                                                         cell_groups,
-                                                         **target_group)
-        synaptic_delays_prox_group = layertype_to_grouptype(
-            synaptic_delays_prox, cell_groups, **target_group)
-        print(weights_ampa_prox_group)
-        print(synaptic_delays_prox_group)
-        net.add_evoked_drive(
-            f'evprox_rep{rep_idx}{group_name}', mu=rep_time + t_prox,
-            sigma=2.47, numspikes=1, weights_ampa=weights_ampa_prox_group,
-            weights_nmda=None,
-            location='proximal', synaptic_delays=synaptic_delays_prox_group,
-            probability=prox_strength * depression_factor,
-            conn_seed=conn_seed, event_seed=event_seed)
-
-        weights_ampa_dist_group = layertype_to_grouptype(weights_ampa_dist,
-                                                         cell_groups,
-                                                         **target_group)
-        weights_nmda_dist_group = layertype_to_grouptype(weights_nmda_dist,
-                                                         cell_groups,
-                                                         **target_group)
-        synaptic_delays_dist_group = layertype_to_grouptype(
-            synaptic_delays_dist, cell_groups, **target_group)
-        
-        print(weights_ampa_dist_group)
-        print(weights_nmda_dist_group)
-        print(synaptic_delays_dist_group)
-
-        # dist drive
-        net.add_evoked_drive(
-            f'evdist_rep{rep_idx}{group_name}', mu=rep_time + t_dist,
-            sigma=3.85, numspikes=1, weights_ampa=weights_ampa_dist_group,
-            weights_nmda=weights_nmda_dist_group,
-            location='distal', synaptic_delays=synaptic_delays_dist_group,
-            probability=dist_strength,
-            conn_seed=conn_seed, event_seed=event_seed)
+    # dist drive
+    net.add_evoked_drive(
+        f'evdist_rep{rep_idx}', mu=rep_time + t_dist,
+        sigma=3.85, numspikes=1, weights_ampa=weights_ampa_dist_group,
+        weights_nmda=weights_nmda_dist_group,
+        location='distal', synaptic_delays=synaptic_delays_dist_group,
+        probability=prob_dist,
+        conn_seed=conn_seed, event_seed=event_seed)
 
 ###############################################################################
 # Now let's simulate the dipole
@@ -186,13 +188,12 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 
     # determine if this is the DEV or STD trial...
     if rep_idx == len(rep_start_times) - 1:  # last rep
-        # THIS EVOKES THE DEVIANT!!!!
-        prox_strength = prox_conn_prob_dev
-        dist_strength = dist_conn_prob_dev
+        prox_strength = prob_avg + dev_delta
+        dist_strength = prob_avg
         c_prox = 'r'
     else:
-        prox_strength = prox_conn_prob_std
-        dist_strength = dist_conn_prob_std
+        prox_strength = prob_avg
+        dist_strength = prob_avg
         c_prox = 'k'
 
     # plot arrows for each drive
