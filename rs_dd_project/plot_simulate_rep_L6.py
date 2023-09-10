@@ -51,6 +51,7 @@ t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 # increase or decrease of this value drives deviance detection)
 prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
 dev_delta = -0.1
+prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
 event_seed = 1
 conn_seed = 1
@@ -113,33 +114,33 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 
     prob_prox = dict()
     for layer_type in synaptic_delays_prox.keys():
+        # group-type 1 (red) will be preferentially targetted
         for group_type in cell_groups[layer_type]:
             if '1' in group_type:
-                prob_prox[group_type] = (4 / 3 * (prob_avg + prob_delta) *
-                                         depression_factor)
+                prop = prop_1_to_2 * 2 / (prop_1_to_2 + 1)
             elif '2' in group_type:
-                prob_prox[group_type] = (2 / 3 * (prob_avg + prob_delta) *
-                                         depression_factor)
+                prop = 2 / (prop_1_to_2 + 1)
             else:
-                prob_prox[group_type] = ((prob_avg + prob_delta) *
-                                         depression_factor)
-    print()
+                prop = 1
+            # prox drive for this cell group: total conn prob has 3 factors,
+            # proportion of cells targetted relative to other group, the total
+            # avg probability of cells targetted across groups, and the
+            # depression factor for this rep
+            prob_prox[group_type] = (prop * (prob_avg + prob_delta) *
+                                     depression_factor)
 
-    # note: the distal drive doesn't change during deviant
+    # note: the distal drive doesn't change during deviant or depress with
+    # repetition
     prob_dist = dict()
     for layer_type in synaptic_delays_dist.keys():
         for group_type in cell_groups[layer_type]:
             if '1' in group_type:
-                prob_dist[group_type] = 4 / 3 * prob_avg * depression_factor
+                prop = prop_1_to_2 * 2 / (prop_1_to_2 + 1)
             elif '2' in group_type:
-                prob_dist[group_type] = 2 / 3 * prob_avg * depression_factor
+                prop = 2 / (prop_1_to_2 + 1)
             else:
-                prob_dist[group_type] = prob_avg * depression_factor
-
-    # weights_ampa_prox_depr = {key: val * depression_factor
-    #                           for key, val in weights_ampa_prox.items()}
-    # weights_ampa_L6_depr = {key: val * depression_factor
-    #                         for key, val in weights_ampa_L6.items()}
+                prop = 1
+            prob_dist[group_type] = prop * prob_avg
 
     # prox drive: attenuate conn probability at each repetition
     # note that all NMDA weights are zero
