@@ -50,7 +50,7 @@ t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 # the total circuit that gets directly activated through afferent drive (an
 # increase or decrease of this value drives deviance detection)
 prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
-dev_delta = -0.15 * prob_avg  # -15% change
+dev_delta = -0.20 * prob_avg  # -15% change
 prop_1_to_2 = 3  # proportion of red to blue cells targetted by drive
 
 event_seed = 1
@@ -75,8 +75,8 @@ net = L6_model(connect_layer_6=True)
 # undergo synaptic depletion
 
 # prox drive weights and delays
-weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.01,
-                     'L5i': 0.0, 'L5e': 0.0020, 'L6e': 0.01}
+weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.008,
+                     'L5i': 0.0, 'L5e': 0.0032, 'L6e': 0.009}
 synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                         'L5i': 1., 'L5e': 1., 'L6e': 0.1}
 weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.01, 'L5e': 0.0012}
@@ -141,7 +141,8 @@ for rep_idx, rep_time in enumerate(rep_start_times):
                 prop = 2 / (prop_1_to_2 + 1)
             else:
                 prop = 1
-            prob_dist[group_type] = prop * prob_avg
+            prob_dist[group_type] = (prop * (prob_avg + prob_delta) *
+                                     depression_factor)
 
     # prox drive: attenuate conn probability at each repetition
     # note that all NMDA weights are zero
@@ -191,19 +192,21 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     # determine if this is the DEV or STD trial...
     if rep_idx == len(rep_start_times) - 1:  # last rep
         prox_strength = prob_avg + dev_delta
-        dist_strength = prob_avg
-        c_prox = 'r'
+        dist_strength = prob_avg + dev_delta
+        ec = None
+        fc = 'r'
     else:
         prox_strength = prob_avg
         dist_strength = prob_avg
-        c_prox = 'k'
+        ec = None
+        fc = 'k'
 
     # plot arrows for each drive
     axes[0].arrow(rep_time + t_prox, 0, 0, prox_strength,
-                  fc=c_prox, ec=None, alpha=1., width=5, head_width=head_width,
+                  fc=fc, ec=ec, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
     axes[0].arrow(rep_time + t_dist, dist_strength, 0, -dist_strength,
-                  fc='k', ec=None, alpha=1., width=5, head_width=head_width,
+                  fc=fc, ec=ec, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
 axes[0].set_ylim([0, arrow_height_max])
 axes[0].set_yticks([0, arrow_height_max])
@@ -318,6 +321,7 @@ spike_type_colors = {'L2e_1': 'r', 'L2e_2': 'b', 'L2i': 'orange',
 net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=spike_types,
                                      color=spike_type_colors, show=False)
 axes[5].spines[['right', 'top']].set_visible(True)
+axes[5].get_yaxis().set_visible(True)
 axes[5].get_legend().remove()
 axes[5].set_xlim([burn_in_time - 100, tstop])
 xticks = np.arange(burn_in_time - 100, tstop + 1, 50)
@@ -325,6 +329,7 @@ xticks_labels = (xticks - rep_start_times[0]).astype(int).astype(str)
 axes[5].set_xticks(xticks)
 axes[5].set_xticklabels(xticks_labels)
 axes[5].set_xlabel('time (ms)')
-axes[5].set_ylabel('neuron #')
+axes[5].set_yticks([])
+axes[5].set_ylabel('neuron')
 # plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()

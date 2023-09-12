@@ -355,7 +355,7 @@ def L6_model(params=None, add_drives_from_params=False,
     conn_weights = {"L2e_L2e_ampa": 0.00065,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
                     "L2i_L2e_gabaa": 0.010,
-                    "L2i_L2e_gabab": 0.0078,
+                    "L2i_L2e_gabab": 0.0080,
                     "L2e_L2i_ampa": 0.00087,  # 0.00090
                     "L2i_L2i_gabaa": 0.02,
                     "L2e_L5e_ampa": 0.00020,
@@ -363,12 +363,12 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5e_ampa": 0.00073,  # 0.00077
                     "L5e_L5e_nmda": 0.00011,
                     "L5i_L5e_gabaa": 0.0250,  # 0.018
-                    "L5i_L5e_gabab": 0.0020,  # changed from jones09
+                    "L5i_L5e_gabab": 0.0100,  # changed from jones09
                     "L2e_L5i_ampa": 0.00010,
                     "L5e_L5i_ampa": 0.00020,  # 0.00043
                     "L5i_L5i_gabaa": 0.02}
     lamtha = 4.0
-    lamtha_L6_cross = 8.0
+    lamtha_L6_cross = 24.0
     delay = net.delay
     prob_e = 0.33  # e->e
     # inhibition within and between groups is constant
@@ -539,7 +539,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                target_gids=f'L2e_{targ_src_group}',
                                loc='soma',
                                receptor='gabaa',
-                               weight=0.004,
+                               weight=0.01,
                                delay=delay,
                                lamtha=lamtha_L6_cross,
                                probability=prob_i_e_cross,
