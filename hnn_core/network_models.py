@@ -352,15 +352,15 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00066,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00065,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
                     "L2i_L2e_gabaa": 0.010,
-                    "L2i_L2e_gabab": 0.008,
+                    "L2i_L2e_gabab": 0.0078,
                     "L2e_L2i_ampa": 0.00087,  # 0.00090
                     "L2i_L2i_gabaa": 0.02,
                     "L2e_L5e_ampa": 0.00020,
                     "L2i_L5e_gabaa": 0.001,
-                    "L5e_L5e_ampa": 0.00077,  # 0.00077
+                    "L5e_L5e_ampa": 0.00073,  # 0.00077
                     "L5e_L5e_nmda": 0.00011,
                     "L5i_L5e_gabaa": 0.0250,  # 0.018
                     "L5i_L5e_gabab": 0.0020,  # changed from jones09
@@ -373,6 +373,7 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_e = 0.33  # e->e
     # inhibition within and between groups is constant
     prob_i = 0.67  # i->i, i<->e
+    prob_i_e_cross = 1.0
     # using the same seed will enforce matching subpop conn!!!
     conn_seed = 1
 
@@ -436,7 +437,7 @@ def L6_model(params=None, add_drives_from_params=False,
     ######################################################################
     for src_group in [1, 2]:
         targ_src_group = src_group
-        prob_e = 0.3  # e->e
+        prob_e = 0.33  # e->e
 
         # layer2 Pyr -> layer5 Pyr
         src_cell = 'L2e'
@@ -500,15 +501,26 @@ def L6_model(params=None, add_drives_from_params=False,
             #                    probability=prob_e,
             #                    conn_seed=conn_seed)
 
+            # layer6 Pyr -> layer6 cross-laminar Bask
+            net.add_connection(src_gids=f'L6e_{src_group}',
+                               target_gids=f'L6i_cross{targ_src_group}',
+                               loc='soma',
+                               receptor='ampa',
+                               weight=0.0004,
+                               delay=delay,
+                               lamtha=lamtha,
+                               probability=prob_i,
+                               conn_seed=conn_seed)
+
             # layer6 cross-laminar Bask -> layer5 Pyr
             net.add_connection(src_gids=f'L6i_cross{src_group}',
                                target_gids='L5e',
                                loc='soma',
                                receptor='gabaa',
-                               weight=0.02,
+                               weight=0.03,
                                delay=delay,
                                lamtha=lamtha_L6_cross,
-                               probability=prob_i,
+                               probability=prob_i_e_cross,
                                conn_seed=conn_seed)
 
             # layer6 cross-laminar Bask -> layer5 Bask
@@ -527,10 +539,10 @@ def L6_model(params=None, add_drives_from_params=False,
                                target_gids=f'L2e_{targ_src_group}',
                                loc='soma',
                                receptor='gabaa',
-                               weight=0.001,
+                               weight=0.004,
                                delay=delay,
                                lamtha=lamtha_L6_cross,
-                               probability=prob_i,
+                               probability=prob_i_e_cross,
                                conn_seed=conn_seed)
 
             # layer6 cross-laminar Bask -> layer2 Bask (within-group only)
@@ -538,7 +550,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                target_gids=f'L2i_{targ_src_group}',
                                loc='soma',
                                receptor='gabaa',
-                               weight=0.02,
+                               weight=0.03,
                                delay=delay,
                                lamtha=lamtha_L6_cross,
                                probability=prob_i,
@@ -552,11 +564,15 @@ def L6_model(params=None, add_drives_from_params=False,
             if src_group == targ_group:
                 # within-group connections
                 prob_e = 0.33  # e->e
-                prob_e_i_cross = 0.67
+                prob_i_e = 0.33
+                prob_i_i = 0.33
+                prob_e_i = 0.67
             else:
                 # between-group connections
-                prob_e = 0.11  # e->e
-                prob_e_i_cross = 0.33
+                prob_e = 0.10  # e->e
+                prob_i_e = 0.67
+                prob_i_i = 0.33
+                prob_e_i = 0.33
 
             # layer2 Pyr -> layer2 Pyr
             src_cell = 'L2e'
@@ -583,7 +599,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     f'{src_cell}_{src_group}',
                     f'{target_cell}_{targ_group}', loc, receptor, weight,
                     delay, lamtha,
-                    probability=prob_i, conn_seed=conn_seed)
+                    probability=prob_i_e, conn_seed=conn_seed)
 
             # xx -> layer2 Basket
             src_cell = 'L2e'
@@ -596,7 +612,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 f'{src_cell}_{src_group}',
                 f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
                 lamtha,
-                probability=prob_i, conn_seed=conn_seed)
+                probability=prob_e_i, conn_seed=conn_seed)
 
             src_cell = 'L2i'
             target_cell = 'L2i'
@@ -608,7 +624,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 f'{src_cell}_{src_group}',
                 f'{target_cell}_{targ_group}', loc, receptor, weight, delay,
                 lamtha,
-                probability=prob_i, conn_seed=conn_seed)
+                probability=prob_i_i, conn_seed=conn_seed)
 
             if connect_layer_6:
                 # layer6 Pyr -> layer6 Pyr
@@ -641,18 +657,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    weight=0.00085,
                                    delay=delay,
                                    lamtha=lamtha,
-                                   probability=prob_i,
-                                   conn_seed=conn_seed)
-
-                # layer6 Pyr -> layer6 cross-laminar Bask
-                net.add_connection(src_gids=f'L6e_{src_group}',
-                                   target_gids=f'L6i_cross{targ_group}',
-                                   loc='soma',
-                                   receptor='ampa',
-                                   weight=0.002,
-                                   delay=delay,
-                                   lamtha=lamtha,
-                                   probability=prob_e_i_cross,
+                                   probability=prob_e_i,
                                    conn_seed=conn_seed)
 
                 # layer6 Bask -> layer6 Pyr
@@ -663,7 +668,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    weight=0.003,
                                    delay=delay,
                                    lamtha=lamtha,
-                                   probability=prob_i,
+                                   probability=prob_i_e,
                                    conn_seed=conn_seed)
                 net.add_connection(src_gids=f'L6i_{src_group}',
                                    target_gids=f'L6e_{targ_group}',
@@ -672,7 +677,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    weight=0.002,
                                    delay=delay,
                                    lamtha=lamtha,
-                                   probability=prob_i,
+                                   probability=prob_i_e,
                                    conn_seed=conn_seed)
 
                 # layer6 Bask -> layer6 Bask
@@ -683,7 +688,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    weight=0.02,
                                    delay=delay,
                                    lamtha=lamtha,
-                                   probability=prob_i,
+                                   probability=prob_i_i,
                                    conn_seed=conn_seed)
     return net
 

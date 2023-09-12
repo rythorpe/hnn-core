@@ -39,7 +39,7 @@ reps = 4
 stim_interval = 100.  # in ms; 10 Hz
 rep_duration = 100.  # 170 ms for human M/EEG
 
-syn_depletion_factor = 0.9  # used to simulate successive synaptic depression
+syn_depletion_factor = 1.0  # used to simulate successive synaptic depression
 
 # see Constantinople and Bruno (2013) for experimental values
 # see Sachidhanandam (2013) for a discusson on feedback drive timing
@@ -49,11 +49,12 @@ t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 # avg connection probability (across groups 1 and 2) controls the proportion of
 # the total circuit that gets directly activated through afferent drive (an
 # increase or decrease of this value drives deviance detection)
-prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
-dev_delta = -0.1
-prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
+prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
+dev_delta = -0.15 * prob_avg  # -15% change
+prop_1_to_2 = 3  # proportion of red to blue cells targetted by drive
 
 event_seed = 1
+# change on each rep; sets initial condition
 conn_seed = 1
 
 ###############################################################################
@@ -74,11 +75,11 @@ net = L6_model(connect_layer_6=True)
 # undergo synaptic depletion
 
 # prox drive weights and delays
-weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.009,
-                     'L5i': 0.0, 'L5e': 0.0027, 'L6e': 0.01}
+weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.01,
+                     'L5i': 0.0, 'L5e': 0.0020, 'L6e': 0.01}
 synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                         'L5i': 1., 'L5e': 1., 'L6e': 0.1}
-weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.009, 'L5e': 0.0023}
+weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.01, 'L5e': 0.0012}
 weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
 synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -182,8 +183,8 @@ fig, axes = plt.subplots(6, 1, sharex=True, figsize=(6, 6),
                          gridspec_kw=gridspec, constrained_layout=True)
 
 # plot drive strength
-arrow_height_max = 1.0
-head_length = 0.2
+arrow_height_max = 0.5
+head_length = 0.1
 head_width = 12.0
 for rep_idx, rep_time in enumerate(rep_start_times):
 
@@ -198,7 +199,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         c_prox = 'k'
 
     # plot arrows for each drive
-    axes[0].arrow(rep_time + t_prox, 0, 0, arrow_height_max * prox_strength,
+    axes[0].arrow(rep_time + t_prox, 0, 0, prox_strength,
                   fc=c_prox, ec=None, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
     axes[0].arrow(rep_time + t_dist, dist_strength, 0, -dist_strength,
@@ -278,28 +279,29 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
                                            colors=cell_type_colors[spike_type],
                                            linestyle=':')
 
+ylim_max = 60.0
 axes[1].set_ylabel('mean single-unit\nspikes/s')
-axes[1].set_ylim([0, 100])
+axes[1].set_ylim([0, ylim_max])
 handles, _ = axes[1].get_legend_handles_labels()
-axes[1].legend(handles, ['L2/3e R+NR', 'P', 'NP'], ncol=3, loc='lower center',
+axes[1].legend(handles, ['L2/3e P+NP', 'P', 'NP'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[2].set_ylabel('')
-axes[2].set_ylim([0, 100])
+axes[2].set_ylim([0, ylim_max])
 handles, _ = axes[2].get_legend_handles_labels()
 axes[2].legend(handles, ['L4e (proximal drive)'], ncol=1, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[3].set_ylabel('')
-axes[3].set_ylim([0, 100])
+axes[3].set_ylim([0, ylim_max])
 handles, _ = axes[3].get_legend_handles_labels()
 axes[3].legend(handles, ['L5e'], ncol=1, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 axes[4].set_ylabel('')
-axes[4].set_ylim([0, 100])
+axes[4].set_ylim([0, ylim_max])
 handles, _ = axes[4].get_legend_handles_labels()
-axes[4].legend(handles, ['L6e R+NR', 'P', 'NP'], ncol=3, loc='lower center',
+axes[4].legend(handles, ['L6e P+NP', 'P', 'NP'], ncol=3, loc='lower center',
                bbox_to_anchor=(0.5, 1.0), frameon=False, columnspacing=1,
                handlelength=0.75, borderaxespad=0.0)
 
@@ -323,6 +325,6 @@ xticks_labels = (xticks - rep_start_times[0]).astype(int).astype(str)
 axes[5].set_xticks(xticks)
 axes[5].set_xticklabels(xticks_labels)
 axes[5].set_xlabel('time (ms)')
-axes[5].set_ylabel('cell #')
+axes[5].set_ylabel('neuron #')
 # plot_dipole(dpls, average=False, layer=['L2', 'L5', 'L6', 'agg'], show=False)
 plt.show()
