@@ -352,11 +352,11 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00065,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00068,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
-                    "L2i_L2e_gabaa": 0.010,
-                    "L2i_L2e_gabab": 0.0078,
-                    "L2e_L2i_ampa": 0.00087,  # 0.00090
+                    "L2i_L2e_gabaa": 0.0085,
+                    "L2i_L2e_gabab": 0.006,
+                    "L2e_L2i_ampa": 0.00100,  # 0.00090
                     "L2i_L2i_gabaa": 0.02,
                     "L2e_L5e_ampa": 0.00006,
                     "L2i_L5e_gabaa": 0.001,
@@ -365,7 +365,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5i_L5e_gabaa": 0.0310,  # 0.018
                     "L5i_L5e_gabab": 0.0020,  # changed from jones09
                     "L2e_L5i_ampa": 0.00003,
-                    "L5e_L5i_ampa": 0.0002,  # 0.00043
+                    "L5e_L5i_ampa": 0.00020,  # 0.00043
                     "L5i_L5i_gabaa": 0.02}
     lamtha = 4.0
     lamtha_L6_cross = 1e50
@@ -489,6 +489,17 @@ def L6_model(params=None, add_drives_from_params=False,
                                    lamtha=lamtha,
                                    probability=prob_e,
                                    conn_seed=conn_seed)
+
+            # layer5 Pyr -> layer6 Bask
+            net.add_connection(src_gids='L5e',
+                               target_gids=f'L6i_{targ_src_group}',
+                               loc='soma',
+                               receptor='ampa',
+                               weight=0.00003,
+                               delay=delay,
+                               lamtha=lamtha,
+                               probability=prob_i,
+                               conn_seed=conn_seed)
             # NMDA is, by convention in HNN, reserved for within-layer e->e
             # connections
             # net.add_connection(src_gids='L5e',
@@ -569,8 +580,8 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_i = 0.66
             else:
                 # between-group connections
-                prob_e = 0.01  # e->e
-                prob_i_e = 0.99
+                prob_e = 0.10  # e->e
+                prob_i_e = 0.90
                 prob_i_i = 0.33
                 prob_e_i = 0.33
 
@@ -632,7 +643,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    target_gids=f'L6e_{targ_group}',
                                    loc='deep_basal',
                                    receptor='ampa',
-                                   weight=0.00055,
+                                   weight=0.00057,
                                    delay=delay,
                                    lamtha=lamtha,
                                    allow_autapses=False,
@@ -654,7 +665,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    target_gids=f'L6i_{targ_group}',
                                    loc='soma',
                                    receptor='ampa',
-                                   weight=0.00085,
+                                   weight=0.00089,
                                    delay=delay,
                                    lamtha=lamtha,
                                    probability=prob_e_i,
