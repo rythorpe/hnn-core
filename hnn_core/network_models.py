@@ -360,7 +360,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L2i_L2i_gabaa": 0.02,
                     "L2e_L5e_ampa": 0.00006,
                     "L2i_L5e_gabaa": 0.001,
-                    "L5e_L5e_ampa": 0.00075,  # 0.00077
+                    "L5e_L5e_ampa": 0.00077,  # 0.00077
                     "L5e_L5e_nmda": 0.00003,
                     "L5i_L5e_gabaa": 0.0310,  # 0.018
                     "L5i_L5e_gabab": 0.0020,  # changed from jones09
@@ -368,11 +368,11 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5i_ampa": 0.0002,  # 0.00043
                     "L5i_L5i_gabaa": 0.02}
     lamtha = 4.0
-    lamtha_L6_cross = 8.0
+    lamtha_L6_cross = 1e50
     delay = net.delay
     prob_e = 0.33  # e->e
     # inhibition within and between groups is constant
-    prob_i = 0.67  # i->i, i<->e
+    prob_i = 0.66  # i->i, i<->e
     prob_i_e_cross = 1.0
     # using the same seed will enforce matching subpop conn!!!
     conn_seed = 1
@@ -484,7 +484,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    target_gids=f'L6e_{targ_src_group}',
                                    loc=loc,
                                    receptor='ampa',
-                                   weight=0.00004,
+                                   weight=0.00002,
                                    delay=delay,
                                    lamtha=lamtha,
                                    probability=prob_e,
@@ -517,7 +517,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                target_gids='L5e',
                                loc='soma',
                                receptor='gabaa',
-                               weight=0.03,
+                               weight=0.06,
                                delay=delay,
                                lamtha=lamtha_L6_cross,
                                probability=prob_i_e_cross,
@@ -539,7 +539,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                target_gids=f'L2e_{targ_src_group}',
                                loc='soma',
                                receptor='gabaa',
-                               weight=0.01,
+                               weight=0.1,
                                delay=delay,
                                lamtha=lamtha_L6_cross,
                                probability=prob_i_e_cross,
@@ -550,7 +550,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                target_gids=f'L2i_{targ_src_group}',
                                loc='soma',
                                receptor='gabaa',
-                               weight=0.03,
+                               weight=0.02,
                                delay=delay,
                                lamtha=lamtha_L6_cross,
                                probability=prob_i,
@@ -566,11 +566,11 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e = 0.33  # e->e
                 prob_i_e = 0.33
                 prob_i_i = 0.33
-                prob_e_i = 0.67
+                prob_e_i = 0.66
             else:
                 # between-group connections
-                prob_e = 0.10  # e->e
-                prob_i_e = 0.67
+                prob_e = 0.01  # e->e
+                prob_i_e = 0.99
                 prob_i_i = 0.33
                 prob_e_i = 0.33
 
@@ -632,7 +632,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    target_gids=f'L6e_{targ_group}',
                                    loc='deep_basal',
                                    receptor='ampa',
-                                   weight=0.00052,
+                                   weight=0.00055,
                                    delay=delay,
                                    lamtha=lamtha,
                                    allow_autapses=False,
@@ -690,6 +690,19 @@ def L6_model(params=None, add_drives_from_params=False,
                                    lamtha=lamtha,
                                    probability=prob_i_i,
                                    conn_seed=conn_seed)
+
+                if src_group != targ_group:
+                    # layer6 Bask -> layer6 cross-laminar Bask
+                    # needed to inhibit other group's output basket cell
+                    net.add_connection(src_gids=f'L6i_{src_group}',
+                                       target_gids=f'L6i_cross{targ_group}',
+                                       loc='soma',
+                                       receptor='gabaa',
+                                       weight=0.00,
+                                       delay=delay,
+                                       lamtha=lamtha,
+                                       probability=prob_i,
+                                       conn_seed=conn_seed)
     return net
 
 

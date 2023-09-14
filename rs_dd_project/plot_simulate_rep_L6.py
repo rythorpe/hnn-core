@@ -50,8 +50,8 @@ t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 # the total circuit that gets directly activated through afferent drive (an
 # increase or decrease of this value drives deviance detection)
 prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
-dev_delta = -0.20 * prob_avg  # -15% change
-prop_1_to_2 = 3  # proportion of red to blue cells targetted by drive
+dev_delta = -0.15 * prob_avg  # -10% change
+prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
 event_seed = 1
 # change on each rep; sets initial condition
@@ -76,10 +76,10 @@ net = L6_model(connect_layer_6=True)
 
 # prox drive weights and delays
 weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.008,
-                     'L5i': 0.0, 'L5e': 0.0032, 'L6e': 0.009}
+                     'L5i': 0.0, 'L5e': 0.008, 'L6e': 0.008}
 synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                         'L5i': 1., 'L5e': 1., 'L6e': 0.1}
-weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.01, 'L5e': 0.0012}
+weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.01, 'L5e': 0.0001}
 weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
 synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -194,7 +194,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         prox_strength = prob_avg + dev_delta
         dist_strength = prob_avg + dev_delta
         ec = None
-        fc = 'r'
+        fc = 'k'
     else:
         prox_strength = prob_avg
         dist_strength = prob_avg
@@ -208,6 +208,8 @@ for rep_idx, rep_time in enumerate(rep_start_times):
     axes[0].arrow(rep_time + t_dist, dist_strength, 0, -dist_strength,
                   fc=fc, ec=ec, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
+    axes[0].hlines(y=prox_strength, xmin=rep_time,
+                   xmax=rep_time + stim_interval, colors='k', linestyle=':')
 axes[0].set_ylim([0, arrow_height_max])
 axes[0].set_yticks([0, arrow_height_max])
 axes[0].set_ylabel('drive\nstrength')
@@ -282,7 +284,7 @@ for layer_idx, layer_spike_types in enumerate(spike_types):
                                            colors=cell_type_colors[spike_type],
                                            linestyle=':')
 
-ylim_max = 60.0
+ylim_max = 50.0
 axes[1].set_ylabel('mean single-unit\nspikes/s')
 axes[1].set_ylim([0, ylim_max])
 handles, _ = axes[1].get_legend_handles_labels()
