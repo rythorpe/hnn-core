@@ -11,10 +11,12 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 plt.ion()
 
+from ipywidgets import interact, IntSlider
+
 import hnn_core
 from hnn_core import read_dipole
 from hnn_core.network_models import L6_model
-from hnn_core.viz import plot_dipole
+from hnn_core.viz import plot_dipole, NetworkPlotter
 from optimization_lib import (cell_groups, special_groups,
                               layertype_to_grouptype, poiss_drive_params,
                               simulate_network)
@@ -33,6 +35,7 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # general sim parameters
 n_procs = 10
 burn_in_time = 300.0
+record_vsec = True
 
 # Hyperparameters of repetitive drive sequence
 reps = 4
@@ -61,6 +64,7 @@ conn_seed = 1
 # Let us first create our default network and visualize the cells
 # inside it.
 net = L6_model(connect_layer_6=True)
+net.set_cell_positions(inplane_distance=300.0)
 # net.plot_cells()
 # fig = plt.figure(figsize=(6, 6), constrained_layout=True)
 # for cell_type_idx, cell_type in enumerate(net.cell_types):
@@ -167,13 +171,27 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 # Now let's simulate the dipole
 net, dpls = simulate_network(net, sim_time=tstop, burn_in_time=burn_in_time,
                              n_trials=1, n_procs=n_procs,
-                             poiss_params=poiss_drive_params)
+                             poiss_params=poiss_drive_params,
+                             record_vsec=record_vsec)
 # with MPIBackend(n_procs=10):
 #     dpls = simulate_dipole(net, tstop=tstop, n_trials=1)
 
 window_len, scaling_factor = 30, 2000
 for dpl in dpls:
     dpl.smooth(window_len).scale(scaling_factor)
+
+###############################################################################
+# Plot 3D Network
+net_plot = NetworkPlotter(net, voltage_colormap='RdBu_r', vmin=-75)
+
+# def update_plot(t_idx):
+#     net_plot.update_section_voltages(t_idx)
+#     return net_plot.fig
+
+# time_slider = IntSlider(min=0, max=len(net_plot.times), value=1,
+#                         continuous_update=False)
+# interact(update_plot, t_idx=time_slider)
+net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0)))
 
 ###############################################################################
 # Plot the amplitudes of the simulated aggregate dipole moments over time

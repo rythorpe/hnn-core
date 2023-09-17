@@ -283,7 +283,8 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
 
 
 def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
-                     poiss_params=None, clear_conn=False, rng=None):
+                     poiss_params=None, clear_conn=False, rng=None,
+                     record_vsec=False):
     """Add poisson drive to empty network and run simulation."""
 
     # induce variation between simulations (aside from parameter exploration)
@@ -324,9 +325,13 @@ def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
                               probability=1.0,
                               event_seed=seed)
 
+    if record_vsec is True:
+        record_vsec = 'all'
+
     with MPIBackend(n_procs=n_procs):
         dpls = simulate_dipole(net, tstop=sim_time, n_trials=n_trials,
-                               baseline_win=[burn_in_time, sim_time])
+                               baseline_win=[burn_in_time, sim_time],
+                               record_vsec=record_vsec)
 
     return net, dpls
 

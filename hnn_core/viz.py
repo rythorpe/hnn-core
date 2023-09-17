@@ -1389,7 +1389,7 @@ class NetworkPlotter:
         self._init_network_plot()
         self._update_axes()
 
-    def _get_voltages(self):
+    def _get_voltages(self,):
         vsec_list = list()
         for cell_type in self.net.cell_types:
             gid_range = self.net.gid_ranges[cell_type]
@@ -1398,8 +1398,12 @@ class NetworkPlotter:
                 cell = self.net.cell_types[cell_type]
 
                 for sec_name in cell.sections.keys():
-                    vsec = np.array(self.net.cell_response.vsec[
-                        self.trial_idx][gid][sec_name])
+                    # XXX hack to get this to run without recording voltages
+                    try:
+                        vsec = np.array(self.net.cell_response.vsec[
+                            self.trial_idx][gid][sec_name])
+                    except:
+                        vsec = 0.0
                     vsec_list.append(vsec)
 
         vsec_array = np.vstack(vsec_list)
