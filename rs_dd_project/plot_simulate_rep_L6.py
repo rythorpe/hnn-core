@@ -35,7 +35,7 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # general sim parameters
 n_procs = 10
 burn_in_time = 300.0
-record_vsec = True
+record_vsec = False
 
 # Hyperparameters of repetitive drive sequence
 reps = 4
@@ -182,16 +182,8 @@ for dpl in dpls:
 
 ###############################################################################
 # Plot 3D Network
-net_plot = NetworkPlotter(net, voltage_colormap='RdBu_r', vmin=-75)
-
-# def update_plot(t_idx):
-#     net_plot.update_section_voltages(t_idx)
-#     return net_plot.fig
-
-# time_slider = IntSlider(min=0, max=len(net_plot.times), value=1,
-#                         continuous_update=False)
-# interact(update_plot, t_idx=time_slider)
-net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0)))
+# net_plot = NetworkPlotter(net, voltage_colormap='RdBu_r', vmin=-75)
+# net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0)))
 
 ###############################################################################
 # Plot the amplitudes of the simulated aggregate dipole moments over time
