@@ -159,8 +159,8 @@ def _connection_probability(conn, probability, conn_seed=None):
     # Random number generator for random connection selection
     rng = np.random.default_rng(conn_seed)
     _validate_type(probability, float, 'probability')
-    if probability <= 0.0 or probability >= 1.0:
-        raise ValueError('probability must be in the range (0,1)')
+    if probability < 0.0 or probability > 1.0:
+        raise ValueError('probability must be in the range [0,1]')
     # Flatten connections into a list of targets.
     all_connections = np.concatenate(
         [target_src_pair for
