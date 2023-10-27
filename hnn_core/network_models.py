@@ -374,7 +374,6 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L6e_L6e_nmda": 0.00005,
                     "L6i_L6e_gabaa": 0.003,
                     "L6i_L6e_gabab": 0.002,
-                    "L5e_L6i_ampa": 0.00006,
                     "L6e_L6i_ampa": 0.00089,
                     "L6i_L6i_gabaa": 0.02,
                     "L6e_L6i_cross_ampa": 0.00040}
@@ -499,16 +498,6 @@ def L6_model(params=None, add_drives_from_params=False,
                                    probability=prob_e_e,
                                    conn_seed=conn_seed)
 
-            # layer5 Pyr -> layer6 Bask
-            net.add_connection(src_gids='L5e',
-                               target_gids=f'L6i_{targ_group}',
-                               loc='soma',
-                               receptor='ampa',
-                               weight=conn_weights['L5e_L6i_ampa'],
-                               delay=delay,
-                               lamtha=lamtha,
-                               probability=prob_e_i,
-                               conn_seed=conn_seed)
             # NMDA is, by convention in HNN, reserved for within-layer e->e
             # connections
             # net.add_connection(src_gids='L5e',
