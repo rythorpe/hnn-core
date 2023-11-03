@@ -29,7 +29,6 @@ cell_groups = {'L2/3i': ['L2i_1', 'L2i_2'],
                'L5e': ['L5e'],
                'L6i': ['L6i_1', 'L6i_2'],
                'L6e': ['L6e_1', 'L6e_2']}
-special_groups = {'L6i_cross': ['L6i_cross1', 'L6i_cross2']}
 
 
 def layertype_to_grouptype(weights_or_delays, cell_groups,

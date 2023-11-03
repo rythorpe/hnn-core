@@ -122,12 +122,6 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     # save the origin for adding external drives later
     pos_dict['origin'] = origin
 
-    # finally, add cross-laminar L6 basket cells (one for each group)
-    pos_dict['L6i_cross1'] = [(origin[0], origin[1],
-                               (-zdiff / 2) + (0.2 * zdiff))]
-    pos_dict['L6i_cross2'] = [(origin[0], origin[1],
-                               (-zdiff / 2) + (0.2 * zdiff))]
-
     return pos_dict
 
 
@@ -402,8 +396,6 @@ class Network(object):
             'L5e': pyramidal(cell_name=_short_name('L5_pyramidal')),
             'L6i_1': basket(cell_name=_short_name('L6_basket')),
             'L6i_2': basket(cell_name=_short_name('L6_basket')),
-            'L6i_cross1': basket(cell_name=_short_name('L6_basket')),
-            'L6i_cross2': basket(cell_name=_short_name('L6_basket')),
             'L6e_1': pyramidal(cell_name=_short_name('L6_pyramidal')),
             'L6e_2': pyramidal(cell_name=_short_name('L6_pyramidal')),
         }

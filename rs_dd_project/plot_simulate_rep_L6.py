@@ -17,9 +17,8 @@ import hnn_core
 from hnn_core import read_dipole
 from hnn_core.network_models import L6_model
 from hnn_core.viz import plot_dipole, NetworkPlotter
-from optimization_lib import (cell_groups, special_groups,
-                              layertype_to_grouptype, poiss_drive_params,
-                              simulate_network)
+from optimization_lib import (cell_groups, layertype_to_grouptype,
+                              poiss_drive_params, simulate_network)
 
 ###############################################################################
 # Read in empirical data to compare to simulated data
@@ -324,12 +323,10 @@ spike_types = {'L2i': ['L2i_1', 'L2i_2'],
                'L2e_1': ['L2e_1'], 'L2e_2': ['L2e_2'],
                'L5i': ['L5i'], 'L5e': ['L5e'],
                'L6i': ['L6i_1', 'L6i_2'],
-               'L6e_1': ['L6e_1'], 'L6e_2': ['L6e_2'],
-               'L6i_cross1': ['L6i_cross1'], 'L6i_cross2': ['L6i_cross2']}
+               'L6e_1': ['L6e_1'], 'L6e_2': ['L6e_2']}
 spike_type_colors = {'L2e_1': 'r', 'L2e_2': 'b', 'L2i': 'orange',
                      'L5e': 'm', 'L5i': 'orange',
-                     'L6e_1': 'r', 'L6e_2': 'b', 'L6i': 'orange',
-                     'L6i_cross1': 'orange', 'L6i_cross2': 'orange'}
+                     'L6e_1': 'r', 'L6e_2': 'b', 'L6i': 'orange'}
 net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=spike_types,
                                      color=spike_type_colors, show=False)
 axes[5].spines[['right', 'top']].set_visible(True)

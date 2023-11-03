@@ -504,7 +504,6 @@ def L6_model(params=None, add_drives_from_params=False,
             cross_gids = net.gid_ranges[src_gid_group]
             n_cells = int(np.round(len(cross_gids) / 3))
             src_gids = np.random.permutation(cross_gids)[:n_cells].tolist()
-            print(src_gids)
             net.add_connection(src_gids=src_gids,
                                target_gids='L5e',
                                loc='soma',
