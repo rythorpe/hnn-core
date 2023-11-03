@@ -3,6 +3,7 @@
 # Authors: Nick Tolley <nicholas_tolley@brown.edu>
 
 import os.path as op
+import numpy as np
 import hnn_core
 from hnn_core import read_params
 from .network import Network
@@ -365,7 +366,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5e_nmda": 0.00003,
                     "L5i_L5e_gabaa": 0.0310,  # 0.018
                     "L5i_L5e_gabab": 0.0020,  # changed from jones09
-                    "L6i_cross_L5e_gabaa": 0.07,
+                    "L6i_cross_L5e_gabaa": 0.01,
                     "L2e_L5i_ampa": 0.00010,
                     "L5e_L5i_ampa": 0.00020,  # 0.00043
                     "L5i_L5i_gabaa": 0.02,
@@ -375,8 +376,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L6i_L6e_gabaa": 0.003,
                     "L6i_L6e_gabab": 0.002,
                     "L6e_L6i_ampa": 0.00089,
-                    "L6i_L6i_gabaa": 0.02,
-                    "L6e_L6i_cross_ampa": 0.00040}
+                    "L6i_L6i_gabaa": 0.02}
     lamtha = 4.0
     lamtha_L6_cross = 1e50
     delay = net.delay
@@ -498,31 +498,14 @@ def L6_model(params=None, add_drives_from_params=False,
                                    probability=prob_e_e,
                                    conn_seed=conn_seed)
 
-            # NMDA is, by convention in HNN, reserved for within-layer e->e
-            # connections
-            # net.add_connection(src_gids='L5e',
-            #                    target_gids=f'L6e_{targ_group}',
-            #                    loc='deep_basal',
-            #                    receptor='nmda',
-            #                    weight=0.00005,
-            #                    delay=delay,
-            #                    lamtha=lamtha,
-            #                    probability=prob_e,
-            #                    conn_seed=conn_seed)
-
-            # layer6 Pyr -> layer6 cross-laminar Bask
-            net.add_connection(src_gids=f'L6e_{src_group}',
-                               target_gids=f'L6i_cross{targ_group}',
-                               loc='soma',
-                               receptor='ampa',
-                               weight=conn_weights['L6e_L6i_cross_ampa'],
-                               delay=delay,
-                               lamtha=lamtha,
-                               probability=prob_e_i,
-                               conn_seed=conn_seed)
-
-            # layer6 cross-laminar Bask -> layer5 Pyr
-            net.add_connection(src_gids=f'L6i_cross{src_group}',
+            # note: cross-laminar inhibtion from L6i only targets L5e and L2e
+            # layer6 Bask -> layer5 Pyr
+            src_gid_group = f'L6i_{src_group}'
+            cross_gids = net.gid_ranges[src_gid_group]
+            n_cells = int(np.round(len(cross_gids) / 3))
+            src_gids = np.random.permutation(cross_gids)[:n_cells].tolist()
+            print(src_gids)
+            net.add_connection(src_gids=src_gids,
                                target_gids='L5e',
                                loc='soma',
                                receptor='gabaa',
@@ -532,19 +515,8 @@ def L6_model(params=None, add_drives_from_params=False,
                                probability=prob_i_e_cross,
                                conn_seed=conn_seed)
 
-            # # layer6 cross-laminar Bask -> layer5 Bask
-            # net.add_connection(src_gids=f'L6i_cross{src_group}',
-            #                    target_gids='L5i',
-            #                    loc='soma',
-            #                    receptor='gabaa',
-            #                    weight=0.00,
-            #                    delay=delay,
-            #                    lamtha=lamtha_L6_cross,
-            #                    probability=prob_i,
-            #                    conn_seed=conn_seed)
-
-            # layer6 cross-laminar Bask -> layer2 Pyr (within-group only)
-            net.add_connection(src_gids=f'L6i_cross{src_group}',
+            # layer6 Bask -> layer2 Pyr (within-group only)
+            net.add_connection(src_gids=src_gids,
                                target_gids=f'L2e_{targ_group}',
                                loc='soma',
                                receptor='gabaa',
@@ -553,17 +525,6 @@ def L6_model(params=None, add_drives_from_params=False,
                                lamtha=lamtha_L6_cross,
                                probability=prob_i_e_cross,
                                conn_seed=conn_seed)
-
-            # # layer6 cross-laminar Bask -> layer2 Bask (within-group only)
-            # net.add_connection(src_gids=f'L6i_cross{src_group}',
-            #                    target_gids=f'L2i_{targ_group}',
-            #                    loc='soma',
-            #                    receptor='gabaa',
-            #                    weight=0.00,
-            #                    delay=delay,
-            #                    lamtha=lamtha_L6_cross,
-            #                    probability=prob_i,
-            #                    conn_seed=conn_seed)
 
         ######################################################################
         # loop over cell type connections that have more than one target group
