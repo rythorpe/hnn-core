@@ -63,8 +63,7 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     # PYRAMIDAL CELLS L5
     xxrange = np.arange(n_pyr_x) * inplane_distance
     yyrange = np.arange(n_pyr_y) * inplane_distance
-    pos_dict['L5e'] = [
-        pos for pos in it.product(xxrange, yyrange, [0])]
+    pos_dict['L5e'] = [pos for pos in it.product(xxrange, yyrange, [0])]
 
     # Create checkerboard pattern for L2/3 and L6
     checker_light = list()
@@ -86,29 +85,70 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     pos_dict['L6e_2'] = [(x, y, -zdiff / 2) for x, y, z in checker_dark]
 
     # BASKET CELLS
-    xzero = np.arange(0, n_pyr_x, 3) * inplane_distance
-    xone = np.arange(2, n_pyr_x, 3) * inplane_distance
-    # split even and odd y vals
-    yeven = np.arange(0, n_pyr_y, 2) * inplane_distance
-    yodd = np.arange(1, n_pyr_y, 2) * inplane_distance
-    # create general list of x,y coords and sort it
-    coords = [pos for pos in it.product(
-        xzero, yeven)] + [pos for pos in it.product(xone, yodd)]
-    coords_sorted = sorted(coords, key=lambda pos: pos[0])
-    # append the z value for position for L2 and L5
-    # print(len(coords_sorted))
+    # 3:1 basket-to-pyramidal ratio; select every 3rd position for baskets
+    i_e_ratio = 3
+    offset_x = (n_pyr_x % 3) / 2
+    offset_y = (n_pyr_y % 3) / 2
 
-    pos_dict['L5i'] = [(pos_xy[0], pos_xy[1], 0.2 * zdiff)
-                       for pos_xy in coords_sorted]
-    # for L2/3 and L6, alternate between groups 1 and 2 when assigning pos
-    pos_dict['L2i_1'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff)
-                         for pos_xy in coords_sorted[::2]]
-    pos_dict['L2i_2'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff)
-                         for pos_xy in coords_sorted[1::2]]
-    pos_dict['L6i_1'] = [(pos_xy[0], pos_xy[1], (-zdiff / 2) + (0.2 * zdiff))
-                         for pos_xy in coords_sorted[::2]]
-    pos_dict['L6i_2'] = [(pos_xy[0], pos_xy[1], (-zdiff / 2) + (0.2 * zdiff))
-                         for pos_xy in coords_sorted[1::2]]
+    # re-center in x-y plane and shift above pyramidal cells in z-direction
+    pos_dict['L5i'] = pos_dict['L5e'][::i_e_ratio]
+    for cell_idx, (x, y, z) in enumerate(pos_dict['L5i']):
+        pos_dict['L5i'][cell_idx] = (x + offset_x,
+                                     y + offset_y,
+                                     z + 0.2 * zdiff)
+
+    checker_light = list()
+    checker_dark = list()
+    for x in range(0, n_pyr_x, i_e_ratio):
+        for y in range(x % (i_e_ratio * 2), n_pyr_y, 3):
+            checker_light.append((x * inplane_distance + offset_x,
+                                  y * inplane_distance + offset_y,
+                                  0.0))
+        for y in range((x + i_e_ratio) % (i_e_ratio * 2), n_pyr_y, 3):
+            checker_dark.append((x * inplane_distance + offset_x,
+                                 y * inplane_distance + offset_y,
+                                 0.0))
+
+    pos_dict['L2i_1'] = [(x, y, zdiff + (0.2 * zdiff))
+                         for x, y, z in checker_light]
+    pos_dict['L2i_2'] = [(x, y, zdiff + (0.2 * zdiff))
+                         for x, y, z in checker_dark]
+    pos_dict['L6i_1'] = [(x, y, (-zdiff / 2) + (0.2 * zdiff))
+                         for x, y, z in checker_light]
+    pos_dict['L6i_2'] = [(x, y, (-zdiff / 2) + (0.2 * zdiff))
+                         for x, y, z in checker_dark]
+
+    # for e_cell, i_cell in zip(e_cells, i_cells):
+    #     # 3:1 basket-to-pyramidal ratio; select every 3rd position for baskets
+    #     pos_dict[i_cell] = pos_dict[e_cell][::3]
+    #     # re-center in x-y plane and shift above pyramidal cells in z-direction
+    #     for cell_idx, (x, y, z) in enumerate(pos_dict[i_cell]):
+    #         pos_dict[i_cell][cell_idx] = (x + offset_x,
+    #                                       y + offset_y,
+    #                                       z + 0.2 * zdiff)
+
+    # xzero = np.arange(0, n_pyr_x, 3) * inplane_distance
+    # # split even and odd y vals
+    # yeven = np.arange(0, n_pyr_y, 2) * inplane_distance
+    # yodd = np.arange(1, n_pyr_y, 2) * inplane_distance
+    # # create general list of x,y coords and sort it
+    # coords = [pos for pos in it.product(
+    #     xzero, xzero)] + [pos for pos in it.product(xzero, xzero)]
+    # coords_sorted = sorted(coords, key=lambda pos: pos[0])
+    # # append the z value for position for L2 and L5
+    # # print(len(coords_sorted))
+
+    # pos_dict['L5i'] = [(pos_xy[0], pos_xy[1], 0.2 * zdiff)
+    #                    for pos_xy in coords_sorted]
+    # # for L2/3 and L6, alternate between groups 1 and 2 when assigning pos
+    # pos_dict['L2i_1'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff)
+    #                      for pos_xy in coords_sorted[::2]]
+    # pos_dict['L2i_2'] = [(pos_xy[0], pos_xy[1], 0.8 * zdiff)
+    #                      for pos_xy in coords_sorted[1::2]]
+    # pos_dict['L6i_1'] = [(pos_xy[0], pos_xy[1], (-zdiff / 2) + (0.2 * zdiff))
+    #                      for pos_xy in coords_sorted[::2]]
+    # pos_dict['L6i_2'] = [(pos_xy[0], pos_xy[1], (-zdiff / 2) + (0.2 * zdiff))
+    #                      for pos_xy in coords_sorted[1::2]]
 
     # ORIGIN
     # origin's z component isn't really used in
