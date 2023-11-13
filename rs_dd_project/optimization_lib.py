@@ -103,7 +103,6 @@ def plot_net_response(dpls, net):
                 show=False)
     # create dictionary of all cell groupings, including cross-laminar L6 types
     cell_types = cell_groups.copy()
-    cell_types.update(special_groups)
     # plot raster for all cell types
     net.cell_response.plot_spikes_raster(ax=axes[5], cell_types=cell_types,
                                          show=False)
