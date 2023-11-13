@@ -62,7 +62,7 @@ conn_seed = 1
 ###############################################################################
 # Let us first create our default network and visualize the cells
 # inside it.
-net = L6_model(connect_layer_6=True)
+net = L6_model(layer_6_fb=True)
 net.set_cell_positions(inplane_distance=300.0)
 # net.plot_cells()
 # fig = plt.figure(figsize=(6, 6), constrained_layout=True)

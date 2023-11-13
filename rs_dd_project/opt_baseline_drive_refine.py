@@ -25,7 +25,7 @@ sim_time = 2300
 burn_in_time = 300
 n_trials = 1
 clear_conn = False
-connect_layer_6 = True
+layer_6_fb = True
 rng = np.random.default_rng(1234)
 
 # avg population spike rates for each layer
@@ -44,7 +44,7 @@ target_sr = {'L2/3i': 0.8,
 target_sr_unconn = {cell: rate * 0.2 for cell, rate in
                     target_sr.items()}
 
-net = L6_model(grid_shape=(12, 12), connect_layer_6=connect_layer_6)
+net = L6_model(grid_shape=(12, 12), layer_6_fb=layer_6_fb)
 net, dpls = simulate_network(net.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=clear_conn,
                              n_trials=n_trials, n_procs=n_procs, rng=rng)
