@@ -355,11 +355,11 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.000676,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00047,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
-                    "L2i_L2e_gabaa": 0.0085,
-                    "L2i_L2e_gabab": 0.006,
-                    "L2e_L2i_ampa": 0.00100,  # 0.00090
+                    "L2i_L2e_gabaa": 0.0030,
+                    "L2i_L2e_gabab": 0.0020,
+                    "L2e_L2i_ampa": 0.00096,  # 0.00090
                     "L2i_L2i_gabaa": 0.02,
                     "L6i_cross_L2e_gabaa": 0.2,
                     "L2e_L5e_ampa": 0.00005,
@@ -391,7 +391,7 @@ def L6_model(params=None, add_drives_from_params=False,
     # general connection probabilities
     prob_e_e = 0.33
     prob_i_e = 0.66  # 0.66
-    prob_i_i = 0.66  # 0.66
+    prob_i_i = 0.33  # 0.66
     prob_e_i = 0.66  # 0.66
     prob_i_e_cross = 1.0
 
@@ -451,7 +451,7 @@ def L6_model(params=None, add_drives_from_params=False,
         # general connection probabilities
         prob_e_e = 0.33
         prob_i_e = 0.66  # 0.66
-        prob_i_i = 0.66  # 0.66
+        prob_i_i = 0.33  # 0.66
         prob_e_i = 0.66  # 0.66
 
         # layer2 Pyr -> layer5 Pyr
@@ -502,6 +502,7 @@ def L6_model(params=None, add_drives_from_params=False,
             # note: cross-laminar inhibtion from L6i only targets L5e and L2e
             # layer6 Bask -> layer5 Pyr
             src_gid_group = f'L6i_{src_group}'
+            cross_pos_idxs = [0, 3, 5, 17, 20, 22]
             cross_gids = net.gid_ranges[src_gid_group]
             n_cells = int(np.round(len(cross_gids) / 3))
             src_gids = np.random.permutation(cross_gids)[:n_cells].tolist()
@@ -534,15 +535,15 @@ def L6_model(params=None, add_drives_from_params=False,
             if src_group == targ_group:
                 # within-group connection probabilities
                 prob_e_e = 0.33
-                prob_i_e = 0.33
+                prob_i_e = 0.66
                 prob_i_i = 0.33
                 prob_e_i = 0.66
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.10
                 prob_i_e = 0.90
-                prob_i_i = 0.33
-                prob_e_i = 0.33
+                prob_i_i = 0.66
+                prob_e_i = 0.10
 
             # layer2 Pyr -> layer2 Pyr
             for receptor in ['nmda', 'ampa']:
@@ -593,49 +594,49 @@ def L6_model(params=None, add_drives_from_params=False,
             # layer6 Pyr -> layer6 Pyr
             for recep in ['ampa', 'nmda']:
                 net.add_connection(src_gids=f'L6e_{src_group}',
-                                    target_gids=f'L6e_{targ_group}',
-                                    loc='deep_basal',
-                                    receptor=recep,
-                                    weight=conn_weights[f'L6e_L6e_{recep}'],
-                                    delay=delay,
-                                    lamtha=lamtha,
-                                    allow_autapses=False,
-                                    probability=prob_e_e,
-                                    conn_seed=conn_seed)
+                                   target_gids=f'L6e_{targ_group}',
+                                   loc='deep_basal',
+                                   receptor=recep,
+                                   weight=conn_weights[f'L6e_L6e_{recep}'],
+                                   delay=delay,
+                                   lamtha=lamtha,
+                                   allow_autapses=False,
+                                   probability=prob_e_e,
+                                   conn_seed=conn_seed)
 
             # layer6 Pyr -> layer6 Bask
             net.add_connection(src_gids=f'L6e_{src_group}',
-                                target_gids=f'L6i_{targ_group}',
-                                loc='soma',
-                                receptor='ampa',
-                                weight=conn_weights['L6e_L6i_ampa'],
-                                delay=delay,
-                                lamtha=lamtha,
-                                probability=prob_e_i,
-                                conn_seed=conn_seed)
+                               target_gids=f'L6i_{targ_group}',
+                               loc='soma',
+                               receptor='ampa',
+                               weight=conn_weights['L6e_L6i_ampa'],
+                               delay=delay,
+                               lamtha=lamtha,
+                               probability=prob_e_i,
+                               conn_seed=conn_seed)
 
             # layer6 Bask -> layer6 Pyr
             for recep in ['gabaa', 'gabab']:
                 net.add_connection(src_gids=f'L6i_{src_group}',
-                                    target_gids=f'L6e_{targ_group}',
-                                    loc='soma',
-                                    receptor=recep,
-                                    weight=conn_weights[f'L6i_L6e_{recep}'],
-                                    delay=delay,
-                                    lamtha=lamtha,
-                                    probability=prob_i_e,
-                                    conn_seed=conn_seed)
+                                   target_gids=f'L6e_{targ_group}',
+                                   loc='soma',
+                                   receptor=recep,
+                                   weight=conn_weights[f'L6i_L6e_{recep}'],
+                                   delay=delay,
+                                   lamtha=lamtha,
+                                   probability=prob_i_e,
+                                   conn_seed=conn_seed)
 
             # layer6 Bask -> layer6 Bask
             net.add_connection(src_gids=f'L6i_{src_group}',
-                                target_gids=f'L6i_{targ_group}',
-                                loc='soma',
-                                receptor='gabaa',
-                                weight=conn_weights['L6i_L6i_gabaa'],
-                                delay=delay,
-                                lamtha=lamtha,
-                                probability=prob_i_i,
-                                conn_seed=conn_seed)
+                               target_gids=f'L6i_{targ_group}',
+                               loc='soma',
+                               receptor='gabaa',
+                               weight=conn_weights['L6i_L6i_gabaa'],
+                               delay=delay,
+                               lamtha=lamtha,
+                               probability=prob_i_i,
+                               conn_seed=conn_seed)
 
     return net
 

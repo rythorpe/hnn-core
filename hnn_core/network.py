@@ -64,7 +64,7 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
     # x-y plane in the y-direction (spacing in the x-direction enforces unit
     # neuron-to-neuron spacing)
     hex_mesh = list()
-    xrange = np.arange(n_pyr_x) * (3**(1/2) / 2) * inplane_distance
+    xrange = np.arange(n_pyr_x) * (3 ** (1 / 2) / 2) * inplane_distance
     yrange = np.arange(n_pyr_y) * inplane_distance
     y_offset = 0.5 * inplane_distance
     for x_i, x in enumerate(xrange):
@@ -73,7 +73,6 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
             hex_mesh.extend([(x, y + y_offset) for y in yrange])
         else:
             hex_mesh.extend([(x, y) for y in yrange])
-    n_exc = len(hex_mesh)
 
     # select positions within hexagonal mesh for inhibitory cells
     hex_mesh_inh = list()
@@ -111,11 +110,11 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
                          for x, y in hex_mesh_inh[n_inh // 2:]]
 
     # L6 will be placed below L5 at half the distance between L5 and L2/3
-    pos_dict['L6e_1'] = [(x, y, -zdiff/2) for x, y in hex_mesh_1]
-    pos_dict['L6e_2'] = [(x, y, -zdiff/2) for x, y in hex_mesh_2]
-    pos_dict['L6i_1'] = [(x, y, -zdiff/2 + z_offset)
+    pos_dict['L6e_1'] = [(x, y, -zdiff / 2) for x, y in hex_mesh_1]
+    pos_dict['L6e_2'] = [(x, y, -zdiff / 2) for x, y in hex_mesh_2]
+    pos_dict['L6i_1'] = [(x, y, -zdiff / 2 + z_offset)
                          for x, y in hex_mesh_inh[:n_inh // 2]]
-    pos_dict['L6i_2'] = [(x, y, -zdiff/2 + z_offset)
+    pos_dict['L6i_2'] = [(x, y, -zdiff / 2 + z_offset)
                          for x, y in hex_mesh_inh[n_inh // 2:]]
 
     # ORIGIN
