@@ -171,7 +171,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
 net, dpls = simulate_network(net, sim_time=tstop, burn_in_time=burn_in_time,
                              n_trials=1, n_procs=n_procs,
                              poiss_params=poiss_drive_params,
-                             record_vsec=record_vsec)
+                             record_vsec=record_vsec, rng=event_seed)
 # with MPIBackend(n_procs=10):
 #     dpls = simulate_dipole(net, tstop=tstop, n_trials=1)
 
