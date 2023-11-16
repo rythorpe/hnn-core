@@ -355,32 +355,32 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00047,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00064,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
-                    "L2i_L2e_gabaa": 0.0030,
+                    "L2i_L2e_gabaa": 0.0040,
                     "L2i_L2e_gabab": 0.0020,
-                    "L2e_L2i_ampa": 0.00096,  # 0.00090
+                    "L2e_L2i_ampa": 0.00099,  # 0.00090
                     "L2i_L2i_gabaa": 0.02,
-                    "L6i_cross_L2e_gabaa": 0.2,
-                    "L2e_L5e_ampa": 0.00005,
-                    "L2i_L5e_gabaa": 0.001,
-                    "L5e_L5e_ampa": 0.00077,  # 0.00077
-                    "L5e_L5e_nmda": 0.00003,
-                    "L5i_L5e_gabaa": 0.0310,  # 0.018
-                    "L5i_L5e_gabab": 0.0020,  # changed from jones09
+                    "L6i_cross_L2e_gabaa": 0.003,
+                    "L2e_L5e_ampa": 0.0001,
+                    "L2i_L5e_gabaa": 0.002,
+                    "L5e_L5e_ampa": 0.00078,  # 0.00077
+                    "L5e_L5e_nmda": 0.00001,
+                    "L5i_L5e_gabaa": 0.01075,  # 0.018
+                    "L5i_L5e_gabab": 0.00005,  # changed from jones09
                     "L6i_cross_L5e_gabaa": 0.01,
                     "L2e_L5i_ampa": 0.00010,
                     "L5e_L5i_ampa": 0.00020,  # 0.00043
                     "L5i_L5i_gabaa": 0.02,
-                    "L5e_L6e_ampa": 0.000005,
-                    "L6e_L6e_ampa": 0.00057,
-                    "L6e_L6e_nmda": 0.00005,
-                    "L6i_L6e_gabaa": 0.003,
+                    "L5e_L6e_ampa": 0.00002,
+                    "L6e_L6e_ampa": 0.00063,
+                    "L6e_L6e_nmda": 0.00001,
+                    "L6i_L6e_gabaa": 0.0040,
                     "L6i_L6e_gabab": 0.002,
-                    "L6e_L6i_ampa": 0.00089,
+                    "L6e_L6i_ampa": 0.00099,
                     "L6i_L6i_gabaa": 0.02}
     lamtha = 4.0
-    lamtha_L6_cross = 1e50
+    lamtha_L6_cross = 4.0
     delay = net.delay
     conn_seed = 1  # using the same seed will enforce matching subpop conn!!!
 
@@ -390,10 +390,10 @@ def L6_model(params=None, add_drives_from_params=False,
 
     # general connection probabilities
     prob_e_e = 0.33
-    prob_i_e = 0.66  # 0.66
+    prob_i_e = 0.67  # 0.66
     prob_i_i = 0.33  # 0.66
-    prob_e_i = 0.66  # 0.66
-    prob_i_e_cross = 1.0
+    prob_e_i = 0.67  # 0.66
+    prob_i_e_cross = 0.67
 
     # layer5 Pyr -> layer5 Pyr
     for receptor in ['nmda', 'ampa']:
@@ -450,9 +450,9 @@ def L6_model(params=None, add_drives_from_params=False,
 
         # general connection probabilities
         prob_e_e = 0.33
-        prob_i_e = 0.66  # 0.66
+        prob_i_e = 0.67  # 0.66
         prob_i_i = 0.33  # 0.66
-        prob_e_i = 0.66  # 0.66
+        prob_e_i = 0.67  # 0.66
 
         # layer2 Pyr -> layer5 Pyr
         for loc in ['proximal', 'distal']:
@@ -502,10 +502,10 @@ def L6_model(params=None, add_drives_from_params=False,
             # note: cross-laminar inhibtion from L6i only targets L5e and L2e
             # layer6 Bask -> layer5 Pyr
             src_gid_group = f'L6i_{src_group}'
-            cross_pos_idxs = [0, 3, 5, 17, 20, 22]
-            cross_gids = net.gid_ranges[src_gid_group]
-            n_cells = int(np.round(len(cross_gids) / 3))
-            src_gids = np.random.permutation(cross_gids)[:n_cells].tolist()
+            gid_idxs = [0, 3, 20, 23]
+            gid_range = net.gid_ranges[src_gid_group]
+            src_gids = [gid for idx, gid in enumerate(gid_range)
+                        if idx in gid_idxs]
             net.add_connection(src_gids=src_gids,
                                target_gids='L5e',
                                loc='soma',
@@ -535,14 +535,14 @@ def L6_model(params=None, add_drives_from_params=False,
             if src_group == targ_group:
                 # within-group connection probabilities
                 prob_e_e = 0.33
-                prob_i_e = 0.66
+                prob_i_e = 0.67
                 prob_i_i = 0.33
-                prob_e_i = 0.66
+                prob_e_i = 0.67
             else:
                 # between-group connection probabilities
-                prob_e_e = 0.10
+                prob_e_e = 0.01
                 prob_i_e = 0.90
-                prob_i_i = 0.66
+                prob_i_i = 0.33
                 prob_e_i = 0.10
 
             # layer2 Pyr -> layer2 Pyr
