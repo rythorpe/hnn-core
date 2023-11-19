@@ -181,8 +181,9 @@ for dpl in dpls:
 
 ###############################################################################
 # Plot 3D Network
-# net_plot = NetworkPlotter(net, voltage_colormap='RdBu_r', vmin=-75)
+# net_plot = NetworkPlotter(net, voltage_colormap='binary_r', vmin=-75)  #RdBu_r
 # net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0)))
+# net_plot.update_section_voltages(0)
 
 ###############################################################################
 # Plot the amplitudes of the simulated aggregate dipole moments over time
