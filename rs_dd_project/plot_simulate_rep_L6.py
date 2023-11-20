@@ -79,7 +79,7 @@ net.set_cell_positions(inplane_distance=300.0)
 
 # prox drive weights and delays
 weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.008,
-                     'L5i': 0.0, 'L5e': 0.0071, 'L6e': 0.008}
+                     'L5i': 0.0, 'L5e': 0.001, 'L6e': 0.008}
 synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                         'L5i': 1., 'L5e': 1., 'L6e': 0.1}
 weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.01, 'L5e': 0.0001}
