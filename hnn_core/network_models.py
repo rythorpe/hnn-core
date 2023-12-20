@@ -355,24 +355,24 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00073,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00066,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
-                    "L2i_L2e_gabaa": 0.0035,
+                    "L2i_L2e_gabaa": 0.0040,
                     "L2i_L2e_gabab": 0.0020,
-                    "L2e_L2i_ampa": 0.00120,  # 0.00090
+                    "L2e_L2i_ampa": 0.00110,  # 0.00090
                     "L2i_L2i_gabaa": 0.02,
-                    "L6i_cross_L2e_gabaa": 0.05,
-                    "L2e_L5e_ampa": 0.00040,
+                    "L6i_cross_L2e_gabaa": 0.015,
+                    "L2e_L5e_ampa": 0.00180,
                     "L2i_L5e_gabaa": 0.002,
-                    "L5e_L5e_ampa": 0.00120,  # 0.00077
+                    "L5e_L5e_ampa": 0.00070,  # 0.00077
                     "L5e_L5e_nmda": 0.00001,
-                    "L5i_L5e_gabaa": 0.01065,  # 0.018
+                    "L5i_L5e_gabaa": 0.01265,  # 0.018
                     "L5i_L5e_gabab": 0.00005,  # changed from jones09
                     "L6i_cross_L5e_gabaa": 0.01,
-                    "L2e_L5i_ampa": 0.00010,
-                    "L5e_L5i_ampa": 0.00015,  # 0.00043
+                    "L2e_L5i_ampa": 0.00084,  # 0.00084
+                    "L5e_L5i_ampa": 0.00010,  # 0.00043
                     "L5i_L5i_gabaa": 0.02,
-                    "L5e_L6e_ampa": 0.00002,
+                    "L5e_L6e_ampa": 0.00006,
                     "L6e_L6e_ampa": 0.00067,
                     "L6e_L6e_nmda": 0.00001,
                     "L6i_L6e_gabaa": 0.0038,
@@ -382,7 +382,7 @@ def L6_model(params=None, add_drives_from_params=False,
     lamtha = 4.0
     lamtha_L6_cross = 8.0
     delay = net.delay
-    conn_seed = 1  # using the same seed will enforce matching subpop conn!!!
+    conn_seed = 4  # using the same seed will enforce matching subpop conn!!!
 
     #######################################################
     # cell type connections that only have one source group
@@ -391,7 +391,7 @@ def L6_model(params=None, add_drives_from_params=False,
     # general connection probabilities
     prob_e_e = 0.33
     prob_i_e = 0.67  # 0.66
-    prob_i_i = 0.33  # 0.66
+    prob_i_i = 0.67  # 0.66
     prob_e_i = 0.67  # 0.66
     prob_i_e_cross = 0.67
     prob_e_e_5 = 0.125
@@ -452,7 +452,7 @@ def L6_model(params=None, add_drives_from_params=False,
         # general connection probabilities
         prob_e_e = 0.33
         prob_i_e = 0.67  # 0.66
-        prob_i_i = 0.33  # 0.66
+        prob_i_i = 0.67  # 0.66
         prob_e_i = 0.67  # 0.66
 
         # layer2 Pyr -> layer5 Pyr
@@ -464,7 +464,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                weight=conn_weights['L2e_L5e_ampa'],
                                delay=delay,
                                lamtha=lamtha,
-                               probability=prob_e_e,
+                               probability=prob_e_e_5,
                                conn_seed=conn_seed)
 
         # layer2 Basket -> layer5 Pyr
@@ -537,13 +537,13 @@ def L6_model(params=None, add_drives_from_params=False,
                 # within-group connection probabilities
                 prob_e_e = 0.33
                 prob_i_e = 0.67
-                prob_i_i = 0.33
+                prob_i_i = 0.67
                 prob_e_i = 0.67
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
                 prob_i_e = 0.90
-                prob_i_i = 0.33
+                prob_i_i = 0.00
                 prob_e_i = 0.00
 
             # layer2 Pyr -> layer2 Pyr
