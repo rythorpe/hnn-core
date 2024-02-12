@@ -98,7 +98,8 @@ def plot_net_response(dpls, net):
     # for dpl in dpls:
     #     dpl.smooth(window_len).scale(scaling_factor)
 
-    net.cell_response.plot_spikes_hist(ax=axes[0], bin_width=1.0, show=False)
+    net.cell_response.plot_spikes_hist(spike_types='poisson', ax=axes[0],
+                                       bin_width=1.0, show=False)
     plot_dipole(dpls, ax=axes[1:5], layer=['L2', 'L5', 'L6', 'agg'],
                 show=False)
     # create dictionary of all cell groupings, including cross-laminar L6 types

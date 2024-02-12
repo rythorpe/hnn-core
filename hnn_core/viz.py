@@ -392,14 +392,10 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     _validate_type(trial_idx, list, 'trial_idx', 'int, list of int')
 
     # Extract desired trials
-    if len(cell_response._spike_times[0]) > 0:
-        spike_times = np.concatenate(
-            np.array(cell_response._spike_times, dtype=object)[trial_idx])
-        spike_types_data = np.concatenate(
-            np.array(cell_response._spike_types, dtype=object)[trial_idx])
-    else:
-        spike_times = np.array([])
-        spike_types_data = np.array([])
+    spike_times = np.concatenate(
+        np.array(cell_response._spike_times, dtype=object)[trial_idx])
+    spike_types_data = np.concatenate(
+        np.array(cell_response._spike_types, dtype=object)[trial_idx])
 
     unique_types = list(cell_response._gid_ranges.keys())
     spike_types_mask = {s_type: np.in1d(spike_types_data, s_type)
@@ -459,8 +455,8 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
     #bins, bin_width = np.linspace(0, spike_times[-1], n_bins + 1, retstep=True)  # noqa
     # make sure final spike times are included despite not dividing into a
     # clean number of bins
-    post_spiking_buffer = spike_times[-1] % bin_width + 1
-    bins = np.arange(0, spike_times[-1] + post_spiking_buffer, bin_width)
+    post_spiking_buffer = spike_times.max() % bin_width + 1
+    bins = np.arange(0, spike_times.max() + post_spiking_buffer, bin_width)
 
     # Create dictionary to aggregate spike times that have the same spike_label
     spike_type_times = {spike_label: list() for
@@ -553,21 +549,16 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
     _validate_type(trial_idx, list, 'trial_idx', 'int, list of int')
 
     # Extract desired trials
-    if len(cell_response._spike_times[0]) > 0:
-        spike_times = np.concatenate(
-            np.array(cell_response._spike_times, dtype=object)[trial_idx])
-        spike_types = np.concatenate(
-            np.array(cell_response._spike_types, dtype=object)[trial_idx])
-        spike_gids = np.concatenate(
-            np.array(cell_response._spike_gids, dtype=object)[trial_idx])
-    else:
-        spike_times = np.array([])
-        spike_types = np.array([])
-        spike_gids = np.array([])
+    spike_times = np.concatenate(
+        np.array(cell_response._spike_times, dtype=object)[trial_idx])
+    spike_types = np.concatenate(
+        np.array(cell_response._spike_types, dtype=object)[trial_idx])
+    spike_gids = np.concatenate(
+        np.array(cell_response._spike_gids, dtype=object)[trial_idx])
 
     if cell_types is None:
-        spike_types = {cell_type: [cell_type] for cell_type in
-                       cell_response._cell_type_names}
+        cell_types = {cell_type: [cell_type] for cell_type in
+                      cell_response._cell_type_names}
 
     if color is None:
         color = {'L2/3e': 'g', 'L2/3i': 'orange',
@@ -594,7 +585,7 @@ def plot_spikes_raster(cell_response, trial_idx=None, ax=None,
                 cell_type_ypos.append(ypos)
                 ypos -= 1
 
-        if cell_type_times:
+        if np.concatenate(cell_type_times).size > 0:
             events.append(
                 ax.eventplot(cell_type_times, lineoffsets=cell_type_ypos,
                              color=color[cell_label],
