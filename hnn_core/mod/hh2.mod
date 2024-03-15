@@ -27,10 +27,10 @@ NEURON {
 }
  
 PARAMETER {
-        gnabar = .12 (S/cm2)	<0,1e9>
-        gkbar = .036 (S/cm2)	<0,1e9>
-        gl = .0003 (S/cm2)	<0,1e9>
-        el = -54.3 (mV)
+        gnabar = .06 (S/cm2)	<0,1e9>
+        gkbar = .030 (S/cm2)	<0,1e9>
+        gl = .00045 (S/cm2)	<0,1e9>
+        el = -58.27 (mV)
         temp = 6.3
         tshift = 30.7
 }
