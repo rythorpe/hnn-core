@@ -9,15 +9,15 @@ from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
                               simulate_network, err_spike_rates_logdiff)
 
-poiss_rate = 1e1
+poiss_rate = 2e1
 
 # final optimization results for 20% target rate + manual tuning [use this one]
-poiss_params = [5.82e-04,
-                8.80e-04,
-                9.61e-04,
-                29.01e-04,
-                6.85e-04,
-                9.30e-04,
+poiss_params = [12.65e-04,
+                6.60e-04,
+                13.70e-04,
+                21.80e-04,
+                12.95e-04,
+                7.30e-04,
                 poiss_rate]
 
 n_procs = 10
@@ -47,7 +47,8 @@ target_sr_unconn = {cell: rate * 0.2 for cell, rate in
 net = L6_model(grid_shape=(12, 12), layer_6_fb=layer_6_fb)
 net, dpls = simulate_network(net.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=clear_conn,
-                             n_trials=n_trials, n_procs=n_procs, rng=rng)
+                             n_trials=n_trials, n_procs=n_procs, rng=rng,
+                             record_vsec='soma')
 
 fig_net_response = plot_net_response(dpls, net)
 plt.tight_layout()
