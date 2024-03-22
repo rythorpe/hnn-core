@@ -75,47 +75,58 @@ def _create_cell_coords(n_pyr_x, n_pyr_y, zdiff, inplane_distance):
             hex_mesh.extend([(x, y) for y in yrange])
 
     # select positions within hexagonal mesh for inhibitory cells
-    hex_mesh_inh = list()
+    hex_mesh_inh_1 = list()
     # 1st half = 1st set of inhibitory cell positions
     for x_i in range(len(xrange)):
         if (x_i % 4) in {1, 2}:
             for y_i in range(x_i % 4 - 1, len(yrange), 3):
                 pos_idx = x_i * len(yrange) + y_i
-                hex_mesh_inh.append(hex_mesh[pos_idx])
+                hex_mesh_inh_1.append(hex_mesh[pos_idx])
     # 2nd half = 2nd set of inhibitory cell positions
+    hex_mesh_inh_2 = list()
     for x_i in range(len(xrange)):
         if (x_i % 4) in {1, 2}:
             for y_i in range(x_i % 4, len(yrange), 3):
                 pos_idx = x_i * len(yrange) + y_i
-                hex_mesh_inh.append(hex_mesh[pos_idx])
-    n_inh = len(hex_mesh_inh)
+                hex_mesh_inh_2.append(hex_mesh[pos_idx])
+
+    # select positions within hexagonal mesh for excitatory cells
+    # every two columns (x) starts with a different set, alternating between
+    # set 1 and set 2
+    hex_mesh_exc_1 = list()
+    hex_mesh_exc_2 = list()
+    for x_i in range(len(xrange)):
+        # determine whether the first pos in each column belongs to set 1 or 2
+        if ((x_i + 1) % 4) < 2:
+            x_start = 0  # set 1
+        else:
+            x_start = 1  # set 2
+        for y_i in range(len(yrange)):
+            pos_idx = x_i * len(yrange) + y_i
+            if ((y_i + x_start * 2) % 4) < 2:
+                hex_mesh_exc_1.append(hex_mesh[pos_idx])
+            else:
+                hex_mesh_exc_2.append(hex_mesh[pos_idx])
 
     # L5
     pos_dict['L5e'] = [(x, y, 0) for x, y in hex_mesh]
     z_offset = 0.2 * zdiff
-    pos_dict['L5i'] = [(x, y, z_offset) for x, y in hex_mesh_inh]
+    pos_dict['L5i'] = [(x, y, z_offset) for x, y in
+                       (hex_mesh_inh_1 + hex_mesh_inh_2)]  # agg all inh pos
 
     # L2/3
-    # every other column (x) belongs to a different group (set 1 or 2)
-    hex_mesh_1 = [pos for pos_idx, pos in enumerate(hex_mesh)
-                  if ((pos_idx // len(xrange)) % 2) == 0]
-    hex_mesh_2 = [pos for pos_idx, pos in enumerate(hex_mesh)
-                  if ((pos_idx // len(xrange)) % 2) == 1]
-    pos_dict['L2e_1'] = [(x, y, zdiff) for x, y in hex_mesh_1]
-    pos_dict['L2e_2'] = [(x, y, zdiff) for x, y in hex_mesh_2]
-    # 1st half of inhibitory hex_mesh positions belongs to set 1
-    pos_dict['L2i_1'] = [(x, y, zdiff + z_offset)
-                         for x, y in hex_mesh_inh[:n_inh // 2]]
-    pos_dict['L2i_2'] = [(x, y, zdiff + z_offset)
-                         for x, y in hex_mesh_inh[n_inh // 2:]]
+    pos_dict['L2e_1'] = [(x, y, zdiff) for x, y in hex_mesh_exc_1]
+    pos_dict['L2e_2'] = [(x, y, zdiff) for x, y in hex_mesh_exc_2]
+    pos_dict['L2i_1'] = [(x, y, zdiff + z_offset) for x, y in hex_mesh_inh_1]
+    pos_dict['L2i_2'] = [(x, y, zdiff + z_offset) for x, y in hex_mesh_inh_2]
 
     # L6 will be placed below L5 at half the distance between L5 and L2/3
-    pos_dict['L6e_1'] = [(x, y, -zdiff / 2) for x, y in hex_mesh_1]
-    pos_dict['L6e_2'] = [(x, y, -zdiff / 2) for x, y in hex_mesh_2]
+    pos_dict['L6e_1'] = [(x, y, -zdiff / 2) for x, y in hex_mesh_exc_1]
+    pos_dict['L6e_2'] = [(x, y, -zdiff / 2) for x, y in hex_mesh_exc_2]
     pos_dict['L6i_1'] = [(x, y, -zdiff / 2 + z_offset)
-                         for x, y in hex_mesh_inh[:n_inh // 2]]
+                         for x, y in hex_mesh_inh_1]
     pos_dict['L6i_2'] = [(x, y, -zdiff / 2 + z_offset)
-                         for x, y in hex_mesh_inh[n_inh // 2:]]
+                         for x, y in hex_mesh_inh_2]
 
     # ORIGIN
     # origin's z component isn't really used in
