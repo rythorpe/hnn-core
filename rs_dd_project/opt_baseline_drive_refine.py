@@ -11,13 +11,14 @@ from optimization_lib import (plot_net_response, plot_spiking_profiles,
 
 poiss_rate = 2e1
 
-# final optimization results for 20% target rate + manual tuning [use this one]
-poiss_params = [12.65e-04,
-                6.60e-04,
-                13.70e-04,
-                21.80e-04,
-                12.95e-04,
-                7.30e-04,
+# final optimization results for 40% target rate + manual tuning [use this one]
+# 40% => excitation propogates from one neuron to between 1 to 2 other neurons
+poiss_params = [13.20e-04,
+                7.20e-04,
+                17.90e-04,
+                23.90e-04,
+                14.40e-04,
+                8.00e-04,
                 poiss_rate]
 
 n_procs = 10
@@ -40,8 +41,9 @@ target_sr = {'L2/3i': 0.8,
              'L6e': 0.5}  # from De Kock 2007
 
 # avg rates in unconn network should be a bit less
-# try 20% of the avg rates in a fully connected network
-target_sr_unconn = {cell: rate * 0.2 for cell, rate in
+# try 40% of the avg rates in a fully connected network
+# 40% => excitation propogates from one neuron to between 1 to 2 other neurons
+target_sr_unconn = {cell: rate * 0.4 for cell, rate in
                     target_sr.items()}
 
 net = L6_model(grid_shape=(12, 12), layer_6_fb=layer_6_fb)

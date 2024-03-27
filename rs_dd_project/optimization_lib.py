@@ -14,13 +14,13 @@ from hnn_core import simulate_dipole, MPIBackend
 from hnn_core.viz import plot_dipole
 
 # poisson drive parameters
-poiss_drive_params = [5.82e-04,
-                      8.80e-04,
-                      9.61e-04,
-                      29.01e-04,
-                      6.85e-04,
-                      9.30e-04,
-                      1e1]
+poiss_drive_params = [13.20e-04,
+                      7.20e-04,
+                      17.90e-04,
+                      23.90e-04,
+                      14.40e-04,
+                      8.00e-04,
+                      2e1]
 
 # order matters!!!
 cell_groups = {'L2/3i': ['L2i_1', 'L2i_2'],
