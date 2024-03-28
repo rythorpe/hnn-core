@@ -355,22 +355,22 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00046,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00051,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
-                    "L2i_L2e_gabaa": 0.0004,
+                    "L2i_L2e_gabaa": 0.0020,
                     "L2i_L2e_gabab": 0.0003,
-                    "L2e_L2i_ampa": 0.0030,  # 0.00090
+                    "L2e_L2i_ampa": 0.0031,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
                     "L6i_cross_L2e_gabaa": 0.015,
-                    "L2e_L5e_ampa": 0.00180,
+                    "L2e_L5e_ampa": 0.0009,
                     "L2i_L5e_gabaa": 0.002,
-                    "L5e_L5e_ampa": 0.00020,  # 0.00077
+                    "L5e_L5e_ampa": 0.0010,  # 0.00077
                     "L5e_L5e_nmda": 0.00001,
-                    "L5i_L5e_gabaa": 0.003,  # 0.018
+                    "L5i_L5e_gabaa": 0.0029,  # 0.018
                     "L5i_L5e_gabab": 0.00005,  # changed from jones09
                     "L6i_cross_L5e_gabaa": 0.01,
-                    "L2e_L5i_ampa": 0.00080,  # 0.00084
-                    "L5e_L5i_ampa": 0.0034,  # 0.00043
+                    "L2e_L5i_ampa": 0.00060,  # 0.00084
+                    "L5e_L5i_ampa": 0.0028,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.00006,
                     "L6e_L6e_ampa": 0.00040,
@@ -541,7 +541,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_i = 0.33
             else:
                 # between-group connection probabilities
-                prob_e_e = 0.028
+                prob_e_e = 0.00
                 prob_i_e = 0.67
                 prob_i_i = 0.00
                 prob_e_i = 0.00

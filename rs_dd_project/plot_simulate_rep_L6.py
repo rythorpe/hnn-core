@@ -49,7 +49,7 @@ t_prox = 12.  # time (ms) of the proximal drive relative to stimulus rep
 t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 
 # avg connection probability (across groups 1 and 2) controls the proportion of
-# the total circuit that gets directly activated through afferent drive (an
+# the total network that gets directly activated through afferent drive (an
 # increase or decrease of this value drives deviance detection)
 prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
 dev_delta = -0.2 * prob_avg  # -10% change
@@ -82,7 +82,7 @@ weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.008,
                      'L5i': 0.0, 'L5e': 0.008, 'L6e': 0.008}
 synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                         'L5i': 1., 'L5e': 1., 'L6e': 0.1}
-weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.01, 'L5e': 0.0001}
+weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.002, 'L5e': 0.0001}
 weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
 synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
