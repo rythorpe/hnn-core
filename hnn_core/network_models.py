@@ -355,14 +355,14 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00051,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00053,  # 0.00070
                     "L2e_L2e_nmda": 0.00001,
                     "L2i_L2e_gabaa": 0.0020,
-                    "L2i_L2e_gabab": 0.0003,
+                    "L2i_L2e_gabab": 0.0004,
                     "L2e_L2i_ampa": 0.0031,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
                     "L6i_cross_L2e_gabaa": 0.015,
-                    "L2e_L5e_ampa": 0.0009,
+                    "L2e_L5e_ampa": 0.0000,
                     "L2i_L5e_gabaa": 0.002,
                     "L5e_L5e_ampa": 0.0010,  # 0.00077
                     "L5e_L5e_nmda": 0.00001,
@@ -373,11 +373,11 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5i_ampa": 0.0028,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.00006,
-                    "L6e_L6e_ampa": 0.00040,
+                    "L6e_L6e_ampa": 0.00050,
                     "L6e_L6e_nmda": 0.00001,
-                    "L6i_L6e_gabaa": 0.0006,
+                    "L6i_L6e_gabaa": 0.0020,
                     "L6i_L6e_gabab": 0.0004,
-                    "L6e_L6i_ampa": 0.0034,
+                    "L6e_L6i_ampa": 0.0031,
                     "L6i_L6i_gabaa": 0.005}
     lamtha = 4.0
     lamtha_L6_cross = 8.0
@@ -389,12 +389,13 @@ def L6_model(params=None, add_drives_from_params=False,
     #######################################################
 
     # general connection probabilities
-    prob_e_e = 0.33
-    prob_i_e = 0.33  # 0.66
-    prob_i_i = 0.33  # 0.66
-    prob_e_i = 0.33  # 0.66
-    prob_i_e_cross = 0.67
+    prob_e_e = 0.25
+    prob_i_e = 0.25  # 0.66
+    prob_i_i = 0.25  # 0.66
+    prob_e_i = 0.25  # 0.66
+    prob_i_e_cross = 1.0
     prob_e_e_5 = 0.125
+    prob_offset_L6 = 0.1
 
     # layer5 Pyr -> layer5 Pyr
     for receptor in ['nmda', 'ampa']:
@@ -450,10 +451,10 @@ def L6_model(params=None, add_drives_from_params=False,
         targ_group = src_group
 
         # general connection probabilities
-        prob_e_e = 0.33
-        prob_i_e = 0.33  # 0.66
-        prob_i_i = 0.33  # 0.66
-        prob_e_i = 0.33  # 0.66
+        prob_e_e = 0.25
+        prob_i_e = 0.25  # 0.66
+        prob_i_i = 0.25  # 0.66
+        prob_e_i = 0.25  # 0.66
 
         # layer2 Pyr -> layer5 Pyr
         for loc in ['proximal', 'distal']:
@@ -503,7 +504,7 @@ def L6_model(params=None, add_drives_from_params=False,
             # note: cross-laminar inhibtion from L6i only targets L5e and L2e
             # layer6 Bask -> layer5 Pyr
             src_gid_group = f'L6i_{src_group}'
-            gid_idxs = [0, 3, 20, 23]
+            gid_idxs = [0, 3, 9, 14, 20, 23]
             gid_range = net.gid_ranges[src_gid_group]
             src_gids = [gid for idx, gid in enumerate(gid_range)
                         if idx in gid_idxs]
@@ -535,16 +536,22 @@ def L6_model(params=None, add_drives_from_params=False,
             # excitation is greater within groups
             if src_group == targ_group:
                 # within-group connection probabilities
-                prob_e_e = 0.33
-                prob_i_e = 0.33
-                prob_i_i = 0.33
-                prob_e_i = 0.33
+                prob_e_e = 0.25
+                prob_i_e = 0.25
+                prob_i_i = 0.25
+                prob_e_i = 0.25
+
+                prob_e_e_6 = prob_e_e - prob_offset_L6
+                prob_i_e_6 = prob_i_e
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
                 prob_i_e = 0.67
                 prob_i_i = 0.00
                 prob_e_i = 0.00
+
+                prob_e_e_6 = prob_e_e
+                prob_i_e_6 = prob_i_e + prob_offset_L6
 
             # layer2 Pyr -> layer2 Pyr
             for receptor in ['nmda', 'ampa']:
@@ -602,7 +609,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    delay=delay,
                                    lamtha=lamtha,
                                    allow_autapses=False,
-                                   probability=prob_e_e,
+                                   probability=prob_e_e_6,
                                    conn_seed=conn_seed)
 
             # layer6 Pyr -> layer6 Bask
@@ -625,7 +632,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    weight=conn_weights[f'L6i_L6e_{recep}'],
                                    delay=delay,
                                    lamtha=lamtha,
-                                   probability=prob_i_e,
+                                   probability=prob_i_e_6,
                                    conn_seed=conn_seed)
 
             # layer6 Bask -> layer6 Bask
