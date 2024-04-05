@@ -373,11 +373,11 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5i_ampa": 0.0028,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.00006,
-                    "L6e_L6e_ampa": 0.00050,
+                    "L6e_L6e_ampa": 0.00048,
                     "L6e_L6e_nmda": 0.00001,
                     "L6i_L6e_gabaa": 0.0020,
                     "L6i_L6e_gabab": 0.0004,
-                    "L6e_L6i_ampa": 0.0031,
+                    "L6e_L6i_ampa": 0.0033,
                     "L6i_L6i_gabaa": 0.005}
     lamtha = 4.0
     lamtha_L6_cross = 8.0
@@ -395,7 +395,7 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_e_i = 0.25  # 0.66
     prob_i_e_cross = 1.0
     prob_e_e_5 = 0.125
-    prob_offset_L6 = 0.1
+    prob_offset_L6 = 0.0833
 
     # layer5 Pyr -> layer5 Pyr
     for receptor in ['nmda', 'ampa']:
@@ -541,7 +541,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_i_i = 0.25
                 prob_e_i = 0.25
 
-                prob_e_e_6 = prob_e_e - prob_offset_L6
+                prob_e_e_6 = prob_e_e + prob_offset_L6
                 prob_i_e_6 = prob_i_e
             else:
                 # between-group connection probabilities
