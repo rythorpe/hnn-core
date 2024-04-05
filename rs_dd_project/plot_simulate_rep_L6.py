@@ -52,12 +52,12 @@ t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 # the total network that gets directly activated through afferent drive (an
 # increase or decrease of this value drives deviance detection)
 prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
-dev_delta = -0.2 * prob_avg  # -10% change
+dev_delta = -0.25 * prob_avg  # -10% change
 prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
-event_seed = 8  # 6, 3
+event_seed = 1  # 6, 3
 # change on each rep; sets initial condition
-conn_seed = 8  # 6, 2
+conn_seed = 1  # 6, 2
 
 ###############################################################################
 # Let us first create our default network and visualize the cells
@@ -78,11 +78,11 @@ net.set_cell_positions(inplane_distance=300.0)
 # undergo synaptic depletion
 
 # prox drive weights and delays
-weights_ampa_prox = {'L2/3i': 0.0, 'L2/3e': 0.008,
-                     'L5i': 0.0, 'L5e': 0.000, 'L6e': 0.008}
+weights_ampa_prox = {'L2/3i': 0.004, 'L2/3e': 0.010,
+                     'L5i': 0.0005, 'L5e': 0.0025, 'L6e': 0.008}
 synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                         'L5i': 1., 'L5e': 1., 'L6e': 0.1}
-weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.008, 'L5e': 0.0000}
+weights_ampa_dist = {'L2/3i': 0.004, 'L2/3e': 0.008, 'L5e': 0.001}
 weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
 synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
