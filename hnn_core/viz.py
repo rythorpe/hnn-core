@@ -484,7 +484,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
         # set weights uniformly across bins; used for calculating spike rates
         weights = np.ones(len(plot_data))
         if rate:
-            weights *= rate / (bin_width * 1e-3)
+            weights *= rate / (bin_width * 1e-3) / n_trials
         if sliding_bin:
             # 1 kH sampling rate
             times = np.arange(bin_width / 2, bins[-1] - bin_width / 2, 1.0)
@@ -495,7 +495,7 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
                 spikes_in_win = np.logical_and(plot_data > t_win[0],
                                                plot_data <= t_win[1])
                 spike_rate[t_idx] = (np.sum(spikes_in_win) *
-                                     rate / (bin_width * 1e-3))
+                                     rate / (bin_width * 1e-3) / n_trials)
             spike_rates[spike_label] = spike_rate
             if not fill_between:
                 ax.plot(times, spike_rate, label=spike_label,
