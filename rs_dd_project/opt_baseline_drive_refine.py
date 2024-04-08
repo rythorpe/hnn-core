@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from hnn_core.network_models import L6_model
 from optimization_lib import (plot_net_response, plot_spiking_profiles,
-                              simulate_network, err_spike_rates_logdiff)
+                              sim_net_baseline, err_spike_rates_logdiff)
 
 poiss_rate = 2e1
 
@@ -47,7 +47,7 @@ target_sr_unconn = {cell: rate * 0.4 for cell, rate in
                     target_sr.items()}
 
 net = L6_model(grid_shape=(12, 12), layer_6_fb=layer_6_fb)
-net, dpls = simulate_network(net.copy(), sim_time, burn_in_time,
+net, dpls = sim_net_baseline(net.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=clear_conn,
                              n_trials=n_trials, n_procs=n_procs, rng=rng,
                              record_vsec='soma')

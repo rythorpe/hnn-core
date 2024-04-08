@@ -281,10 +281,10 @@ def plot_spikerate_hist(net, sim_time, burn_in_time, ax):
     return ax.get_figure()
 
 
-def simulate_network(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
+def sim_net_baseline(net, sim_time, burn_in_time, n_trials=1, n_procs=6,
                      poiss_params=None, clear_conn=False, rng=None,
                      record_vsec=False):
-    """Add poisson drive to empty network and run simulation."""
+    """Add poisson drive to network and run simulation."""
 
     # induce variation between simulations (aside from parameter exploration)
     if rng is None:
