@@ -355,16 +355,16 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00054,  # 0.00070
-                    "L2e_L2e_nmda": 0.00001,
-                    "L2i_L2e_gabaa": 0.0024,
+    conn_weights = {"L2e_L2e_ampa": 0.00043,  # 0.00070
+                    "L2e_L2e_nmda": 0.00008,
+                    "L2i_L2e_gabaa": 0.0023,
                     "L2i_L2e_gabab": 0.0004,
                     "L2e_L2i_ampa": 0.0032,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
                     "L6i_cross_L2e_gabaa": 0.02,
                     "L2e_L5e_ampa": 0.00001,
                     "L2i_L5e_gabaa": 0.00002,
-                    "L5e_L5e_ampa": 0.0011,  # 0.00077
+                    "L5e_L5e_ampa": 0.00102,  # 0.00077
                     "L5e_L5e_nmda": 0.00001,
                     "L5i_L5e_gabaa": 0.0029,  # 0.018
                     "L5i_L5e_gabab": 0.00005,  # changed from jones09
@@ -375,7 +375,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L6e_ampa": 0.00006,
                     "L6e_L6e_ampa": 0.00049,
                     "L6e_L6e_nmda": 0.00001,
-                    "L6i_L6e_gabaa": 0.0022,
+                    "L6i_L6e_gabaa": 0.0023,
                     "L6i_L6e_gabab": 0.0005,
                     "L6e_L6i_ampa": 0.0030,
                     "L6i_L6i_gabaa": 0.005}
@@ -395,7 +395,7 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_e_i = 0.33  # 0.66
     prob_i_e_cross = 1.0
     prob_e_e_5 = 0.125
-    prob_offset_L6 = 0.0833
+    prob_offset_L6 = 0.10
 
     # layer5 Pyr -> layer5 Pyr
     for receptor in ['nmda', 'ampa']:
