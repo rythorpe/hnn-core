@@ -52,12 +52,12 @@ t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
 # the total network that gets directly activated through afferent drive (an
 # increase or decrease of this value drives deviance detection)
 prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
-dev_delta = -0.25 * prob_avg  # -10% change
+dev_delta = -0.20 * prob_avg  # -10% change
 prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
-event_seed = 1  # 6, 3
+event_seed = 2  # 6, 3
 # change on each rep; sets initial condition
-conn_seed = 1  # 6, 2
+conn_seed = 2  # 6, 2
 
 ###############################################################################
 # Let us first create our default network and visualize the cells
@@ -105,8 +105,8 @@ rep_start_times = np.arange(burn_in_time, tstop, stim_interval)
 
 for rep_idx, rep_time in enumerate(rep_start_times):
 
-    # downscale syn weights for each successive prox drive
-    # attenuate syn weight values as a function of # of reps
+    # attenuate drive strength (proportion of driven post-synaptic targets) as
+    # a function rep #
     depression_factor = syn_depletion_factor ** rep_idx
 
     # determine if this is the DEV or STD trial...
@@ -155,7 +155,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         weights_nmda=None,
         location='proximal', synaptic_delays=synaptic_delays_prox_group,
         probability=prob_prox,
-        conn_seed=conn_seed, event_seed=event_seed)
+        conn_seed=conn_seed + rep_idx, event_seed=event_seed)
 
     # dist drive
     net.add_evoked_drive(
@@ -164,7 +164,7 @@ for rep_idx, rep_time in enumerate(rep_start_times):
         weights_nmda=weights_nmda_dist_group,
         location='distal', synaptic_delays=synaptic_delays_dist_group,
         probability=prob_dist,
-        conn_seed=conn_seed, event_seed=event_seed)
+        conn_seed=conn_seed + rep_idx, event_seed=event_seed)
 
 ###############################################################################
 # Now let's simulate the dipole
@@ -199,26 +199,28 @@ head_length = 0.1
 head_width = 12.0
 for rep_idx, rep_time in enumerate(rep_start_times):
 
+    # attenuate drive strength (proportion of driven post-synaptic targets) as
+    # a function rep #
+    depression_factor = syn_depletion_factor ** rep_idx
+
     # determine if this is the DEV or STD trial...
     if rep_idx == len(rep_start_times) - 1:  # last rep
-        prox_strength = prob_avg + dev_delta
-        dist_strength = prob_avg + dev_delta
+        drive_strength = (prob_avg + dev_delta) * depression_factor
         ec = None
         fc = 'k'
     else:
-        prox_strength = prob_avg
-        dist_strength = prob_avg
+        drive_strength = prob_avg * depression_factor
         ec = None
         fc = 'k'
 
     # plot arrows for each drive
-    axes[0].arrow(rep_time + t_prox, 0, 0, prox_strength,
+    axes[0].arrow(rep_time + t_prox, 0, 0, drive_strength,
                   fc=fc, ec=ec, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
-    axes[0].arrow(rep_time + t_dist, dist_strength, 0, -dist_strength,
+    axes[0].arrow(rep_time + t_dist, drive_strength, 0, -drive_strength,
                   fc=fc, ec=ec, alpha=1., width=5, head_width=head_width,
                   head_length=head_length, length_includes_head=True)
-    axes[0].hlines(y=prox_strength, xmin=rep_time,
+    axes[0].hlines(y=drive_strength, xmin=rep_time,
                    xmax=rep_time + stim_interval, colors='k', linestyle=':')
 axes[0].set_ylim([0, arrow_height_max])
 axes[0].set_yticks([0, arrow_height_max])
