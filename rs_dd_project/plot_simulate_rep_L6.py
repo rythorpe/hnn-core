@@ -162,7 +162,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
 
         # dist drive
         net.add_evoked_drive(
-            f'evdist_rep{rep_idx}', mu=drive_times[rep_idx]['prox'],
+            f'evdist_rep{rep_idx}', mu=drive_times[rep_idx]['dist'],
             sigma=3.85, numspikes=1, weights_ampa=weights_ampa_dist_group,
             weights_nmda=weights_nmda_dist_group,
             location='distal', synaptic_delays=synaptic_delays_dist_group,
