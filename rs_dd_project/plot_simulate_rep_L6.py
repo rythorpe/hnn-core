@@ -193,7 +193,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
     custom_params = {'axes.spines.right': False, 'axes.spines.top': False}
     sns.set_theme(style='ticks', rc=custom_params)
     gridspec = {'width_ratios': [1], 'height_ratios': [1, 1, 1, 2]}
-    fig, axes = plt.subplots(4, 1, sharex=True, figsize=(6, 6),
+    fig, axes = plt.subplots(4, 1, sharex=True, figsize=(6, 4),
                              gridspec_kw=gridspec, constrained_layout=True)
 
     # plot drive strength
