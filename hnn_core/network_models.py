@@ -355,7 +355,7 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00038,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00040,  # 0.00070
                     "L2e_L2e_nmda": 0.00010,
                     "L2i_L2e_gabaa": 0.0023,
                     "L2i_L2e_gabab": 0.0005,
@@ -364,16 +364,16 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L6i_cross_L2e_gabaa": 0.018,
                     "L2e_L5e_ampa": 0.00003,
                     "L2i_L5e_gabaa": 0.00001,
-                    "L5e_L5e_ampa": 0.0012,  # 0.00077
+                    "L5e_L5e_ampa": 0.00122,  # 0.00077
                     "L5e_L5e_nmda": 0.00001,
-                    "L5i_L5e_gabaa": 0.0020,  # 0.018
+                    "L5i_L5e_gabaa": 0.0018,  # 0.018
                     "L5i_L5e_gabab": 0.00005,  # changed from jones09
                     "L6i_cross_L5e_gabaa": 0.0001,
                     "L2e_L5i_ampa": 0.00055,  # 0.00084
                     "L5e_L5i_ampa": 0.0026,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.00006,
-                    "L6e_L6e_ampa": 0.00048,
+                    "L6e_L6e_ampa": 0.00047,
                     "L6e_L6e_nmda": 0.00002,
                     "L6i_L6e_gabaa": 0.0023,
                     "L6i_L6e_gabab": 0.0005,

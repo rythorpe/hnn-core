@@ -75,11 +75,11 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.004, 'L2/3e': 0.010,
-                         'L5i': 0.0005, 'L5e': 0.0025, 'L6e': 0.008}
+    weights_ampa_prox = {'L2/3i': 0.006, 'L2/3e': 0.015,
+                         'L5i': 0.0005, 'L5e': 0.0025, 'L6e': 0.015}
     synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                             'L5i': 1., 'L5e': 1., 'L6e': 0.1}
-    weights_ampa_dist = {'L2/3i': 0.004, 'L2/3e': 0.008, 'L5e': 0.001}
+    weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.011, 'L5e': 0.001}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
