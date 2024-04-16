@@ -49,7 +49,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
     prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -0.20 * prob_avg  # -10% change
+    dev_delta = -0.25 * prob_avg  # -25% change
     prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
     event_seed = 2  # 6, 3
