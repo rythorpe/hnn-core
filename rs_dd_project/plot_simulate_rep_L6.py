@@ -48,13 +48,13 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
     # proportion of the total network that gets directly activated through
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
-    prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
+    prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
     dev_delta = -0.25 * prob_avg  # -25% change
     prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
-    event_seed = 2  # 6, 3
+    event_seed = 352  # 6, 3
     # change on each rep; sets initial condition
-    conn_seed = 2  # 6, 2
+    conn_seed = 564  # 6, 2
 
     ###########################################################################
     # Let us first create our default network and visualize the cells
@@ -76,7 +76,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
 
     # prox drive weights and delays
     weights_ampa_prox = {'L2/3i': 0.006, 'L2/3e': 0.015,
-                         'L5i': 0.0005, 'L5e': 0.0025, 'L6e': 0.015}
+                         'L5i': 0.0005, 'L5e': 0.0027, 'L6e': 0.015}
     synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                             'L5i': 1., 'L5e': 1., 'L6e': 0.1}
     weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.011, 'L5e': 0.001}
@@ -159,6 +159,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
             location='proximal', synaptic_delays=synaptic_delays_prox_group,
             probability=prob_prox,
             conn_seed=conn_seed + rep_idx, event_seed=event_seed)
+        print(prob_prox)
 
         # dist drive
         net.add_evoked_drive(
@@ -168,6 +169,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
             location='distal', synaptic_delays=synaptic_delays_dist_group,
             probability=prob_dist,
             conn_seed=conn_seed + rep_idx, event_seed=event_seed)
+        print(prob_dist)
 
     ###########################################################################
     # Now let's simulate the dipole
@@ -197,7 +199,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
                              gridspec_kw=gridspec, constrained_layout=True)
 
     # plot drive strength
-    arrow_height_max = 40
+    arrow_height_max = 65
     head_length = 10
     head_width = 12.0
     stim_interval = np.unique(np.diff(rep_start_times))
@@ -225,7 +227,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
                        xmax=rep_time + stim_interval, colors='k',
                        linestyle=':')
     axes[0].set_ylim([0, arrow_height_max])
-    axes[0].set_yticks([0, arrow_height_max])
+    axes[0].set_yticks([0, 50])
     axes[0].set_ylabel('external drive\n(% total\ndriven units)')
 
     # vertical lines separating reps
