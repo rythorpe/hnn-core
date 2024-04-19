@@ -159,7 +159,6 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
             location='proximal', synaptic_delays=synaptic_delays_prox_group,
             probability=prob_prox,
             conn_seed=conn_seed + rep_idx, event_seed=event_seed)
-        print(prob_prox)
 
         # dist drive
         net.add_evoked_drive(
@@ -169,7 +168,6 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
             location='distal', synaptic_delays=synaptic_delays_dist_group,
             probability=prob_dist,
             conn_seed=conn_seed + rep_idx, event_seed=event_seed)
-        print(prob_dist)
 
     ###########################################################################
     # Now let's simulate the dipole
