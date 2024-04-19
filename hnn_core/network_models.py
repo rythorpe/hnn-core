@@ -358,10 +358,10 @@ def L6_model(params=None, add_drives_from_params=False,
     conn_weights = {"L2e_L2e_ampa": 0.00020,  # 0.00070
                     "L2e_L2e_nmda": 0.00020,
                     "L2i_L2e_gabaa": 0.0023,
-                    "L2i_L2e_gabab": 0.0005,
+                    "L2i_L2e_gabab": 0.00095,
                     "L2e_L2i_ampa": 0.0032,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.018,
+                    "L6i_cross_L2e_gabaa": 0.011,
                     "L2e_L5e_ampa": 0.00003,
                     "L2i_L5e_gabaa": 0.00001,
                     "L5e_L5e_ampa": 0.00122,  # 0.00077
@@ -393,7 +393,7 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_i_e = 0.33  # 0.66
     prob_i_i = 0.33  # 0.66
     prob_e_i = 0.33  # 0.66
-    prob_i_e_cross = 1.0
+    prob_i_e_cross = 0.66
     prob_e_e_5 = 0.0833
     prob_offset_L6 = 0.1
 
