@@ -355,34 +355,34 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00020,  # 0.00070
-                    "L2e_L2e_nmda": 0.00020,
-                    "L2i_L2e_gabaa": 0.0023,
-                    "L2i_L2e_gabab": 0.00095,
-                    "L2e_L2i_ampa": 0.0032,  # 0.00090
+    conn_weights = {"L2e_L2e_ampa": 0.00041,  # 0.00070
+                    "L2e_L2e_nmda": 0.00030,
+                    "L2i_L2e_gabaa": 0.0045,
+                    "L2i_L2e_gabab": 0.0010,
+                    "L2e_L2i_ampa": 0.0055,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.011,
-                    "L2e_L5e_ampa": 0.00003,
-                    "L2i_L5e_gabaa": 0.00001,
-                    "L5e_L5e_ampa": 0.00122,  # 0.00077
-                    "L5e_L5e_nmda": 0.00001,
-                    "L5i_L5e_gabaa": 0.0018,  # 0.018
-                    "L5i_L5e_gabab": 0.00005,  # changed from jones09
-                    "L6i_cross_L5e_gabaa": 0.0001,
-                    "L2e_L5i_ampa": 0.00055,  # 0.00084
-                    "L5e_L5i_ampa": 0.0026,  # 0.00043
+                    "L6i_cross_L2e_gabaa": 0.030,
+                    "L2e_L5e_ampa": 0.00010,
+                    "L2i_L5e_gabaa": 0.00002,
+                    "L5e_L5e_ampa": 0.0021,  # 0.00077
+                    "L5e_L5e_nmda": 0.0001,
+                    "L5i_L5e_gabaa": 0.0025,  # 0.018
+                    "L5i_L5e_gabab": 0.0001,  # changed from jones09
+                    "L6i_cross_L5e_gabaa": 0.003,
+                    "L2e_L5i_ampa": 0.0007,  # 0.00084
+                    "L5e_L5i_ampa": 0.0047,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
-                    "L5e_L6e_ampa": 0.00006,
-                    "L6e_L6e_ampa": 0.00047,
-                    "L6e_L6e_nmda": 0.00002,
-                    "L6i_L6e_gabaa": 0.0023,
-                    "L6i_L6e_gabab": 0.0005,
-                    "L6e_L6i_ampa": 0.0030,
+                    "L5e_L6e_ampa": 0.0001,
+                    "L6e_L6e_ampa": 0.00046,
+                    "L6e_L6e_nmda": 0.00025,
+                    "L6i_L6e_gabaa": 0.0045,
+                    "L6i_L6e_gabab": 0.0010,
+                    "L6e_L6i_ampa": 0.0053,
                     "L6i_L6i_gabaa": 0.005}
-    lamtha = 4.0
-    lamtha_L6_cross = 8.0
+    lamtha = 2.0
+    lamtha_L6_cross = 6.0
     delay = net.delay
-    conn_seed = 4  # using the same seed will enforce matching subpop conn!!!
+    conn_seed = 1  # using the same seed will enforce matching subpop conn!!!
 
     #######################################################
     # cell type connections that only have one source group
@@ -394,8 +394,8 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_i_i = 0.33  # 0.66
     prob_e_i = 0.33  # 0.66
     prob_i_e_cross = 0.66
-    prob_e_e_5 = 0.0833
-    prob_offset_L6 = 0.1
+    prob_e_e_5 = 0.125
+    prob_offset_L6 = 0.0
 
     # layer5 Pyr -> layer5 Pyr
     for receptor in ['nmda', 'ampa']:
