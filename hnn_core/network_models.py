@@ -307,7 +307,8 @@ def calcium_model(params=None, add_drives_from_params=False,
 
 
 def L6_model(params=None, add_drives_from_params=False,
-             legacy_mode=False, layer_6_fb=True, grid_shape=(12, 12)):
+             legacy_mode=False, layer_6_fb=True, grid_shape=(12, 12),
+             rng=None):
     """Instantiate the updated calcium model with layer 6 cell types.
 
     Returns
@@ -356,9 +357,9 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
     conn_weights = {"L2e_L2e_ampa": 0.00041,  # 0.00070
-                    "L2e_L2e_nmda": 0.00030,
+                    "L2e_L2e_nmda": 0.00035,
                     "L2i_L2e_gabaa": 0.0045,
-                    "L2i_L2e_gabab": 0.0010,
+                    "L2i_L2e_gabab": 0.0030,
                     "L2e_L2i_ampa": 0.0055,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
                     "L6i_cross_L2e_gabaa": 0.030,
@@ -382,7 +383,10 @@ def L6_model(params=None, add_drives_from_params=False,
     lamtha = 2.0
     lamtha_L6_cross = 6.0
     delay = net.delay
-    conn_seed = 1  # using the same seed will enforce matching subpop conn!!!
+    if rng is None:
+        rng = np.random.default_rng()
+    # NB: using the same seed will enforce matching subpop conn!!!
+    conn_seed = rng.integers(0, np.iinfo(np.int32).max)
 
     #######################################################
     # cell type connections that only have one source group
@@ -393,7 +397,7 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_i_e = 0.33  # 0.66
     prob_i_i = 0.33  # 0.66
     prob_e_i = 0.33  # 0.66
-    prob_i_e_cross = 0.66
+    prob_i_e_cross = 0.667
     prob_e_e_5 = 0.125
     prob_offset_L6 = 0.0
 

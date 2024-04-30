@@ -30,7 +30,7 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # emp_dpl = read_dipole('S1_SupraT.txt')
 
 
-def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
+def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False, rng=None):
 
     # Hyperparameters of repetitive drive sequence
     reps = 4
@@ -48,13 +48,16 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
     # proportion of the total network that gets directly activated through
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
-    prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
+    prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
     dev_delta = -0.25 * prob_avg  # -25% change
     prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
-    event_seed = 352  # 6, 3
-    # change on each rep; sets initial condition
-    conn_seed = 564  # 6, 2
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # for now, seeds are randomly sampled for each drive
+    # event_seed = rng.integers(0, np.iinfo(np.int32).max)
+    # conn_seed = rng.integers(0, np.iinfo(np.int32).max)
 
     ###########################################################################
     # Let us first create our default network and visualize the cells
@@ -75,11 +78,11 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.006, 'L2/3e': 0.015,
-                         'L5i': 0.0005, 'L5e': 0.0027, 'L6e': 0.015}
+    weights_ampa_prox = {'L2/3i': 0.006, 'L2/3e': 0.006,
+                         'L5i': 0.0005, 'L5e': 0.0028, 'L6e': 0.020}
     synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                             'L5i': 1., 'L5e': 1., 'L6e': 0.1}
-    weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.011, 'L5e': 0.001}
+    weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.01, 'L5e': 0.002}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -158,7 +161,8 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
             weights_nmda=None,
             location='proximal', synaptic_delays=synaptic_delays_prox_group,
             probability=prob_prox,
-            conn_seed=conn_seed + rep_idx, event_seed=event_seed)
+            conn_seed=rng.integers(0, np.iinfo(np.int32).max),
+            event_seed=rng.integers(0, np.iinfo(np.int32).max))
 
         # dist drive
         net.add_evoked_drive(
@@ -167,7 +171,8 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
             weights_nmda=weights_nmda_dist_group,
             location='distal', synaptic_delays=synaptic_delays_dist_group,
             probability=prob_dist,
-            conn_seed=conn_seed + rep_idx, event_seed=event_seed)
+            conn_seed=rng.integers(0, np.iinfo(np.int32).max),
+            event_seed=rng.integers(0, np.iinfo(np.int32).max))
 
     ###########################################################################
     # Now let's simulate the dipole
@@ -175,7 +180,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False):
                                  burn_in_time=burn_in_time,
                                  n_trials=1, n_procs=n_procs,
                                  poiss_params=poiss_drive_params,
-                                 record_vsec=record_vsec, rng=event_seed)
+                                 record_vsec=record_vsec, rng=rng)
 
     # window_len, scaling_factor = 30, 2000
     # for dpl in dpls:
@@ -369,13 +374,15 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
 
 if __name__ == "__main__":
 
+    rng = np.random.default_rng(1234)
     burn_in_time = 300.0
     n_procs = 10
     record_vsec = False
 
     net, drive_params = sim_dev_spiking(burn_in_time=burn_in_time,
                                         n_procs=n_procs,
-                                        record_vsec=record_vsec)
+                                        record_vsec=record_vsec,
+                                        rng=rng)
 
     rep_start_times = drive_params['rep_times']
     drive_times = drive_params['drive_times']
