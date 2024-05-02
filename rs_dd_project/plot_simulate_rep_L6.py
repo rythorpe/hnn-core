@@ -30,7 +30,8 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # emp_dpl = read_dipole('S1_SupraT.txt')
 
 
-def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False, rng=None):
+def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
+                    rng=None):
 
     # Hyperparameters of repetitive drive sequence
     reps = 4
@@ -62,7 +63,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False, rng=None)
     ###########################################################################
     # Let us first create our default network and visualize the cells
     # inside it.
-    net = L6_model(layer_6_fb=True)
+    net = L6_model(layer_6_fb=True, rng=rng)
     net.set_cell_positions(inplane_distance=300.0)
     # net.plot_cells()
     # fig = plt.figure(figsize=(6, 6), constrained_layout=True)

@@ -63,4 +63,4 @@ plt.tight_layout()
 plt.show()
 
 err = err_spike_rates_logdiff(net, sim_time, burn_in_time, target_sr_unconn)
-print(f'spike rate profile error: {err}')  # compare to -17.2157 from optimization minimum
+print(f'spike rate profile error: {err}')

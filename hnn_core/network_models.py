@@ -356,29 +356,29 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00041,  # 0.00070
-                    "L2e_L2e_nmda": 0.00035,
+    conn_weights = {"L2e_L2e_ampa": 0.00040,  # 0.00070
+                    "L2e_L2e_nmda": 0.00025,
                     "L2i_L2e_gabaa": 0.0045,
-                    "L2i_L2e_gabab": 0.0030,
-                    "L2e_L2i_ampa": 0.0055,  # 0.00090
+                    "L2i_L2e_gabab": 0.0010,
+                    "L2e_L2i_ampa": 0.0060,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.030,
+                    "L6i_cross_L2e_gabaa": 0.050,
                     "L2e_L5e_ampa": 0.00010,
                     "L2i_L5e_gabaa": 0.00002,
-                    "L5e_L5e_ampa": 0.0021,  # 0.00077
-                    "L5e_L5e_nmda": 0.0001,
+                    "L5e_L5e_ampa": 0.0019,  # 0.00077
+                    "L5e_L5e_nmda": 0.00005,
                     "L5i_L5e_gabaa": 0.0025,  # 0.018
                     "L5i_L5e_gabab": 0.0001,  # changed from jones09
-                    "L6i_cross_L5e_gabaa": 0.003,
-                    "L2e_L5i_ampa": 0.0007,  # 0.00084
-                    "L5e_L5i_ampa": 0.0047,  # 0.00043
+                    "L6i_cross_L5e_gabaa": 0.005,
+                    "L2e_L5i_ampa": 0.0005,  # 0.00084
+                    "L5e_L5i_ampa": 0.0045,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.0001,
-                    "L6e_L6e_ampa": 0.00046,
-                    "L6e_L6e_nmda": 0.00025,
+                    "L6e_L6e_ampa": 0.00052,
+                    "L6e_L6e_nmda": 0.00020,
                     "L6i_L6e_gabaa": 0.0045,
                     "L6i_L6e_gabab": 0.0010,
-                    "L6e_L6i_ampa": 0.0053,
+                    "L6e_L6i_ampa": 0.0055,
                     "L6i_L6i_gabaa": 0.005}
     lamtha = 2.0
     lamtha_L6_cross = 6.0
