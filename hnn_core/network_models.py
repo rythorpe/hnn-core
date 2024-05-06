@@ -374,7 +374,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5i_ampa": 0.0045,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.0001,
-                    "L6e_L6e_ampa": 0.00052,
+                    "L6e_L6e_ampa": 0.00045,
                     "L6e_L6e_nmda": 0.00020,
                     "L6i_L6e_gabaa": 0.0045,
                     "L6i_L6e_gabab": 0.0010,
@@ -399,7 +399,7 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_e_i = 0.33  # 0.66
     prob_i_e_cross = 0.667
     prob_e_e_5 = 0.125
-    prob_offset_L6 = 0.1
+    prob_offset_L6 = 0.0
 
     # layer5 Pyr -> layer5 Pyr
     for receptor in ['nmda', 'ampa']:
@@ -540,7 +540,7 @@ def L6_model(params=None, add_drives_from_params=False,
             # excitation is greater within groups
             if src_group == targ_group:
                 # within-group connection probabilities
-                prob_e_e = 0.33
+                prob_e_e = 0.50
                 prob_i_e = 0.33
                 prob_i_i = 0.33
                 prob_e_i = 0.33

@@ -49,9 +49,9 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # proportion of the total network that gets directly activated through
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
-    prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -0.15 * prob_avg  # -20% change
-    prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
+    prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
+    dev_delta = -(1 / 3) * prob_avg  # -0.33% (6 neurons) change
+    prop_1_to_2 = 3  # proportion of red to blue cells targetted by drive
 
     if rng is None:
         rng = np.random.default_rng()
@@ -61,17 +61,9 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # conn_seed = rng.integers(0, np.iinfo(np.int32).max)
 
     ###########################################################################
-    # Let us first create our default network and visualize the cells
-    # inside it.
+    # Let us first create our network
     net = L6_model(layer_6_fb=True, rng=rng)
     net.set_cell_positions(inplane_distance=300.0)
-    # net.plot_cells()
-    # fig = plt.figure(figsize=(6, 6), constrained_layout=True)
-    # for cell_type_idx, cell_type in enumerate(net.cell_types):
-    #    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
-    #                         projection='3d')
-    #     net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
-    # plt.show()
 
     ###########################################################################
     # Add drives
@@ -395,6 +387,15 @@ if __name__ == "__main__":
 
     ###########################################################################
     # Plot 3D Network
+
+    # net.plot_cells()
+    #
+    # fig = plt.figure(figsize=(6, 6), constrained_layout=True)
+    # for cell_type_idx, cell_type in enumerate(net.cell_types):
+    #    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
+    #                         projection='3d')
+    #     net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
+    #
     # net_plot = NetworkPlotter(net, voltage_colormap='binary_r', vmin=-75)
     # net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0))) # noqa
     # net_plot.update_section_voltages(0)
