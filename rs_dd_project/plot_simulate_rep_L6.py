@@ -49,8 +49,8 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # proportion of the total network that gets directly activated through
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
-    prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -0.25 * prob_avg  # -25% change
+    prob_avg = 0.33  # maybe try 0.15 based on Sachidhanandam (2013)?
+    dev_delta = -0.15 * prob_avg  # -20% change
     prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
     if rng is None:
@@ -79,11 +79,11 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.006, 'L2/3e': 0.006,
-                         'L5i': 0.0005, 'L5e': 0.0028, 'L6e': 0.020}
+    weights_ampa_prox = {'L2/3i': 0.020, 'L2/3e': 0.015,
+                         'L5i': 0.0005, 'L5e': 0.0040, 'L6e': 0.020}
     synaptic_delays_prox = {'L2/3i': 0.1, 'L2/3e': 0.1,
                             'L5i': 1., 'L5e': 1., 'L6e': 0.1}
-    weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.01, 'L5e': 0.002}
+    weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.007, 'L5e': 0.004}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -375,7 +375,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
 
 if __name__ == "__main__":
 
-    rng = np.random.default_rng(1234)
+    rng = np.random.default_rng(222)
     burn_in_time = 300.0
     n_procs = 10
     record_vsec = False

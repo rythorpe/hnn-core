@@ -399,7 +399,7 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_e_i = 0.33  # 0.66
     prob_i_e_cross = 0.667
     prob_e_e_5 = 0.125
-    prob_offset_L6 = 0.0
+    prob_offset_L6 = 0.1
 
     # layer5 Pyr -> layer5 Pyr
     for receptor in ['nmda', 'ampa']:
