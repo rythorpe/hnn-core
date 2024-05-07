@@ -231,7 +231,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
         axes[0].axvline(rep_time, c='k')
         axes[1].axvline(rep_time, c='k')
         axes[2].axvline(rep_time, c='k')
-        axes[3].axvline(rep_time, c='w', alpha=0.5)
+        axes[3].axvline(rep_time, c='k')
 
     # horizontal lines separating layers
     # note that the raster plot shows negative GID values on the y-axis
@@ -242,7 +242,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
             if layer in cell_name and (gid := max(gid_range)) > greatest_gid:
                 greatest_gid = gid
         raster_y_tick_pos.append(-greatest_gid + 108)
-        axes[3].axhline(-greatest_gid, c='w', alpha=0.5)
+        axes[3].axhline(-greatest_gid, c='k')
 
     # cell groups are separtated in responders (R) and non-responders (NR)
     spike_types = [{'L2/3e': ['L2e_1', 'L2e_2'],
@@ -347,7 +347,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
                          'L6e_1': 'r', 'L6e_2': 'b', 'L6i': 'orange'}
     net.cell_response.plot_spikes_raster(ax=axes[3], cell_types=spike_types,
                                          color=spike_type_colors, show=False)
-    axes[3].spines[['right', 'top']].set_visible(True)
+    axes[3].set_facecolor('None')
     axes[3].get_yaxis().set_visible(True)
     axes[3].get_legend().remove()
     axes[3].set_xlim([burn_in_time - 100, tstop])
