@@ -1061,6 +1061,8 @@ class Network(object):
         self._reset_drives()
 
         # each trial needs unique event time vectors
+        # trial_idx * n_drive_cells will be added each event seed to ensure
+        # independent spike event sampling across drive cells and trials
         for trial_idx in range(n_trials):
             for drive in self.external_drives.values():
                 event_times = list()  # new list for each trial and drive
@@ -1080,7 +1082,7 @@ class Network(object):
                                 drive['type'],
                                 drive['dynamics'],
                                 target_type=target_type,
-                                trial_idx=trial_idx,
+                                trial_idx=trial_idx * drive['n_drive_cells'],
                                 drive_cell_gid=drive_cell_gid_offset,
                                 event_seed=drive['event_seed'],
                                 tstop=tstop)
@@ -1091,7 +1093,7 @@ class Network(object):
                             drive['dynamics'],
                             tstop=tstop,
                             target_type='any',
-                            trial_idx=trial_idx,
+                            trial_idx=trial_idx * drive['n_drive_cells'],
                             drive_cell_gid=drive_cell_gid_offset,
                             event_seed=drive['event_seed'])
                         event_times.append(src_event_times)
