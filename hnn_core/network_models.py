@@ -381,7 +381,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L6e_L6i_ampa": 0.0055,
                     "L6i_L6i_gabaa": 0.005}
     lamtha = 2.0
-    lamtha_L6_cross = 6.0
+    lamtha_L6_cross = 100.0
     delay = net.delay
     if rng is None:
         rng = np.random.default_rng()

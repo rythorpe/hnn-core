@@ -40,10 +40,11 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
 
     syn_depression_factor = 1.0  # synaptic depression [0, 1]
 
-    # see Constantinople and Bruno (2013) for experimental values
+    # see Constantinople and Bruno (2013) and de Kock et al. (2007) for
+    # experimental values re: evoked response peak timing
     # see Sachidhanandam (2013) for a discusson on feedback drive timing
     t_prox = 12.  # time (ms) of the proximal drive relative to stimulus rep
-    t_dist = 40.  # time (ms) of the distal drive relative to stimulus rep
+    t_dist = 35.  # time (ms) of the distal drive relative to stimulus rep
 
     # avg connection probability (across groups 1 and 2) controls the
     # proportion of the total network that gets directly activated through
@@ -71,10 +72,10 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.020, 'L2/3e': 0.015,
+    weights_ampa_prox = {'L2/3i': 0.020, 'L2/3e': 0.012,
                          'L5i': 0.0005, 'L5e': 0.0040, 'L6e': 0.008}
     synaptic_delays_prox = {'L2/3i': 1.0, 'L2/3e': 1.0,
-                            'L5i': 2., 'L5e': 2., 'L6e': 0.1}
+                            'L5i': 2., 'L5e': 2., 'L6e': 0.0}
     weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.007, 'L5e': 0.004}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
@@ -367,7 +368,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
 
 if __name__ == "__main__":
 
-    rng = np.random.default_rng(123)
+    rng = np.random.default_rng(111)
     burn_in_time = 300.0
     n_procs = 10
     record_vsec = False
