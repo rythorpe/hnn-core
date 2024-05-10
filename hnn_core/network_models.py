@@ -362,7 +362,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L2i_L2e_gabab": 0.0010,
                     "L2e_L2i_ampa": 0.0060,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.050,
+                    "L6i_cross_L2e_gabaa": 0.020,
                     "L2e_L5e_ampa": 0.00010,
                     "L2i_L5e_gabaa": 0.00002,
                     "L5e_L5e_ampa": 0.0019,  # 0.00077
@@ -381,7 +381,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L6e_L6i_ampa": 0.0055,
                     "L6i_L6i_gabaa": 0.005}
     lamtha = 2.0
-    lamtha_L6_cross = 100.0
+    lamtha_L6_cross = 12.0
     delay = net.delay
     if rng is None:
         rng = np.random.default_rng()
@@ -397,7 +397,6 @@ def L6_model(params=None, add_drives_from_params=False,
     prob_i_e = 0.33  # 0.66
     prob_i_i = 0.33  # 0.66
     prob_e_i = 0.33  # 0.66
-    prob_i_e_cross = 0.667
     prob_e_e_5 = 0.125
     prob_offset_L6 = 0.0
 
@@ -459,6 +458,7 @@ def L6_model(params=None, add_drives_from_params=False,
         prob_i_e = 0.33  # 0.66
         prob_i_i = 0.33  # 0.66
         prob_e_i = 0.33  # 0.66
+        prob_i_e_cross = 0.5
 
         # layer2 Pyr -> layer5 Pyr
         for loc in ['proximal', 'distal']:
@@ -505,29 +505,18 @@ def L6_model(params=None, add_drives_from_params=False,
                                probability=prob_e_e,
                                conn_seed=conn_seed)
         if layer_6_fb:
-            # note: cross-laminar inhibtion from L6i only targets L5e and L2e
+            # src_gid_group = f'L6i_{src_group}'
+            # gid_idxs = [0, 3, 9, 14, 20, 23]
+            # gid_range = net.gid_ranges[src_gid_group]
+            # src_gids = [gid for idx, gid in enumerate(gid_range)
+            #             if idx in gid_idxs]
+
             # layer6 Bask -> layer5 Pyr
-            src_gid_group = f'L6i_{src_group}'
-            gid_idxs = [0, 3, 9, 14, 20, 23]
-            gid_range = net.gid_ranges[src_gid_group]
-            src_gids = [gid for idx, gid in enumerate(gid_range)
-                        if idx in gid_idxs]
-            net.add_connection(src_gids=src_gids,
+            net.add_connection(src_gids=f'L6i_{src_group}',
                                target_gids='L5e',
                                loc='soma',
                                receptor='gabaa',
                                weight=conn_weights['L6i_cross_L5e_gabaa'],
-                               delay=delay,
-                               lamtha=lamtha_L6_cross,
-                               probability=prob_i_e_cross,
-                               conn_seed=conn_seed)
-
-            # layer6 Bask -> layer2 Pyr (within-group only)
-            net.add_connection(src_gids=src_gids,
-                               target_gids=f'L2e_{targ_group}',
-                               loc='soma',
-                               receptor='gabaa',
-                               weight=conn_weights['L6i_cross_L2e_gabaa'],
                                delay=delay,
                                lamtha=lamtha_L6_cross,
                                probability=prob_i_e_cross,
@@ -540,7 +529,7 @@ def L6_model(params=None, add_drives_from_params=False,
             # excitation is greater within groups
             if src_group == targ_group:
                 # within-group connection probabilities
-                prob_e_e = 0.50
+                prob_e_e = 0.33
                 prob_i_e = 0.33
                 prob_i_i = 0.33
                 prob_e_i = 0.33
@@ -548,16 +537,18 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e
                 prob_e_i_6 = prob_e_i + prob_offset_L6
+                prob_i_e_cross = 0.75
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
                 prob_i_e = 0.90
-                prob_i_i = 0.00
+                prob_i_i = 0.33
                 prob_e_i = 0.00
 
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e + prob_offset_L6
                 prob_e_i_6 = prob_e_i
+                prob_i_e_cross = 0.25
 
             # layer2 Pyr -> layer2 Pyr
             for receptor in ['nmda', 'ampa']:
@@ -651,6 +642,18 @@ def L6_model(params=None, add_drives_from_params=False,
                                lamtha=lamtha,
                                probability=prob_i_i,
                                conn_seed=conn_seed)
+
+            if layer_6_fb:
+                # layer6 Bask -> layer2 Pyr (cross)
+                net.add_connection(src_gids=f'L6i_{src_group}',
+                                   target_gids=f'L2e_{targ_group}',
+                                   loc='soma',
+                                   receptor='gabaa',
+                                   weight=conn_weights['L6i_cross_L2e_gabaa'],
+                                   delay=delay,
+                                   lamtha=lamtha_L6_cross,
+                                   probability=prob_i_e_cross,
+                                   conn_seed=conn_seed)
 
     return net
 

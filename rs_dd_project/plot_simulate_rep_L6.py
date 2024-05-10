@@ -50,9 +50,9 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # proportion of the total network that gets directly activated through
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
-    prob_avg = 0.50  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -(1 / 3) * prob_avg  # -0.33% (6 neurons) change
-    prop_1_to_2 = 3  # proportion of red to blue cells targetted by drive
+    prob_avg = 0.5  # maybe try 0.15 based on Sachidhanandam (2013)?
+    dev_delta = -(1 / 3) * prob_avg  # -0.33% (8 neurons) change
+    prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
     if rng is None:
         rng = np.random.default_rng()
@@ -73,7 +73,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
 
     # prox drive weights and delays
     weights_ampa_prox = {'L2/3i': 0.020, 'L2/3e': 0.012,
-                         'L5i': 0.0005, 'L5e': 0.0040, 'L6e': 0.008}
+                         'L5i': 0.001, 'L5e': 0.004, 'L6e': 0.008}
     synaptic_delays_prox = {'L2/3i': 1.0, 'L2/3e': 1.0,
                             'L5i': 2., 'L5e': 2., 'L6e': 0.0}
     weights_ampa_dist = {'L2/3i': 0.006, 'L2/3e': 0.007, 'L5e': 0.004}
@@ -151,7 +151,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
         # note that all NMDA weights are zero
         net.add_evoked_drive(
             f'evprox_rep{rep_idx}', mu=drive_times[rep_idx]['prox'],
-            sigma=2.47, numspikes=1, weights_ampa=weights_ampa_prox_group,
+            sigma=1.5, numspikes=1, weights_ampa=weights_ampa_prox_group,
             weights_nmda=None,
             location='proximal', synaptic_delays=synaptic_delays_prox_group,
             probability=prob_prox,
@@ -161,7 +161,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
         # dist drive
         net.add_evoked_drive(
             f'evdist_rep{rep_idx}', mu=drive_times[rep_idx]['dist'],
-            sigma=3.85, numspikes=1, weights_ampa=weights_ampa_dist_group,
+            sigma=3.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
             weights_nmda=weights_nmda_dist_group,
             location='distal', synaptic_delays=synaptic_delays_dist_group,
             probability=prob_dist,
@@ -172,7 +172,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # Now let's simulate the dipole
     net, dpls = sim_net_baseline(net, sim_time=tstop,
                                  burn_in_time=burn_in_time,
-                                 n_trials=1, n_procs=n_procs,
+                                 n_trials=10, n_procs=n_procs,
                                  poiss_params=poiss_drive_params,
                                  record_vsec=record_vsec, rng=rng)
 
