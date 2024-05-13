@@ -172,7 +172,7 @@ def sim_dev_spiking(burn_in_time=300.0, n_procs=10, record_vsec=False,
     # Now let's simulate the dipole
     net, dpls = sim_net_baseline(net, sim_time=tstop,
                                  burn_in_time=burn_in_time,
-                                 n_trials=10, n_procs=n_procs,
+                                 n_trials=1, n_procs=n_procs,
                                  poiss_params=poiss_drive_params,
                                  record_vsec=record_vsec, rng=rng)
 
