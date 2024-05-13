@@ -356,7 +356,7 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00050,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00052,  # 0.00070
                     "L2e_L2e_nmda": 0.00025,
                     "L2i_L2e_gabaa": 0.010,
                     "L2i_L2e_gabab": 0.0010,
