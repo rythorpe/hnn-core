@@ -542,7 +542,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 # between-group connection probabilities
                 prob_e_e = 0.00
                 prob_i_e = 0.90
-                prob_i_i = 0.33
+                prob_i_i = 0.90
                 prob_e_i = 0.00
 
                 prob_e_e_6 = prob_e_e
