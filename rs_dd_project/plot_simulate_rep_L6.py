@@ -403,4 +403,13 @@ if __name__ == "__main__":
     # net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0))) # noqa
     # net_plot.update_section_voltages(0)
 
+    from hnn_core.network import pick_connection
+    from hnn_core.viz import plot_cell_connectivity
+
+    conn_indices = pick_connection(net, src_gids='L2i_1', target_gids='L2i_1',
+                                   loc='soma', receptor='gabaa')
+    conn_idx = conn_indices[0]
+    src_gid = net.connectivity[conn_idx]['src_gids'].copy().pop()
+    fig_conn = plot_cell_connectivity(net, conn_idx, src_gid)
+
     plt.show()
