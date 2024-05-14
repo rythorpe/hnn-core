@@ -51,7 +51,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
     prob_avg = 0.5  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -(1 / 3) * prob_avg  # -0.33% (8 neurons) change
+    dev_delta = -(1 / 6) * prob_avg  # -0.33% (8 neurons) change
     prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
     if rng is None:
@@ -151,7 +151,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
         # note that all NMDA weights are zero
         net.add_evoked_drive(
             f'evprox_rep{rep_idx}', mu=drive_times[rep_idx]['prox'],
-            sigma=1.5, numspikes=1, weights_ampa=weights_ampa_prox_group,
+            sigma=3.0, numspikes=1, weights_ampa=weights_ampa_prox_group,
             weights_nmda=None,
             location='proximal', synaptic_delays=synaptic_delays_prox_group,
             space_constant=5., probability=prob_prox,
@@ -161,7 +161,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
         # dist drive
         net.add_evoked_drive(
             f'evdist_rep{rep_idx}', mu=drive_times[rep_idx]['dist'],
-            sigma=3.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
+            sigma=5.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
             weights_nmda=weights_nmda_dist_group,
             location='distal', synaptic_delays=synaptic_delays_dist_group,
             space_constant=5., probability=prob_dist,
