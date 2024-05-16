@@ -362,7 +362,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L2i_L2e_gabab": 0.0010,
                     "L2e_L2i_ampa": 0.0065,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.020,
+                    "L6i_cross_L2e_gabaa": 0.025,
                     "L2e_L5e_ampa": 0.00010,
                     "L2i_L5e_gabaa": 0.00002,
                     "L5e_L5e_ampa": 0.00200,  # 0.00077
@@ -533,17 +533,19 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_i_e = 0.33
                 prob_i_i = 0.33
                 prob_e_i = 0.33
+                lamtha_subpop = lamtha
 
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e
                 prob_e_i_6 = prob_e_i + prob_offset_L6
-                prob_i_e_cross = 0.50
+                prob_i_e_cross = 0.75
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
-                prob_i_e = 0.90
-                prob_i_i = 0.90
+                prob_i_e = 0.33
+                prob_i_i = 0.33
                 prob_e_i = 0.00
+                lamtha_subpop = lamtha * 3
 
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e + prob_offset_L6
@@ -558,7 +560,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    receptor=receptor,
                                    weight=conn_weights[f'L2e_L2e_{receptor}'],
                                    delay=delay,
-                                   lamtha=lamtha,
+                                   lamtha=lamtha_subpop,
                                    allow_autapses=False,
                                    probability=prob_e_e,
                                    conn_seed=conn_seed)
@@ -571,7 +573,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    receptor=receptor,
                                    weight=conn_weights[f'L2i_L2e_{receptor}'],
                                    delay=delay,
-                                   lamtha=lamtha,
+                                   lamtha=lamtha_subpop,
                                    probability=prob_i_e,
                                    conn_seed=conn_seed)
 
@@ -582,7 +584,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                receptor='ampa',
                                weight=conn_weights['L2e_L2i_ampa'],
                                delay=delay,
-                               lamtha=lamtha,
+                               lamtha=lamtha_subpop,
                                probability=prob_e_i,
                                conn_seed=conn_seed)
 
@@ -592,7 +594,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                receptor='gabaa',
                                weight=conn_weights['L2i_L2i_gabaa'],
                                delay=delay,
-                               lamtha=lamtha,
+                               lamtha=lamtha_subpop,
                                probability=prob_i_i,
                                conn_seed=conn_seed)
 
@@ -604,7 +606,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    receptor=recep,
                                    weight=conn_weights[f'L6e_L6e_{recep}'],
                                    delay=delay,
-                                   lamtha=lamtha,
+                                   lamtha=lamtha_subpop,
                                    allow_autapses=False,
                                    probability=prob_e_e_6,
                                    conn_seed=conn_seed)
@@ -616,7 +618,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                receptor='ampa',
                                weight=conn_weights['L6e_L6i_ampa'],
                                delay=delay,
-                               lamtha=lamtha,
+                               lamtha=lamtha_subpop,
                                probability=prob_e_i_6,
                                conn_seed=conn_seed)
 
@@ -628,7 +630,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                    receptor=recep,
                                    weight=conn_weights[f'L6i_L6e_{recep}'],
                                    delay=delay,
-                                   lamtha=lamtha,
+                                   lamtha=lamtha_subpop,
                                    probability=prob_i_e_6,
                                    conn_seed=conn_seed)
 
@@ -639,7 +641,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                receptor='gabaa',
                                weight=conn_weights['L6i_L6i_gabaa'],
                                delay=delay,
-                               lamtha=lamtha,
+                               lamtha=lamtha_subpop,
                                probability=prob_i_i,
                                conn_seed=conn_seed)
 

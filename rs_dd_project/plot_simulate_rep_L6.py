@@ -15,8 +15,9 @@ from ipywidgets import interact, IntSlider
 
 import hnn_core
 from hnn_core import read_dipole
+from hnn_core.network import pick_connection
 from hnn_core.network_models import L6_model
-from hnn_core.viz import plot_dipole, NetworkPlotter
+from hnn_core.viz import plot_dipole, NetworkPlotter, plot_cell_connectivity
 from optimization_lib import (cell_groups, layertype_to_grouptype,
                               poiss_drive_params, sim_net_baseline)
 
@@ -50,8 +51,8 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # proportion of the total network that gets directly activated through
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
-    prob_avg = 0.5  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -(1 / 6) * prob_avg  # -0.33% (8 neurons) change
+    prob_avg = 0.125  # maybe try 0.15 based on Sachidhanandam (2013)?
+    dev_delta = -(1 / 3) * prob_avg  # -16.667% (2, 1 neurons) change
     prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
     if rng is None:
@@ -72,11 +73,11 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.002, 'L2/3e': 0.003,
-                         'L5i': 0.003, 'L5e': 0.003, 'L6e': 0.006}
+    weights_ampa_prox = {'L2/3i': 0.002, 'L2/3e': 0.002,
+                         'L5i': 0.002, 'L5e': 0.002, 'L6e': 0.006}
     synaptic_delays_prox = {'L2/3i': 1.0, 'L2/3e': 1.0,
                             'L5i': 2., 'L5e': 2., 'L6e': 0.0}
-    weights_ampa_dist = {'L2/3i': 0.003, 'L2/3e': 0.004, 'L5e': 0.002}
+    weights_ampa_dist = {'L2/3i': 0.0018, 'L2/3e': 0.0018, 'L5e': 0.0018}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -154,7 +155,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
             sigma=3.0, numspikes=1, weights_ampa=weights_ampa_prox_group,
             weights_nmda=None,
             location='proximal', synaptic_delays=synaptic_delays_prox_group,
-            space_constant=5., probability=prob_prox,
+            space_constant=1e50, probability=prob_prox,
             conn_seed=rng.integers(0, np.iinfo(np.int32).max),
             event_seed=rng.integers(0, np.iinfo(np.int32).max))
 
@@ -164,7 +165,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
             sigma=5.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
             weights_nmda=weights_nmda_dist_group,
             location='distal', synaptic_delays=synaptic_delays_dist_group,
-            space_constant=5., probability=prob_dist,
+            space_constant=1e50, probability=prob_dist,
             conn_seed=rng.integers(0, np.iinfo(np.int32).max),
             event_seed=rng.integers(0, np.iinfo(np.int32).max))
 
@@ -196,8 +197,8 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
                              gridspec_kw=gridspec, constrained_layout=True)
 
     # plot drive strength
-    arrow_height_max = 65
-    head_length = 10
+    arrow_height_max = 15
+    head_length = arrow_height_max / 5
     head_width = 12.0
     stim_interval = np.unique(np.diff(rep_start_times))
     for rep_idx, rep_time in enumerate(rep_start_times):
@@ -224,7 +225,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
                        xmax=rep_time + stim_interval, colors='k',
                        linestyle=':')
     axes[0].set_ylim([0, arrow_height_max])
-    axes[0].set_yticks([0, 50])
+    axes[0].set_yticks([0, arrow_height_max])
     axes[0].set_ylabel('external drive\n(% total\ndriven units)')
 
     # vertical lines separating reps
@@ -304,7 +305,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
 
     axes[1].set_ylabel('L2/3\nspikes/s')
     handles, _ = axes[1].get_legend_handles_labels()
-    axes[1].legend(handles, ['agg. (P+NP)', 'P', 'NP'], ncol=3,
+    axes[1].legend(handles, ['agg. (eP+eNP)', 'eP', 'eNP'], ncol=3,
                    loc='lower center', bbox_to_anchor=(0.5, 1.0),
                    frameon=False, columnspacing=1,
                    handlelength=0.75, borderaxespad=0.0)
@@ -369,7 +370,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
 if __name__ == "__main__":
 
     n_trials = 1
-    rng = np.random.default_rng(111)
+    rng = np.random.default_rng(789)
     burn_in_time = 300.0
     n_procs = 10
     record_vsec = False
@@ -403,13 +404,11 @@ if __name__ == "__main__":
     # net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0))) # noqa
     # net_plot.update_section_voltages(0)
 
-    from hnn_core.network import pick_connection
-    from hnn_core.viz import plot_cell_connectivity
-
-    conn_indices = pick_connection(net, src_gids='L2i_1', target_gids='L2i_1',
+    conn_indices = pick_connection(net, src_gids='L2i_1', target_gids='L2e_2',
                                    loc='soma', receptor='gabaa')
     conn_idx = conn_indices[0]
-    src_gid = net.connectivity[conn_idx]['src_gids'].copy().pop()
-    fig_conn = plot_cell_connectivity(net, conn_idx, src_gid)
+    src_gids = list(net.connectivity[conn_idx]['src_gids'])
+    src_gid = src_gids[10]  # select a gid near the middle
+    fig_conn = plot_cell_connectivity(net, conn_idx, src_gid, colormap='binary')
 
     plt.show()
