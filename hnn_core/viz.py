@@ -1095,12 +1095,12 @@ def _update_target_plot(ax, conn, src_gid, src_type_pos, target_type_pos,
         weights.append(weight)
 
     ax.clear()
-    im = ax.scatter(target_x_pos, target_y_pos, c=weights, s=50,
+    im = ax.scatter(target_x_pos, target_y_pos, c=weights, marker='^', s=50,
                     cmap=colormap)
     x_pos = target_type_pos[:, 0]
     y_pos = target_type_pos[:, 1]
     ax.scatter(x_pos, y_pos, color='k', marker='x', zorder=-1, s=20)
-    ax.scatter(src_pos[0], src_pos[1], marker='s', color='red', s=150)
+    ax.scatter(src_pos[0], src_pos[1], marker='o', color='tab:red', s=50)
     ax.set_ylabel('Y Position')
     ax.set_xlabel('X Position')
     return im
@@ -1165,8 +1165,13 @@ def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
     target_type_pos = np.array(net.pos_dict[target_type])
     src_range = np.array(net.gid_ranges[conn['src_type']])
 
+    # hack: get complimentary group sources (assumes src_type is from group 1)
+    src_type_c = src_type[:-1] + '2'
+    src_range_other_group = np.array(net.gid_ranges[src_type_c])
+
     valid_src_gids = list(net.connectivity[conn_idx]['gid_pairs'].keys())
-    src_pos_valid = src_type_pos[np.in1d(src_range, valid_src_gids)]
+    src_pos_valid = src_type_pos[np.in1d(src_range, valid_src_gids,
+                                         src_range_other_group)]
 
     if src_gid is None:
         src_gid = valid_src_gids[0]
@@ -1180,7 +1185,8 @@ def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
 
     if axes is None:
         if src_type in net.cell_types:
-            fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
+            fig, axes = plt.subplots(1, 2, sharex=True, sharey=True,
+                                     layout='constrained')
         else:
             fig, axes = plt.subplots(1, 1, sharex=True, sharey=True)
             axes = [axes]
@@ -1200,10 +1206,14 @@ def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
     x_src_valid = src_pos_valid[:, 0]
     y_src_valid = src_pos_valid[:, 1]
     if src_type in net.cell_types:
-        ax_src.scatter(x_src, y_src, marker='s', color='red', s=50,
+        if '1' in src_type:
+            color = 'tab:red'
+        else:
+            color = 'tab:blue'
+        ax_src.scatter(x_src, y_src, marker='o', color=color, s=50,
                        alpha=0.2)
-        ax_src.scatter(x_src_valid, y_src_valid, marker='s', color='red',
-                       s=50)
+        ax_src.scatter(x_src_valid, y_src_valid, marker='o', color=color,
+                       edgecolors='tab:orange', s=50)
 
     plt.suptitle(f"{conn['src_type']}-> {conn['target_type']}"
                  f" ({conn['loc']}, {conn['receptor']})")
@@ -1233,8 +1243,6 @@ def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
         cbar = fig.colorbar(im, ax=ax, format=xfmt)
         cbar.ax.yaxis.set_ticks_position('right')
         cbar.ax.set_ylabel('Weight', rotation=-90, va="bottom")
-
-    plt.tight_layout()
 
     fig.canvas.mpl_connect('button_press_event', _onclick)
 
