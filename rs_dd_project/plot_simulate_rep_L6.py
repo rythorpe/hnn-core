@@ -52,7 +52,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
     prob_avg = 0.125  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -(1 / 3) * prob_avg  # -16.667% (2, 1 neurons) change
+    dev_delta = -(1 / 6) * prob_avg  # -16.667% (2, 1 neurons) change
     prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
 
     if rng is None:
@@ -73,11 +73,11 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.002, 'L2/3e': 0.002,
+    weights_ampa_prox = {'L2/3i': 0.003, 'L2/3e': 0.004,
                          'L5i': 0.002, 'L5e': 0.002, 'L6e': 0.006}
     synaptic_delays_prox = {'L2/3i': 1.0, 'L2/3e': 1.0,
                             'L5i': 2., 'L5e': 2., 'L6e': 0.0}
-    weights_ampa_dist = {'L2/3i': 0.0018, 'L2/3e': 0.0018, 'L5e': 0.0018}
+    weights_ampa_dist = {'L2/3i': 0.003, 'L2/3e': 0.0015, 'L5e': 0.0014}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -370,7 +370,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
 if __name__ == "__main__":
 
     n_trials = 1
-    rng = np.random.default_rng(789)
+    rng = np.random.default_rng(731)
     burn_in_time = 300.0
     n_procs = 10
     record_vsec = False
@@ -396,19 +396,27 @@ if __name__ == "__main__":
     #
     # fig = plt.figure(figsize=(6, 6), constrained_layout=True)
     # for cell_type_idx, cell_type in enumerate(net.cell_types):
-    #    ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
-    #                         projection='3d')
+    #     ax = fig.add_subplot(1, len(net.cell_types), cell_type_idx + 1,
+    #                          projection='3d')
     #     net.cell_types[cell_type].plot_morphology(ax=ax, show=False)
-    #
-    # net_plot = NetworkPlotter(net, voltage_colormap='binary_r', vmin=-75)
-    # net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0))) # noqa
+
+    # net_small = L6_model(grid_shape=(4, 4))
+    # net_small.set_cell_positions(inplane_distance=300.0)
+    # sim_net_baseline(net_small, 30., 10., n_trials=1, n_procs=6,
+    #                  poiss_params=poiss_drive_params)
+    # net_plot = NetworkPlotter(net_small, voltage_colormap='RdBu_r', vmin=-1,
+    #                           vmax=1)
+    # # net_plot.update_section_voltages(np.argmin(np.abs(net_plot.times - 317.0))) # noqa
     # net_plot.update_section_voltages(0)
 
-    conn_indices = pick_connection(net, src_gids='L2i_1', target_gids='L2e_2',
-                                   loc='soma', receptor='gabaa')
-    conn_idx = conn_indices[0]
-    src_gids = list(net.connectivity[conn_idx]['src_gids'])
-    src_gid = src_gids[10]  # select a gid near the middle
-    fig_conn = plot_cell_connectivity(net, conn_idx, src_gid, colormap='binary')
+    # conn_idxs_1 = pick_connection(net, src_gids='L2i_1', target_gids='L2e_1',
+    #                               loc='soma', receptor='gabaa')
+    # conn_idxs_2 = pick_connection(net, src_gids='L2i_2', target_gids='L2e_1',
+    #                               loc='soma', receptor='gabaa')
+    # conn_idxs = [conn_idxs_1[0], conn_idxs_2[0]]
+    # src_gids = list(net.connectivity[conn_idxs[0]]['src_gids'])
+    # src_gid = src_gids[10]  # select a gid near the middle
+    # fig_conn = plot_cell_connectivity(net, conn_idxs, src_gid,
+    #                                   colormap='viridis')
 
     plt.show()

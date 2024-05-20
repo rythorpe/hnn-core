@@ -1076,10 +1076,14 @@ def _update_target_plot(ax, conn, src_gid, src_type_pos, target_type_pos,
                         inplane_distance):
     from .cell import _get_gaussian_connection
 
+    src_type = conn['src_type']
+
     # Extract indeces to get position in network
     # Index in gid range aligns with net.pos_dict
     target_src_pair = conn['gid_pairs'][src_gid]
     target_indeces = np.where(np.in1d(target_range, target_src_pair))[0]
+    nontarget_indeces = np.where(np.in1d(target_range, target_src_pair,
+                                         invert=True))[0]
 
     src_idx = np.where(src_range == src_gid)[0][0]
     src_pos = src_type_pos[src_idx]
@@ -1094,19 +1098,27 @@ def _update_target_plot(ax, conn, src_gid, src_type_pos, target_type_pos,
                                              inplane_distance)
         weights.append(weight)
 
+    # Aggregate positions of each non-connected target
+    nontarget_x_pos, nontarget_y_pos = list(), list()
+    for nontarget_idx in nontarget_indeces:
+        nontarget_pos = target_type_pos[nontarget_idx]
+        nontarget_x_pos.append(nontarget_pos[0])
+        nontarget_y_pos.append(nontarget_pos[1])
+
     ax.clear()
     im = ax.scatter(target_x_pos, target_y_pos, c=weights, marker='^', s=50,
                     cmap=colormap)
-    x_pos = target_type_pos[:, 0]
-    y_pos = target_type_pos[:, 1]
-    ax.scatter(x_pos, y_pos, color='k', marker='x', zorder=-1, s=20)
-    ax.scatter(src_pos[0], src_pos[1], marker='o', color='tab:red', s=50)
+    ax.scatter(nontarget_x_pos, nontarget_y_pos, color='k', marker='x', zorder=-1, s=20)
+    color = 'tab:red'
+    if '_2' in src_type:
+        color = 'tab:blue'
+    ax.scatter(src_pos[0], src_pos[1], marker='o', color=color, s=50)
     ax.set_ylabel('Y Position')
     ax.set_xlabel('X Position')
     return im
 
 
-def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
+def plot_cell_connectivity(net, conn_idxs, src_gid=None, axes=None,
                            colorbar=True, colormap='viridis', show=True):
     """Plot synaptic weight of connections.
 
@@ -1154,34 +1166,52 @@ def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
     from matplotlib.ticker import ScalarFormatter
 
     _validate_type(net, Network, 'net', 'Network')
-    _validate_type(conn_idx, int, 'conn_idx', 'int')
+    _validate_type(conn_idxs, list, 'conn_idxs', 'list')
 
     # Load objects for distance calculation
-    conn = net.connectivity[conn_idx]
-    nc_dict = conn['nc_dict']
-    src_type = conn['src_type']
-    target_type = conn['target_type']
-    src_type_pos = np.array(net.pos_dict[src_type])
-    target_type_pos = np.array(net.pos_dict[target_type])
-    src_range = np.array(net.gid_ranges[conn['src_type']])
+    src_types = list()
+    target_types = list()
+    nc_dicts = list()
+    src_gids_valid = list()
+    for conn_idx in conn_idxs:
+        conn = net.connectivity[conn_idx]
+        nc_dicts.append(conn['nc_dict'])
+        src_types.append(conn['src_type'])
+        target_types.append(conn['target_type'])
+        src_gids_valid.append(
+            list(net.connectivity[conn_idx]['gid_pairs'].keys())
+        )
+    src_types = np.unique(src_types)
+    target_types = np.unique(target_types)
 
-    # hack: get complimentary group sources (assumes src_type is from group 1)
-    src_type_c = src_type[:-1] + '2'
-    src_range_other_group = np.array(net.gid_ranges[src_type_c])
+    src_type_pos = list()
+    src_range = list()
+    target_type_pos = list()
+    target_range = list()
+    for src_type in src_types:
+        src_type_pos.extend(net.pos_dict[src_type])
+        src_range.extend(net.gid_ranges[src_type])
+    for target_type in target_types:
+        target_type_pos.extend(net.pos_dict[target_type])
+        target_range.extend(net.gid_ranges[target_type])
+    # convert to arrays
+    src_type_pos = np.array(src_type_pos)
+    src_range = np.array(src_range)
+    target_type_pos = np.array(target_type_pos)
+    target_range = np.array(target_range)
 
-    valid_src_gids = list(net.connectivity[conn_idx]['gid_pairs'].keys())
-    src_pos_valid = src_type_pos[np.in1d(src_range, valid_src_gids,
-                                         src_range_other_group)]
+    # valid_src_gids = list(net.connectivity[conn_idx]['gid_pairs'].keys())
+    # src_pos_valid = src_type_pos[np.in1d(src_range, valid_src_gids)]
 
-    if src_gid is None:
-        src_gid = valid_src_gids[0]
-    _validate_type(src_gid, int, 'src_gid', 'int')
+    # if src_gid is None:
+    #     src_gid = valid_src_gids[0]
+    # _validate_type(src_gid, int, 'src_gid', 'int')
 
-    if src_gid not in valid_src_gids:
-        raise ValueError(f'src_gid {src_gid} not a valid cell ID for this '
-                         f'connection. Please select one of {valid_src_gids}')
+    # if src_gid not in valid_src_gids:
+    #     raise ValueError(f'src_gid {src_gid} not a valid cell ID for this '
+    #                      f'connection. Please select one of {valid_src_gids}')
 
-    target_range = np.array(net.gid_ranges[conn['target_type']])
+    # target_range = np.array(net.gid_ranges[conn['target_type']])
 
     if axes is None:
         if src_type in net.cell_types:
@@ -1196,24 +1226,28 @@ def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
     else:
         ax = axes[0]
 
+    # select first conn type containing the src_gid
+    sel_conn = np.nonzero([src_gid in src_gids for src_gids in src_gids_valid])
+    sel_conn = sel_conn[0][0]
+    conn = net.connectivity[conn_idxs[sel_conn]]
+    nc_dict = nc_dicts[sel_conn]
     im = _update_target_plot(ax, conn, src_gid, src_type_pos,
                              target_type_pos, src_range,
                              target_range, nc_dict, colormap,
                              net._inplane_distance)
 
-    x_src = src_type_pos[:, 0]
-    y_src = src_type_pos[:, 1]
-    x_src_valid = src_pos_valid[:, 0]
-    y_src_valid = src_pos_valid[:, 1]
-    if src_type in net.cell_types:
-        if '1' in src_type:
+    # x_src_valid = src_pos_valid[:, 0]
+    # y_src_valid = src_pos_valid[:, 1]
+    for src_type in src_types:
+        x_src = np.array(net.pos_dict[src_type])[:, 0]
+        y_src = np.array(net.pos_dict[src_type])[:, 1]
+        if src_type in net.cell_types:
             color = 'tab:red'
-        else:
-            color = 'tab:blue'
-        ax_src.scatter(x_src, y_src, marker='o', color=color, s=50,
-                       alpha=0.2)
-        ax_src.scatter(x_src_valid, y_src_valid, marker='o', color=color,
-                       edgecolors='tab:orange', s=50)
+            if '_2' in src_type:
+                color = 'tab:blue'
+            ax_src.scatter(x_src, y_src, marker='o', color=color, s=50)
+            # ax_src.scatter(x_src_valid, y_src_valid, marker='o', color=color,
+            #                s=50)
 
     plt.suptitle(f"{conn['src_type']}-> {conn['target_type']}"
                  f" ({conn['loc']}, {conn['receptor']})")
@@ -1228,8 +1262,13 @@ def plot_cell_connectivity(net, conn_idx, src_gid=None, axes=None,
         src_idx = np.argmin(dist)
 
         src_gid = src_range[src_idx]
-        if src_gid not in valid_src_gids:
-            return
+        # if src_gid not in valid_src_gids:
+        #     return
+        sel_conn = np.nonzero([src_gid in src_gids for src_gids in
+                               src_gids_valid])
+        sel_conn = sel_conn[0][0]
+        conn = net.connectivity[conn_idxs[sel_conn]]
+        nc_dict = nc_dicts[sel_conn]
         _update_target_plot(ax, conn, src_gid, src_type_pos,
                             target_type_pos, src_range, target_range,
                             nc_dict, colormap, net._inplane_distance)
@@ -1393,14 +1432,20 @@ class NetworkPlotter:
             for gid in gid_range:
 
                 cell = self.net.cell_types[cell_type]
-
+                # XXX hack to set color across all cells without recording vsec
+                if '_1' in cell_type:
+                    default_vsec = 1.0
+                elif '_2' in cell_type:
+                    default_vsec = -1.0
+                else:
+                    default_vsec = 0.0
                 for sec_name in cell.sections.keys():
                     # XXX hack to get this to run without recording voltages
                     try:
                         vsec = np.array(self.net.cell_response.vsec[
                             self.trial_idx][gid][sec_name])
                     except:
-                        vsec = 0.0
+                        vsec = default_vsec
                     vsec_list.append(vsec)
 
         vsec_array = np.vstack(vsec_list)
