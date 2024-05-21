@@ -39,7 +39,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     stim_interval = 100.  # in ms; 10 Hz
     rep_duration = 100.  # 170 ms for human M/EEG
 
-    syn_depression_factor = 0.85  # synaptic depression [0, 1]
+    syn_depression = 0.1  # synaptic depression [0, 1]
 
     # see Constantinople and Bruno (2013) and de Kock et al. (2007) for
     # experimental values re: evoked response peak timing
@@ -57,9 +57,9 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # rounding to the nearest whole unit when drive cells are assigned via
     # probabilities
     grid_shape = (12, 12)
-    n_1_delta = 3  # n_cells from group 1 constituting dev drive change
-    n_2_delta = 2  # n_cells from group 1 constituting dev drive change
-    dev_delta_prob = 1 / 4
+    n_1_delta = 2  # n_cells from group 1 constituting dev drive change
+    n_2_delta = 1  # n_cells from group 1 constituting dev drive change
+    dev_delta_prob = 1 / 6
     n_agg_cells = grid_shape[0] * grid_shape[1]
     # proportion of red to blue cells targetted by drive
     prop_1_to_2 = n_1_delta / n_2_delta
@@ -90,10 +90,10 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
 
     # prox drive weights and delays
     weights_ampa_prox = {'L2/3i': 0.0018, 'L2/3e': 0.0012,
-                         'L5i': 0.0020, 'L5e': 0.0020, 'L6e': 0.0040}
+                         'L5i': 0.0018, 'L5e': 0.0015, 'L6e': 0.0025}
     synaptic_delays_prox = {'L2/3i': 0.0, 'L2/3e': 1.0,
                             'L5i': 1., 'L5e': 2., 'L6e': 0.0}
-    weights_ampa_dist = {'L2/3i': 0.0018, 'L2/3e': 0.0020, 'L5e': 0.0014}
+    weights_ampa_dist = {'L2/3i': 0.0018, 'L2/3e': 0.0018, 'L5e': 0.0014}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -127,7 +127,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
 
         # attenuate drive strength (proportion of driven post-synaptic targets)
         # as a function rep #
-        df = syn_depression_factor ** rep_idx
+        df = (1 - syn_depression) ** rep_idx
         w_ampa_prox_depressed = {key: val * df for key, val in
                                  weights_ampa_prox_group.items()}
         # drive_strength = (prob_avg + prob_delta) * depression_factor
@@ -204,8 +204,8 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     return net, drive_params
 
 
-def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
-                     tstop):
+def plot_dev_spiking_v1(net, rep_start_times, drive_times, drive_strengths,
+                        tstop):
     """Plot the network spiking response to repetitive + deviant drive."""
 
     # plt.rcParams.update({'font.size': 10})
@@ -386,9 +386,154 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
     return fig
 
 
+def plot_dev_spiking_v2(net, rep_start_times, drive_times, drive_strengths,
+                        tstop):
+    """Plot the network spiking response to repetitive + deviant drive."""
+
+    # plt.rcParams.update({'font.size': 10})
+    custom_params = {'axes.spines.right': False, 'axes.spines.top': False}
+    sns.set_theme(style='ticks', rc=custom_params)
+    gridspec = {'width_ratios': [1], 'height_ratios': [1, 2.5, 2.5]}
+    fig, axes = plt.subplots(3, 1, sharex=True, figsize=(4, 3),
+                             gridspec_kw=gridspec, constrained_layout=True)
+
+    # plot drive strength
+    arrow_height_max = 15
+    head_length = arrow_height_max / 5
+    head_width = 12.0
+    stim_interval = np.unique(np.diff(rep_start_times))
+    for rep_idx, rep_time in enumerate(rep_start_times):
+
+        drive_strength = drive_strengths[rep_idx] * 100  # convert to percent
+        # determine if this is the DEV or STD trial...
+        if rep_idx == len(rep_start_times) - 1:  # last rep
+            fc = 'k'
+        else:
+            fc = 'None'
+
+        # plot arrows for each drive
+        axes[0].arrow(drive_times[rep_idx]['prox'], 0, 0,
+                      drive_strength, fc=fc, ec='k', lw=0.5, alpha=1.,
+                      width=5, head_width=head_width,
+                      head_length=head_length, length_includes_head=True)
+        axes[0].arrow(drive_times[rep_idx]['dist'], drive_strength, 0,
+                      -drive_strength, fc=fc, ec='k', lw=0.5, alpha=1.,
+                      width=5, head_width=head_width,
+                      head_length=head_length, length_includes_head=True)
+        axes[0].hlines(y=drive_strength, xmin=rep_time,
+                       xmax=rep_time + stim_interval, colors='k',
+                       linestyle=':')
+    axes[0].set_ylim([0, arrow_height_max])
+    axes[0].set_yticks([0, arrow_height_max])
+    axes[0].set_ylabel('external drive\n(% total\ndriven units)')
+
+    # vertical lines separating reps
+    for rep_time in rep_start_times:
+        for ax in axes:
+            ax.axvline(rep_time, c='k')
+
+    spike_types_rast = [{'L2i': ['L2i_1', 'L2i_2'],
+                         'L2e_1': ['L2e_1'], 'L2e_2': ['L2e_2']},
+                        {'L6i': ['L6i_1', 'L6i_2'],
+                         'L6e_1': ['L6e_1'], 'L6e_2': ['L6e_2']}]
+    spike_type_colors_rast = [{'L2e_1': 'r', 'L2e_2': 'b', 'L2i': 'orange'},
+                              {'L6e_1': 'r', 'L6e_2': 'b', 'L6i': 'orange'}]
+
+    # cell groups are separtated in responders (R) and non-responders (NR)
+    spike_types_hist = [{'L2/3e': ['L2e_1', 'L2e_2'],
+                         'P': ['L2e_1'], 'NP': ['L2e_2']},
+                        {'L6e': ['L6e_1', 'L6e_2'],
+                         'P': ['L6e_1'], 'NP': ['L6e_2']}]
+    cell_type_colors_hist = {'L2/3e': 'm', 'P': 'r', 'NP': 'b',
+                             'L6e': 'm'}
+    for layer_idx, layer_spike_types in enumerate(spike_types_hist):
+
+        # first plot spike raster in background
+        ax_2 = axes[layer_idx + 1].twinx()
+        axes[layer_idx + 1].set_zorder(ax_2.get_zorder() + 1)
+        axes[layer_idx + 1].patch.set_alpha(0.5)
+        net.cell_response.plot_spikes_raster(
+            ax=ax_2,
+            cell_types=spike_types_rast[layer_idx],
+            color=spike_type_colors_rast[layer_idx],
+            show=False
+        )
+        ax_2.get_legend().remove()
+
+        for spike_type, spike_type_groups in layer_spike_types.items():
+            if 'L4e' in spike_type:
+                # this is spiking activity of the proximal drives
+                # count artifical drive cells from only one rep
+                # (note that each drive has it's own set of artificial cell
+                # gids, so the total artifical cell count is inflated compared
+                # to the number of L4 stellate cells they represent)
+                n_cells_of_type = \
+                    net.external_drives['evprox_rep0']['n_drive_cells']
+            else:
+                n_cells_of_type = 0
+                for spike_type_group in spike_type_groups:
+                    n_cells_of_type += len(net.gid_ranges[spike_type_group])
+            rate_factor = 1 / n_cells_of_type
+
+            # compute and plot histogram
+            # modified to return spike rates as well as create plot
+            _, spike_rates = net.cell_response.plot_spikes_hist(
+                ax=axes[layer_idx + 1],
+                bin_width=10,
+                spike_types={spike_type: spike_type_groups},
+                color=cell_type_colors_hist[spike_type],
+                rate=rate_factor, sliding_bin=True,
+                show=False
+            )
+
+            # finally, plot a horizontal line at the peak agg. spike rate/rep
+            if 'P' not in spike_type:
+                sr_times = np.array(spike_rates['times'])
+                sr = np.array(spike_rates[spike_type])
+                for rep_time in rep_start_times:
+                    rep_time_stop = rep_time + stim_interval
+                    rep_mask = np.logical_and(sr_times >= rep_time,
+                                              sr_times < rep_time_stop)
+                    peak = sr[rep_mask].max()
+                    axes[layer_idx + 1].hlines(
+                        y=peak,
+                        xmin=rep_time,
+                        xmax=rep_time_stop,
+                        colors=cell_type_colors_hist[spike_type],
+                        linestyle=':'
+                    )
+
+    axes[1].set_ylabel('L2/3\nspikes/s')
+    handles, _ = axes[1].get_legend_handles_labels()
+    axes[1].legend(handles, ['agg. (eP+eNP)', 'eP', 'eNP'], ncol=3,
+                   loc='lower center', bbox_to_anchor=(0.5, 1.0),
+                   frameon=False, columnspacing=1,
+                   handlelength=0.75, borderaxespad=0.0)
+    axes[2].set_ylabel('L6\nspikes/s')
+    axes[2].get_legend().remove()
+    # fig.supylabel('mean single-unit spikes/s')
+
+    # make ylim consistent
+    ylim_max = max([axes[1].get_ylim()[1], axes[2].get_ylim()[1]])
+    # round up to the nearest multiple of 5 for aesthetics
+    ylim_max = (ylim_max // 5 + 1) * 5
+    axes[1].set_ylim([0, ylim_max])
+    axes[1].set_yticks([0, ylim_max])
+    axes[2].set_ylim([0, ylim_max])
+    axes[2].set_yticks([0, ylim_max])
+    axes[-1].set_xlim([burn_in_time - 100, tstop])
+    xticks = np.arange(burn_in_time - 100, tstop + 1, 100)
+    xticks_labels = (xticks - rep_start_times[0]).astype(int).astype(str)
+    axes[-1].set_xticks(xticks)
+    axes[-1].set_xticklabels(xticks_labels)
+    axes[-1].set_xlabel('time (ms)')
+
+    return fig
+
+
 if __name__ == "__main__":
 
-    n_trials = 1
+    n_trials = 5
     rng = np.random.default_rng(9554)
     burn_in_time = 300.0
     n_procs = 10
@@ -405,8 +550,11 @@ if __name__ == "__main__":
     drive_strengths = drive_params['drive_strengths']
     tstop = drive_params['tstop']
 
-    fig_dev_spiking = plot_dev_spiking(net, rep_start_times, drive_times,
-                                       drive_strengths, tstop)
+    fig_dev_spiking_v1 = plot_dev_spiking_v1(net, rep_start_times, drive_times,
+                                             drive_strengths, tstop)
+
+    fig_dev_spiking_v2 = plot_dev_spiking_v2(net, rep_start_times, drive_times,
+                                             drive_strengths, tstop)
 
     ###########################################################################
     # Plot 3D Network
