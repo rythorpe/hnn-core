@@ -204,8 +204,8 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     return net, drive_params
 
 
-def plot_dev_spiking_v1(net, rep_start_times, drive_times, drive_strengths,
-                        tstop):
+def plot_dev_spiking_v1(net, burn_in_time, rep_start_times, drive_times,
+                        drive_strengths, tstop):
     """Plot the network spiking response to repetitive + deviant drive."""
 
     # plt.rcParams.update({'font.size': 10})
@@ -386,8 +386,8 @@ def plot_dev_spiking_v1(net, rep_start_times, drive_times, drive_strengths,
     return fig
 
 
-def plot_dev_spiking_v2(net, rep_start_times, drive_times, drive_strengths,
-                        tstop):
+def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
+                        drive_strengths, tstop):
     """Plot the network spiking response to repetitive + deviant drive."""
 
     # plt.rcParams.update({'font.size': 10})
@@ -550,11 +550,19 @@ if __name__ == "__main__":
     drive_strengths = drive_params['drive_strengths']
     tstop = drive_params['tstop']
 
-    fig_dev_spiking_v1 = plot_dev_spiking_v1(net, rep_start_times, drive_times,
-                                             drive_strengths, tstop)
+    fig_dev_spiking_v1 = plot_dev_spiking_v1(net,
+                                             burn_in_time,
+                                             rep_start_times,
+                                             drive_times,
+                                             drive_strengths,
+                                             tstop)
 
-    fig_dev_spiking_v2 = plot_dev_spiking_v2(net, rep_start_times, drive_times,
-                                             drive_strengths, tstop)
+    fig_dev_spiking_v2 = plot_dev_spiking_v2(net,
+                                             burn_in_time,
+                                             rep_start_times,
+                                             drive_times,
+                                             drive_strengths,
+                                             tstop)
 
     ###########################################################################
     # Plot 3D Network
