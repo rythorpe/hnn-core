@@ -39,7 +39,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     stim_interval = 100.  # in ms; 10 Hz
     rep_duration = 100.  # 170 ms for human M/EEG
 
-    syn_depression_factor = 1.0  # synaptic depression [0, 1]
+    syn_depression_factor = 0.85  # synaptic depression [0, 1]
 
     # see Constantinople and Bruno (2013) and de Kock et al. (2007) for
     # experimental values re: evoked response peak timing
@@ -51,9 +51,25 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # proportion of the total network that gets directly activated through
     # afferent drive (an increase or decrease of this value drives deviance
     # detection)
-    prob_avg = 0.125  # maybe try 0.15 based on Sachidhanandam (2013)?
-    dev_delta = -(1 / 6) * prob_avg  # -16.667% (2, 1 neurons) change
-    prop_1_to_2 = 2  # proportion of red to blue cells targetted by drive
+    # by setting number of targetted units that comprise a deviant and then
+    # calculating the proportion of Group 1 to Group 2, we ensure this ratio
+    # is maintained across standard (std) and deviant (dev) trials despite
+    # rounding to the nearest whole unit when drive cells are assigned via
+    # probabilities
+    grid_shape = (12, 12)
+    n_1_delta = 3  # n_cells from group 1 constituting dev drive change
+    n_2_delta = 2  # n_cells from group 1 constituting dev drive change
+    dev_delta_prob = 1 / 4
+    n_agg_cells = grid_shape[0] * grid_shape[1]
+    # proportion of red to blue cells targetted by drive
+    prop_1_to_2 = n_1_delta / n_2_delta
+    # maybe try 0.15 based on Sachidhanandam (2013)?
+    prob_avg = (n_1_delta + n_2_delta) / dev_delta_prob / n_agg_cells
+    dev_delta = -dev_delta_prob
+
+    print(f'Proportion of network driven on std: {prob_avg}')
+    print(f'# driven units (Group 1) on std: {n_1_delta / dev_delta_prob}')
+    print(f'# driven units (Group 2) on std: {n_2_delta / dev_delta_prob}')
 
     if rng is None:
         rng = np.random.default_rng()
@@ -64,7 +80,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
 
     ###########################################################################
     # Let us first create our network
-    net = L6_model(layer_6_fb=True, rng=rng)
+    net = L6_model(layer_6_fb=False, rng=rng, grid_shape=grid_shape)
     net.set_cell_positions(inplane_distance=300.0)
 
     ###########################################################################
@@ -73,11 +89,11 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.003, 'L2/3e': 0.004,
-                         'L5i': 0.002, 'L5e': 0.002, 'L6e': 0.006}
-    synaptic_delays_prox = {'L2/3i': 1.0, 'L2/3e': 1.0,
-                            'L5i': 2., 'L5e': 2., 'L6e': 0.0}
-    weights_ampa_dist = {'L2/3i': 0.003, 'L2/3e': 0.0015, 'L5e': 0.0014}
+    weights_ampa_prox = {'L2/3i': 0.0018, 'L2/3e': 0.0012,
+                         'L5i': 0.0020, 'L5e': 0.0020, 'L6e': 0.0040}
+    synaptic_delays_prox = {'L2/3i': 0.0, 'L2/3e': 1.0,
+                            'L5i': 1., 'L5e': 2., 'L6e': 0.0}
+    weights_ampa_dist = {'L2/3i': 0.0018, 'L2/3e': 0.0020, 'L5e': 0.0014}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -111,8 +127,11 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
 
         # attenuate drive strength (proportion of driven post-synaptic targets)
         # as a function rep #
-        depression_factor = syn_depression_factor ** rep_idx
-        drive_strength = (prob_avg + prob_delta) * depression_factor
+        df = syn_depression_factor ** rep_idx
+        w_ampa_prox_depressed = {key: val * df for key, val in
+                                 weights_ampa_prox_group.items()}
+        # drive_strength = (prob_avg + prob_delta) * depression_factor
+        drive_strength = prob_avg * (1 + prob_delta)
         drive_strengths.append(drive_strength)
 
         prob_prox = dict()
@@ -152,7 +171,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
         # note that all NMDA weights are zero
         net.add_evoked_drive(
             f'evprox_rep{rep_idx}', mu=drive_times[rep_idx]['prox'],
-            sigma=3.0, numspikes=1, weights_ampa=weights_ampa_prox_group,
+            sigma=3.0, numspikes=1, weights_ampa=w_ampa_prox_depressed,
             weights_nmda=None,
             location='proximal', synaptic_delays=synaptic_delays_prox_group,
             space_constant=1e50, probability=prob_prox,
@@ -370,7 +389,7 @@ def plot_dev_spiking(net, rep_start_times, drive_times, drive_strengths,
 if __name__ == "__main__":
 
     n_trials = 1
-    rng = np.random.default_rng(731)
+    rng = np.random.default_rng(9554)
     burn_in_time = 300.0
     n_procs = 10
     record_vsec = False

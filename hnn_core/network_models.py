@@ -357,12 +357,12 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
     conn_weights = {"L2e_L2e_ampa": 0.00052,  # 0.00070
-                    "L2e_L2e_nmda": 0.00025,
+                    "L2e_L2e_nmda": 0.00020,
                     "L2i_L2e_gabaa": 0.010,
                     "L2i_L2e_gabab": 0.0010,
-                    "L2e_L2i_ampa": 0.0065,  # 0.00090
+                    "L2e_L2i_ampa": 0.0060,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.025,
+                    "L6i_cross_L2e_gabaa": 0.020,
                     "L2e_L5e_ampa": 0.00010,
                     "L2i_L5e_gabaa": 0.00002,
                     "L5e_L5e_ampa": 0.00200,  # 0.00077
@@ -542,10 +542,10 @@ def L6_model(params=None, add_drives_from_params=False,
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
-                prob_i_e = 0.33
-                prob_i_i = 0.33
+                prob_i_e = 0.75
+                prob_i_i = 0.25
                 prob_e_i = 0.00
-                lamtha_subpop = lamtha * 3
+                lamtha_subpop = lamtha * 10
 
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e + prob_offset_L6
