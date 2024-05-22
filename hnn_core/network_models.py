@@ -362,7 +362,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L2i_L2e_gabab": 0.0010,
                     "L2e_L2i_ampa": 0.0060,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.020,
+                    "L6i_cross_L2e_gabaa": 0.010,
                     "L2e_L5e_ampa": 0.00010,
                     "L2i_L5e_gabaa": 0.00002,
                     "L5e_L5e_ampa": 0.00205,  # 0.00077

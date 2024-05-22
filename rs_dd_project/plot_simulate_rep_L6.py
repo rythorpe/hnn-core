@@ -31,7 +31,7 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # emp_dpl = read_dipole('S1_SupraT.txt')
 
 
-def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
+def sim_dev_spiking(with_devn_trials=1, burn_in_time=300.0, n_procs=10,
                     record_vsec=False, rng=None):
 
     # Hyperparameters of repetitive drive sequence
@@ -39,7 +39,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     stim_interval = 100.  # in ms; 10 Hz
     rep_duration = 100.  # 170 ms for human M/EEG
 
-    syn_depression = 0.1  # synaptic depression [0, 1]
+    syn_depression = 0.05  # synaptic depression [0, 1]
 
     # see Constantinople and Bruno (2013) and de Kock et al. (2007) for
     # experimental values re: evoked response peak timing
@@ -57,9 +57,9 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
     # rounding to the nearest whole unit when drive cells are assigned via
     # probabilities
     grid_shape = (12, 12)
-    n_1_delta = 2  # n_cells from group 1 constituting dev drive change
-    n_2_delta = 1  # n_cells from group 1 constituting dev drive change
-    dev_delta_prob = 1 / 6
+    n_1_delta = 3  # n_cells from group 1 constituting dev drive change
+    n_2_delta = 2  # n_cells from group 1 constituting dev drive change
+    dev_delta_prob = 1 / 4
     n_agg_cells = grid_shape[0] * grid_shape[1]
     # proportion of red to blue cells targetted by drive
     prop_1_to_2 = n_1_delta / n_2_delta
@@ -80,7 +80,7 @@ def sim_dev_spiking(n_trials=1, burn_in_time=300.0, n_procs=10,
 
     ###########################################################################
     # Let us first create our network
-    net = L6_model(layer_6_fb=False, rng=rng, grid_shape=grid_shape)
+    net = L6_model(layer_6_fb=True, rng=rng, grid_shape=grid_shape)
     net.set_cell_positions(inplane_distance=300.0)
 
     ###########################################################################
