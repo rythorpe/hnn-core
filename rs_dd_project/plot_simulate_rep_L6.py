@@ -31,8 +31,8 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # emp_dpl = read_dipole('S1_SupraT.txt')
 
 
-def sim_dev_spiking(with_devn_trials=1, burn_in_time=300.0, n_procs=10,
-                    record_vsec=False, rng=None):
+def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
+                    n_procs=10, record_vsec=False, rng=None):
 
     # Hyperparameters of repetitive drive sequence
     reps = 4
@@ -65,7 +65,7 @@ def sim_dev_spiking(with_devn_trials=1, burn_in_time=300.0, n_procs=10,
     prop_1_to_2 = n_1_delta / n_2_delta
     # maybe try 0.15 based on Sachidhanandam (2013)?
     prob_avg = (n_1_delta + n_2_delta) / dev_delta_prob / n_agg_cells
-    dev_delta = -dev_delta_prob
+    dev_delta = dev_magnitude * dev_delta_prob
 
     print(f'Proportion of network driven on std: {prob_avg}')
     print(f'# driven units (Group 1) on std: {n_1_delta / dev_delta_prob}')
@@ -533,13 +533,15 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
 
 if __name__ == "__main__":
 
+    dev_magnitude = -1
     n_trials = 5
-    rng = np.random.default_rng(9554)
+    rng = np.random.default_rng(1234)
     burn_in_time = 300.0
     n_procs = 10
     record_vsec = False
 
-    net, drive_params = sim_dev_spiking(n_trials,
+    net, drive_params = sim_dev_spiking(dev_magnitude=dev_magnitude,
+                                        n_trials=n_trials,
                                         burn_in_time=burn_in_time,
                                         n_procs=n_procs,
                                         record_vsec=record_vsec,
