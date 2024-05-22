@@ -56,7 +56,7 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
     # is maintained across standard (std) and deviant (dev) trials despite
     # rounding to the nearest whole unit when drive cells are assigned via
     # probabilities
-    grid_shape = (12, 12)
+    grid_shape = (16, 12)
     n_1_delta = 3  # n_cells from group 1 constituting dev drive change
     n_2_delta = 2  # n_cells from group 1 constituting dev drive change
     dev_delta_prob = 1 / 4
@@ -90,7 +90,7 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
 
     # prox drive weights and delays
     weights_ampa_prox = {'L2/3i': 0.0018, 'L2/3e': 0.0012,
-                         'L5i': 0.0018, 'L5e': 0.0015, 'L6e': 0.0025}
+                         'L5i': 0.0018, 'L5e': 0.0015, 'L6e': 0.0030}
     synaptic_delays_prox = {'L2/3i': 0.0, 'L2/3e': 1.0,
                             'L5i': 1., 'L5e': 2., 'L6e': 0.0}
     weights_ampa_dist = {'L2/3i': 0.0018, 'L2/3e': 0.0018, 'L5e': 0.0014}
