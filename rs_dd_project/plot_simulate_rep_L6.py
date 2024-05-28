@@ -57,9 +57,9 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
     # rounding to the nearest whole unit when drive cells are assigned via
     # probabilities
     grid_shape = (16, 12)
-    n_1_delta = 3  # n_cells from group 1 constituting dev drive change
-    n_2_delta = 2  # n_cells from group 1 constituting dev drive change
-    dev_delta_prob = 1 / 4
+    n_1_delta = 6  # n_cells from group 1 constituting dev drive change
+    n_2_delta = 3  # n_cells from group 1 constituting dev drive change
+    dev_delta_prob = 1 / 3
     n_agg_cells = grid_shape[0] * grid_shape[1]
     # proportion of red to blue cells targetted by drive
     prop_1_to_2 = n_1_delta / n_2_delta
@@ -89,11 +89,11 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.0018, 'L2/3e': 0.0012,
+    weights_ampa_prox = {'L2/3i': 0.0010, 'L2/3e': 0.0020,
                          'L5i': 0.0018, 'L5e': 0.0015, 'L6e': 0.0030}
     synaptic_delays_prox = {'L2/3i': 0.0, 'L2/3e': 1.0,
                             'L5i': 1., 'L5e': 2., 'L6e': 0.0}
-    weights_ampa_dist = {'L2/3i': 0.0018, 'L2/3e': 0.0018, 'L5e': 0.0014}
+    weights_ampa_dist = {'L2/3i': 0.0000, 'L2/3e': 0.0021, 'L5e': 0.0014}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -181,7 +181,7 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
         # dist drive
         net.add_evoked_drive(
             f'evdist_rep{rep_idx}', mu=drive_times[rep_idx]['dist'],
-            sigma=5.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
+            sigma=8.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
             weights_nmda=weights_nmda_dist_group,
             location='distal', synaptic_delays=synaptic_delays_dist_group,
             space_constant=1e50, probability=prob_dist,
@@ -205,7 +205,7 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
 
 
 def plot_dev_spiking_v1(net, burn_in_time, rep_start_times, drive_times,
-                        drive_strengths, tstop):
+                        drive_strengths, tstop, trial_idx=None):
     """Plot the network spiking response to repetitive + deviant drive."""
 
     # plt.rcParams.update({'font.size': 10})
@@ -303,7 +303,7 @@ def plot_dev_spiking_v1(net, burn_in_time, rep_start_times, drive_times,
                 spike_types={spike_type: spike_type_groups},
                 color=cell_type_colors[spike_type],
                 rate=rate_factor, sliding_bin=True, fill_between=fill_between,
-                show=False)
+                trial_idx=trial_idx, show=False)
 
             # finally, plot a horizontal line at the peak agg. spike rate/rep
             if 'P' not in spike_type:
@@ -367,7 +367,7 @@ def plot_dev_spiking_v1(net, burn_in_time, rep_start_times, drive_times,
                          'L5e': 'gray', 'L5i': 'orange',
                          'L6e_1': 'r', 'L6e_2': 'b', 'L6i': 'orange'}
     net.cell_response.plot_spikes_raster(ax=axes[3], cell_types=spike_types,
-                                         color=spike_type_colors, show=False)
+                                         color=spike_type_colors, trial_idx=trial_idx, show=False)
     axes[3].set_facecolor('None')
     axes[3].get_yaxis().set_visible(True)
     axes[3].get_legend().remove()
@@ -387,7 +387,7 @@ def plot_dev_spiking_v1(net, burn_in_time, rep_start_times, drive_times,
 
 
 def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
-                        drive_strengths, tstop):
+                        drive_strengths, tstop, trial_idx=None):
     """Plot the network spiking response to repetitive + deviant drive."""
 
     # plt.rcParams.update({'font.size': 10})
@@ -456,7 +456,7 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
             ax=ax_2,
             cell_types=spike_types_rast[layer_idx],
             color=spike_type_colors_rast[layer_idx],
-            show=False
+            trial_idx=trial_idx, show=False
         )
         ax_2.get_legend().remove()
 
@@ -483,7 +483,7 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
                 spike_types={spike_type: spike_type_groups},
                 color=cell_type_colors_hist[spike_type],
                 rate=rate_factor, sliding_bin=True,
-                show=False
+                trial_idx=trial_idx, show=False
             )
 
             # finally, plot a horizontal line at the peak agg. spike rate/rep
