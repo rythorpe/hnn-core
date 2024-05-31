@@ -387,7 +387,8 @@ def plot_dev_spiking_v1(net, burn_in_time, rep_start_times, drive_times,
 
 
 def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
-                        drive_strengths, tstop, trial_idx=None):
+                        drive_strengths, tstop, trial_idx=None,
+                        return_spike_rates=False):
     """Plot the network spiking response to repetitive + deviant drive."""
 
     # plt.rcParams.update({'font.size': 10})
@@ -446,6 +447,7 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
                          'P': ['L6e_1'], 'NP': ['L6e_2']}]
     cell_type_colors_hist = {'L2/3e': 'm', 'P': 'r', 'NP': 'b',
                              'L6e': 'm'}
+    spike_rates_all = dict()
     for layer_idx, layer_spike_types in enumerate(spike_types_hist):
 
         # first plot spike raster in background
@@ -502,6 +504,9 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
                         colors=cell_type_colors_hist[spike_type],
                         linestyle=':'
                     )
+            if spike_type != 'L2/3e' and spike_type != 'L6e':
+                spike_rates_all[spike_type_groups[0]] = spike_rates[spike_type]
+                spike_rates_all['times'] = spike_rates['times']
 
     axes[1].set_ylabel('L2/3\nspikes/s')
     handles, _ = axes[1].get_legend_handles_labels()
@@ -528,7 +533,10 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
     axes[-1].set_xticklabels(xticks_labels)
     axes[-1].set_xlabel('time (ms)')
 
-    return fig
+    if return_spike_rates is True:
+        return fig, spike_rates_all
+    else:
+        return fig
 
 
 if __name__ == "__main__":
