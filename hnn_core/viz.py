@@ -495,8 +495,8 @@ def plot_spikes_hist(cell_response, trial_idx=None, ax=None, spike_types=None,
                                                  bin_width / 2])
                 spikes_in_win = np.logical_and(plot_data > t_win[0],
                                                plot_data <= t_win[1])
-                spike_rate[t_idx] = (np.sum(spikes_in_win) *
-                                     rate / (bin_width * 1e-3) / len(trial_idx))
+                spike_rate[t_idx] = (np.sum(spikes_in_win) * rate /
+                                     (1e-3 * bin_width * len(trial_idx)))
             spike_rates[spike_label] = spike_rate
             if not fill_between:
                 ax.plot(times, spike_rate, label=spike_label,
