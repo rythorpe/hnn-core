@@ -83,6 +83,12 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
     net = L6_model(layer_6_fb=True, rng=rng, grid_shape=grid_shape)
     net.set_cell_positions(inplane_distance=300.0)
 
+    # before we continue, sample a random integer to serve as seed for the
+    # baseline (poisson) drive - this will keep baseline drive constant
+    # despite differences between the evoked drive event sampling on dev vs.
+    # non-dev sims
+    poisson_seed = int(rng.integers(0, np.iinfo(np.int32).max))
+
     ###########################################################################
     # Add drives
     # note: first define syn weights associated with proximal drive that will
@@ -194,7 +200,7 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
                                  burn_in_time=burn_in_time,
                                  n_trials=n_trials, n_procs=n_procs,
                                  poiss_params=poiss_drive_params,
-                                 record_vsec=record_vsec, rng=rng)
+                                 record_vsec=record_vsec, rng=poisson_seed)
 
     # window_len, scaling_factor = 30, 2000
     # for dpl in dpls:
