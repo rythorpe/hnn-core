@@ -46,7 +46,7 @@ target_sr = {'L2/3i': 0.8,
 target_sr_unconn = {cell: rate * 0.4 for cell, rate in
                     target_sr.items()}
 
-net = L6_model(grid_shape=(12, 12), layer_6_fb=layer_6_fb, rng=rng)
+net = L6_model(grid_shape=(16, 12), layer_6_fb=layer_6_fb, rng=rng)
 net, dpls = sim_net_baseline(net.copy(), sim_time, burn_in_time,
                              poiss_params=poiss_params, clear_conn=clear_conn,
                              n_trials=n_trials, n_procs=n_procs, rng=rng,
