@@ -157,20 +157,20 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates_1,
 
     ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
                      hue='cell type', estimator='mean', palette='Greys',
-                     errorbar='se', capsize=0.1, errcolor='k', ax=ax)
+                     errorbar='se', ax=ax)
     # note: eyeball dodge value to match barplot
     # also, setting legend='_nolegend_' doesn't work when hue is set
     ax = sns.pointplot(data=spiking_df, x='target rate 1', y='layer',
-                       hue='cell type', join=False, dodge=0.4,
+                       hue='cell type', linestyle='none', dodge=0.4,
                        palette=['darkred'], markers='|', ax=ax)
     ax = sns.pointplot(data=spiking_df, x='target rate 2', y='layer',
-                       hue='cell type', join=False, dodge=0.4,
+                       hue='cell type', linestyle='none', dodge=0.4,
                        palette=['k'], markers='D', ax=ax)
 
     ax.set_ylabel('layer')
     ax.set_xlabel('mean single-unit spikes/s')
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles=handles[4:], labels=labels[4:])
+    ax.legend(handles=handles[:2], labels=labels[:2])
 
     # make sure calcuation above is consistent with mean_rates method
     # avg_spike_rates = net.cell_response.mean_rates(tstart=burn_in_time,
