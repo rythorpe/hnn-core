@@ -31,15 +31,15 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # emp_dpl = read_dipole('S1_SupraT.txt')
 
 
-def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
+def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
                     n_procs=10, record_vsec=False, rng=None):
 
     # Hyperparameters of repetitive drive sequence
-    reps = 4
     stim_interval = 100.  # in ms; 10 Hz
     rep_duration = 100.  # 170 ms for human M/EEG
 
-    syn_depression = 0.05  # synaptic depression [0, 1]
+    # synaptic depression (fractional decrease between [0, 1])
+    syn_depression = 0.05
 
     # see Constantinople and Bruno (2013) and de Kock et al. (2007) for
     # experimental values re: evoked response peak timing
@@ -56,10 +56,10 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
     # is maintained across standard (std) and deviant (dev) trials despite
     # rounding to the nearest whole unit when drive cells are assigned via
     # probabilities
-    grid_shape = (16, 12)
+    grid_shape = (12, 12)
     n_1_delta = 6  # n_cells from group 1 constituting dev drive change
     n_2_delta = 3  # n_cells from group 1 constituting dev drive change
-    dev_delta_prob = 1 / 3
+    dev_delta_prob = 1 / 4
     n_agg_cells = grid_shape[0] * grid_shape[1]
     # proportion of red to blue cells targetted by drive
     prop_1_to_2 = n_1_delta / n_2_delta
@@ -95,12 +95,12 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.0010, 'L2/3e': 0.0020,
-                         'L5i': 0.0018, 'L5e': 0.0015, 'L6e': 0.0030}
-    synaptic_delays_prox = {'L2/3i': 0.0, 'L2/3e': 1.0,
-                            'L5i': 1., 'L5e': 2., 'L6e': 0.0}
-    weights_ampa_dist = {'L2/3i': 0.0000, 'L2/3e': 0.0021, 'L5e': 0.0014}
-    weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0, 'L5e': 0.0}
+    weights_ampa_prox = {'L2/3i': 0.0008, 'L2/3e': 0.0018,
+                         'L5i': 0.0018, 'L5e': 0.0015, 'L6e': 0.0031}
+    synaptic_delays_prox = {'L2/3i': 2.0, 'L2/3e': 3.0,
+                            'L5i': 3.0, 'L5e': 4.0, 'L6e': 0.0}
+    weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.0007, 'L5e': 0.0007}
+    weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0001, 'L5e': 0.00005}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
     # convert each dictionary to a more granular version with specific cell
@@ -137,11 +137,18 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
         w_ampa_prox_depressed = {key: val * df for key, val in
                                  weights_ampa_prox_group.items()}
         # drive_strength = (prob_avg + prob_delta) * depression_factor
-        drive_strength = prob_avg * (1 + prob_delta)
-        drive_strengths.append(drive_strength)
+        drive_strength_default = prob_avg * (1 + prob_delta)
+        drive_strengths.append(drive_strength_default)
 
         prob_prox = dict()
         for layer_type in synaptic_delays_prox.keys():
+            # scale L6 delta to make it more extreme
+            # must by an integer number to allow a whole number change in
+            # the number of driven cells
+            drive_strength = drive_strength_default
+            if 'L6' in layer_type:
+                drive_strength = prob_avg * (1 + (2 * prob_delta))
+                print(f'increasing L6 delta to {2 * prob_delta} on rep {rep_idx}')
             # group-type 1 (red) will be preferentially targetted
             for group_type in cell_groups[layer_type]:
                 if '1' in group_type:
@@ -160,6 +167,7 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
         # repetition
         prob_dist = dict()
         for layer_type in synaptic_delays_dist.keys():
+            drive_strength = drive_strength_default
             for group_type in cell_groups[layer_type]:
                 if '1' in group_type:
                     prop = prop_1_to_2 * 2 / (prop_1_to_2 + 1)
@@ -187,7 +195,7 @@ def sim_dev_spiking(dev_magnitude=-1, n_trials=1, burn_in_time=300.0,
         # dist drive
         net.add_evoked_drive(
             f'evdist_rep{rep_idx}', mu=drive_times[rep_idx]['dist'],
-            sigma=8.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
+            sigma=5.0, numspikes=1, weights_ampa=weights_ampa_dist_group,
             weights_nmda=weights_nmda_dist_group,
             location='distal', synaptic_delays=synaptic_delays_dist_group,
             space_constant=1e50, probability=prob_dist,
@@ -222,7 +230,7 @@ def plot_dev_spiking_v1(net, burn_in_time, rep_start_times, drive_times,
                              gridspec_kw=gridspec, constrained_layout=True)
 
     # plot drive strength
-    arrow_height_max = 15
+    arrow_height_max = 33
     head_length = arrow_height_max / 5
     head_width = 12.0
     stim_interval = np.unique(np.diff(rep_start_times))
@@ -405,7 +413,7 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
                              gridspec_kw=gridspec, constrained_layout=True)
 
     # plot drive strength
-    arrow_height_max = 15
+    arrow_height_max = 33
     head_length = arrow_height_max / 5
     head_width = 12.0
     stim_interval = np.unique(np.diff(rep_start_times))
@@ -431,7 +439,7 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
                        xmax=rep_time + stim_interval, colors='k',
                        linestyle=':')
     axes[0].set_ylim([0, arrow_height_max])
-    axes[0].set_yticks([0, arrow_height_max])
+    axes[0].set_yticks([0, int(drive_strengths[0] * 100)])
     axes[0].set_ylabel('external drive\n(% total\ndriven units)')
 
     # vertical lines separating reps
@@ -454,6 +462,7 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
     cell_type_colors_hist = {'L2/3e': 'm', 'P': 'r', 'NP': 'b',
                              'L6e': 'm'}
     spike_rates_all = dict()
+    mean_dev_peak_rates = dict()
     for layer_idx, layer_spike_types in enumerate(spike_types_hist):
 
         # first plot spike raster in background
@@ -494,15 +503,16 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
                 trial_idx=trial_idx, show=False
             )
 
-            # finally, plot a horizontal line at the peak agg. spike rate/rep
-            if 'P' not in spike_type:
-                sr_times = np.array(spike_rates['times'])
-                sr = np.array(spike_rates[spike_type])
-                for rep_time in rep_start_times:
-                    rep_time_stop = rep_time + stim_interval
-                    rep_mask = np.logical_and(sr_times >= rep_time,
-                                              sr_times < rep_time_stop)
-                    peak = sr[rep_mask].max()
+            # finally, calculate peak spike rates and
+            # plot a horizontal line at the peak agg. spike rate/rep
+            sr_times = np.array(spike_rates['times'])
+            sr = np.array(spike_rates[spike_type])
+            for rep_time in rep_start_times:
+                rep_time_stop = rep_time + stim_interval
+                rep_mask = np.logical_and(sr_times >= rep_time,
+                                          sr_times < rep_time_stop)
+                peak = sr[rep_mask].max()
+                if 'P' not in spike_type:
                     axes[layer_idx + 1].hlines(
                         y=peak,
                         xmin=rep_time,
@@ -510,9 +520,28 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
                         colors=cell_type_colors_hist[spike_type],
                         linestyle=':'
                     )
+                # store peak spike rates on dev
+                if rep_time == rep_start_times[-1]:
+                    if 'P' not in spike_type:
+                        spike_type_name = spike_type
+                    else:
+                        spike_type_name = spike_type_groups[0]
+                    mean_dev_peak_rates[spike_type_name] = peak
+                        
             if spike_type != 'L2/3e' and spike_type != 'L6e':
                 spike_rates_all[spike_type_groups[0]] = spike_rates[spike_type]
                 spike_rates_all['times'] = spike_rates['times']
+
+        # round up upper y-axis tick to the nearest multiple of 5 for
+        # aesthetics
+        ylim_max = axes[layer_idx + 1].get_ylim()[1]
+        if layer_spike_types == 'L2/3e':
+            round_tick_to = 1  # try 5 if peaks are bigger
+        else:
+            round_tick_to = 5
+        ylim_max = (ylim_max // round_tick_to + 1) * round_tick_to
+        axes[layer_idx + 1].set_ylim([0, ylim_max])
+        axes[layer_idx + 1].set_yticks([0, ylim_max])
 
     axes[1].set_ylabel('L2/3\nspikes/s')
     handles, _ = axes[1].get_legend_handles_labels()
@@ -524,14 +553,6 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
     axes[2].get_legend().remove()
     # fig.supylabel('mean single-unit spikes/s')
 
-    # make ylim consistent
-    ylim_max = max([axes[1].get_ylim()[1], axes[2].get_ylim()[1]])
-    # round up to the nearest multiple of 5 for aesthetics
-    ylim_max = (ylim_max // 5 + 1) * 5
-    axes[1].set_ylim([0, ylim_max])
-    axes[1].set_yticks([0, ylim_max])
-    axes[2].set_ylim([0, ylim_max])
-    axes[2].set_yticks([0, ylim_max])
     axes[-1].set_xlim([burn_in_time - 100, tstop])
     xticks = np.arange(burn_in_time - 100, tstop + 1, 100)
     xticks_labels = (xticks - rep_start_times[0]).astype(int).astype(str)
@@ -540,7 +561,7 @@ def plot_dev_spiking_v2(net, burn_in_time, rep_start_times, drive_times,
     axes[-1].set_xlabel('time (ms)')
 
     if return_spike_rates is True:
-        return fig, spike_rates_all
+        return fig, spike_rates_all, mean_dev_peak_rates
     else:
         return fig
 

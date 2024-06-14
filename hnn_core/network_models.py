@@ -356,21 +356,21 @@ def L6_model(params=None, add_drives_from_params=False,
     #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
     #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00080,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00055,  # 0.00070
                     "L2e_L2e_nmda": 0.00020,
                     "L2i_L2e_gabaa": 0.010,
-                    "L2i_L2e_gabab": 0.0010,
+                    "L2i_L2e_gabab": 0.0001,
                     "L2e_L2i_ampa": 0.0060,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.015,
+                    "L6i_cross_L2e_gabaa": 0.020,
                     "L2e_L5e_ampa": 0.00010,
                     "L2i_L5e_gabaa": 0.00002,
-                    "L5e_L5e_ampa": 0.00205,  # 0.00077
+                    "L5e_L5e_ampa": 0.00220,  # 0.00077
                     "L5e_L5e_nmda": 0.00005,
-                    "L5i_L5e_gabaa": 0.0025,  # 0.018
+                    "L5i_L5e_gabaa": 0.0035,  # 0.018
                     "L5i_L5e_gabab": 0.0001,  # changed from jones09
                     "L6i_cross_L5e_gabaa": 0.0030,
-                    "L2e_L5i_ampa": 0.0005,  # 0.00084
+                    "L2e_L5i_ampa": 0.0010,  # 0.00084
                     "L5e_L5i_ampa": 0.0040,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.0001,
@@ -381,7 +381,7 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L6e_L6i_ampa": 0.0060,
                     "L6i_L6i_gabaa": 0.005}
     lamtha = 2.0
-    lamtha_L6_cross = 12.0
+    lamtha_L6_cross = 16.0
     delay = 1.0
     if rng is None:
         rng = np.random.default_rng()
@@ -451,7 +451,7 @@ def L6_model(params=None, add_drives_from_params=False,
     # loop over cell type connections that have more than one source group
     ######################################################################
     for src_group in [1, 2]:
-        targ_group = src_group
+        # for now, target group and source group are the same!!!
 
         # general connection probabilities
         prob_e_e = 0.33
@@ -496,7 +496,7 @@ def L6_model(params=None, add_drives_from_params=False,
         # layer5 Pyr -> layer6 Pyr
         for loc in ['proximal', 'deep_basal']:
             net.add_connection(src_gids='L5e',
-                               target_gids=f'L6e_{targ_group}',
+                               target_gids=f'L6e_{src_group}',
                                loc=loc,
                                receptor='ampa',
                                weight=conn_weights['L5e_L6e_ampa'],
@@ -538,19 +538,19 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e
                 prob_e_i_6 = prob_e_i + prob_offset_L6
-                prob_i_e_cross = 1.0
+                prob_i_e_cross = 11 / 12
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
                 prob_i_e = 0.75
                 prob_i_i = 0.25
                 prob_e_i = 0.00
-                lamtha_subpop = lamtha * 10
+                lamtha_subpop = lamtha * 8
 
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e + prob_offset_L6
                 prob_e_i_6 = prob_e_i
-                prob_i_e_cross = 0.0
+                prob_i_e_cross = 1 / 12
 
             # layer2 Pyr -> layer2 Pyr
             for receptor in ['nmda', 'ampa']:
