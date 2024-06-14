@@ -115,7 +115,7 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates_1,
     # custom_params = {"axes.spines.right": False, "axes.spines.top": False}
     # sns.set_theme(style="ticks", rc=custom_params)
 
-    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+    fig, ax = plt.subplots(1, 1, figsize=(3, 2.5))
 
     # collapse across trials
     n_trials = len(net.cell_response.spike_gids)
@@ -152,20 +152,20 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates_1,
     spiking_df = pd.DataFrame({'layer': pop_layers,
                                'cell type': pop_cell_types,
                                'spike rate': pop_spike_rates,
-                               'target rate 1': pop_targets_1,
-                               'target rate 2': pop_targets_2})
+                               'disconn. target': pop_targets_1,
+                               'connected target': pop_targets_2})
 
     ax = sns.barplot(data=spiking_df, x='spike rate', y='layer',
                      hue='cell type', estimator='mean', palette='Greys',
                      errorbar='se', ax=ax)
     # note: eyeball dodge value to match barplot
     # also, setting legend='_nolegend_' doesn't work when hue is set
-    ax = sns.pointplot(data=spiking_df, x='target rate 1', y='layer',
+    ax = sns.pointplot(data=spiking_df, x='disconn. target', y='layer',
                        hue='cell type', linestyle='none', dodge=0.4,
-                       palette=['darkred'], markers='|', ax=ax)
-    ax = sns.pointplot(data=spiking_df, x='target rate 2', y='layer',
+                       palette=['darkred'], markers=7, markersize=4, ax=ax)
+    ax = sns.pointplot(data=spiking_df, x='connected target', y='layer',
                        hue='cell type', linestyle='none', dodge=0.4,
-                       palette=['k'], markers='D', ax=ax)
+                       palette=['k'], markers=7, markersize=4, ax=ax)
 
     ax.set_ylabel('layer')
     ax.set_xlabel('mean single-unit spikes/s')
