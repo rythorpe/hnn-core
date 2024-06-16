@@ -595,6 +595,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                weight=conn_weights['L2i_L2i_gabaa'],
                                delay=delay,
                                lamtha=lamtha_subpop,
+                               allow_autapses=False,
                                probability=prob_i_i,
                                conn_seed=conn_seed)
 
@@ -642,6 +643,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                weight=conn_weights['L6i_L6i_gabaa'],
                                delay=delay,
                                lamtha=lamtha_subpop,
+                               allow_autapses=False,
                                probability=prob_i_i,
                                conn_seed=conn_seed)
 
