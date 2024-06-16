@@ -39,7 +39,7 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
     rep_duration = 100.  # 170 ms for human M/EEG
 
     # synaptic depression (fractional decrease between [0, 1])
-    syn_depression = 0.05
+    syn_depression = 0.08
 
     # see Constantinople and Bruno (2013) and de Kock et al. (2007) for
     # experimental values re: evoked response peak timing
@@ -95,11 +95,11 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
     # undergo synaptic depletion
 
     # prox drive weights and delays
-    weights_ampa_prox = {'L2/3i': 0.0008, 'L2/3e': 0.0018,
+    weights_ampa_prox = {'L2/3i': 0.0008, 'L2/3e': 0.0016,
                          'L5i': 0.0018, 'L5e': 0.0015, 'L6e': 0.0031}
     synaptic_delays_prox = {'L2/3i': 2.0, 'L2/3e': 3.0,
                             'L5i': 3.0, 'L5e': 4.0, 'L6e': 0.0}
-    weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.0007, 'L5e': 0.0007}
+    weights_ampa_dist = {'L2/3i': 0.0, 'L2/3e': 0.0009, 'L5e': 0.0007}
     weights_nmda_dist = {'L2/3i': 0.0, 'L2/3e': 0.0001, 'L5e': 0.00005}
     synaptic_delays_dist = {'L2/3i': 0.1, 'L2/3e': 0.1, 'L5e': 0.1}
 
@@ -147,8 +147,8 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
             # the number of driven cells
             drive_strength = drive_strength_default
             if 'L6' in layer_type:
-                drive_strength = prob_avg * (1 + (2 * prob_delta))
-                print(f'increasing L6 delta to {2 * prob_delta} on rep {rep_idx}')
+                drive_strength = prob_avg * (1 + (3 * prob_delta))
+                print(f'increasing L6 delta to {3 * prob_delta} on rep {rep_idx}')
             # group-type 1 (red) will be preferentially targetted
             for group_type in cell_groups[layer_type]:
                 if '1' in group_type:
