@@ -162,10 +162,10 @@ def plot_spiking_profiles(net, sim_time, burn_in_time, target_spike_rates_1,
     # also, setting legend='_nolegend_' doesn't work when hue is set
     ax = sns.pointplot(data=spiking_df, x='disconn. target', y='layer',
                        hue='cell type', linestyle='none', dodge=0.4,
-                       palette=['darkred'], markers=7, markersize=4, ax=ax)
+                       palette=['darkred'], markers=7, markersize=5, ax=ax)
     ax = sns.pointplot(data=spiking_df, x='connected target', y='layer',
                        hue='cell type', linestyle='none', dodge=0.4,
-                       palette=['k'], markers=7, markersize=4, ax=ax)
+                       palette=['k'], markers=7, markersize=5, ax=ax)
 
     ax.set_ylabel('layer')
     ax.set_xlabel('mean single-unit spikes/s')
