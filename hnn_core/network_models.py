@@ -350,22 +350,21 @@ def L6_model(params=None, add_drives_from_params=False,
     pos = net.cell_types['L5e'].pos
     net.cell_types['L5e'] = pyramidal_ca(cell_name='L5Pyr', pos=pos)
 
-    # Update biophysics (increase gabab duration of inhibition) as in Law model
+    # update biophysics: increase NMDA duration of excitation
     # for cell_type in net.cell_types.keys():
-    #     if 'pyramidal' in cell_type:
-    #         net.cell_types[cell_type].synapses['gabab']['tau1'] = 45.0
-    #         net.cell_types[cell_type].synapses['gabab']['tau2'] = 200.0
+    #     if 'e' in cell_type:
+    #         net.cell_types[cell_type].synapses['nmda']['tau2'] = 50.0
 
-    conn_weights = {"L2e_L2e_ampa": 0.00055,  # 0.00070
+    conn_weights = {"L2e_L2e_ampa": 0.00057,  # 0.00070
                     "L2e_L2e_nmda": 0.00020,
                     "L2i_L2e_gabaa": 0.010,
                     "L2i_L2e_gabab": 0.0001,
-                    "L2e_L2i_ampa": 0.0060,  # 0.00090
+                    "L2e_L2i_ampa": 0.0065,  # 0.00090
                     "L2i_L2i_gabaa": 0.005,
-                    "L6i_cross_L2e_gabaa": 0.020,
+                    "L6i_cross_L2e_gabaa": 0.017,
                     "L2e_L5e_ampa": 0.00010,
                     "L2i_L5e_gabaa": 0.00002,
-                    "L5e_L5e_ampa": 0.00220,  # 0.00077
+                    "L5e_L5e_ampa": 0.00203,  # 0.00077
                     "L5e_L5e_nmda": 0.00005,
                     "L5i_L5e_gabaa": 0.0035,  # 0.018
                     "L5i_L5e_gabab": 0.0001,  # changed from jones09
@@ -374,11 +373,11 @@ def L6_model(params=None, add_drives_from_params=False,
                     "L5e_L5i_ampa": 0.0040,  # 0.00043
                     "L5i_L5i_gabaa": 0.005,
                     "L5e_L6e_ampa": 0.0001,
-                    "L6e_L6e_ampa": 0.00058,
+                    "L6e_L6e_ampa": 0.00052,
                     "L6e_L6e_nmda": 0.00020,
                     "L6i_L6e_gabaa": 0.010,
-                    "L6i_L6e_gabab": 0.0010,
-                    "L6e_L6i_ampa": 0.0060,
+                    "L6i_L6e_gabab": 0.0001,
+                    "L6e_L6i_ampa": 0.0065,
                     "L6i_L6i_gabaa": 0.005}
     lamtha = 2.0
     lamtha_L6_cross = 16.0
@@ -538,7 +537,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e
                 prob_e_i_6 = prob_e_i + prob_offset_L6
-                prob_i_e_cross = 11 / 12
+                prob_i_e_cross = 1.0
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
@@ -550,7 +549,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e + prob_offset_L6
                 prob_e_i_6 = prob_e_i
-                prob_i_e_cross = 1 / 12
+                prob_i_e_cross = 0.0
 
             # layer2 Pyr -> layer2 Pyr
             for receptor in ['nmda', 'ampa']:
