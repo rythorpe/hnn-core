@@ -147,8 +147,10 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
             # the number of driven cells
             drive_strength = drive_strength_default
             if 'L6' in layer_type:
-                drive_strength = prob_avg * (1 + (2 * prob_delta))
-                print(f'increasing L6 delta to {2 * prob_delta} on rep {rep_idx}')
+                L6_delta_dev_fctr = 2
+                drive_strength = prob_avg * (1 + (L6_delta_dev_fctr * prob_delta))
+                print(f'increasing L6 delta to {L6_delta_dev_fctr * prob_delta} '
+                      f'on rep {rep_idx}')
             # group-type 1 (red) will be preferentially targetted
             for group_type in cell_groups[layer_type]:
                 if '1' in group_type:
@@ -163,8 +165,6 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
                 # groups, and the depression factor for this rep
                 prob_prox[group_type] = prop * drive_strength
 
-        # note: the distal drive doesn't change during deviant or depress with
-        # repetition
         prob_dist = dict()
         for layer_type in synaptic_delays_dist.keys():
             drive_strength = drive_strength_default
@@ -172,7 +172,7 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
                 if '1' in group_type:
                     prop = prop_1_to_2 * 2 / (prop_1_to_2 + 1)
                 elif '2' in group_type:
-                    prop = 0
+                    prop = 2 / (prop_1_to_2 + 1)
                 else:
                     prop = 1
                 prob_dist[group_type] = prop * drive_strength
