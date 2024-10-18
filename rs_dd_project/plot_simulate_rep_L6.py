@@ -31,8 +31,9 @@ data_url = ('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/'
 # emp_dpl = read_dipole('S1_SupraT.txt')
 
 
-def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
-                    n_procs=10, record_vsec=False, rng=None):
+def sim_dev_spiking(dev_magnitude=-1, reps=4, ipsirepr_inhib=1.0, n_trials=1,
+                    burn_in_time=300.0, n_procs=10, record_vsec=False,
+                    rng=None):
 
     # Hyperparameters of repetitive drive sequence
     stim_interval = 100.  # in ms; 10 Hz
@@ -80,7 +81,8 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, n_trials=1, burn_in_time=300.0,
 
     ###########################################################################
     # Let us first create our network
-    net = L6_model(layer_6_fb=True, rng=rng, grid_shape=grid_shape)
+    net = L6_model(layer_6_fb=True, rng=rng, grid_shape=grid_shape,
+                   ipsirepr_inhib=ipsirepr_inhib)
     net.set_cell_positions(inplane_distance=300.0)
 
     # before we continue, sample a random integer to serve as seed for the

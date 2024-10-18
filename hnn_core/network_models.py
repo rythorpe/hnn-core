@@ -308,7 +308,7 @@ def calcium_model(params=None, add_drives_from_params=False,
 
 def L6_model(params=None, add_drives_from_params=False,
              legacy_mode=False, layer_6_fb=True, grid_shape=(12, 12),
-             rng=None):
+             rng=None, ipsirepr_inhib=1.0):
     """Instantiate the updated calcium model with layer 6 cell types.
 
     Returns
@@ -536,7 +536,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e
                 prob_e_i_6 = prob_e_i
-                prob_i_e_cross = 1.0
+                prob_i_e_cross = ipsirepr_inhib
             else:
                 # between-group connection probabilities
                 prob_e_e = 0.00
@@ -548,7 +548,7 @@ def L6_model(params=None, add_drives_from_params=False,
                 prob_e_e_6 = prob_e_e
                 prob_i_e_6 = prob_i_e
                 prob_e_i_6 = prob_e_i
-                prob_i_e_cross = 0.0
+                prob_i_e_cross = (1 - ipsirepr_inhib)
 
             # layer2 Pyr -> layer2 Pyr
             for receptor in ['nmda', 'ampa']:
