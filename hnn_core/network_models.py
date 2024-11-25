@@ -502,7 +502,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                lamtha=lamtha,
                                probability=prob_e_e,
                                conn_seed=conn_seed)
-        if layer_6_fb:
+        if (layer_6_fb is True) or (layer_6_fb == 'layer_5_only'):
             # src_gid_group = f'L6i_{src_group}'
             # gid_idxs = [0, 3, 9, 14, 20, 23]
             # gid_range = net.gid_ranges[src_gid_group]
@@ -645,7 +645,7 @@ def L6_model(params=None, add_drives_from_params=False,
                                probability=prob_i_i,
                                conn_seed=conn_seed)
 
-            if layer_6_fb:
+            if layer_6_fb is True:
                 # layer6 Bask -> layer2 Pyr (cross)
                 net.add_connection(src_gids=f'L6i_{src_group}',
                                    target_gids=f'L2e_{targ_group}',

@@ -79,10 +79,16 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, ipsirepr_inhib=1.0, n_trials=1,
     # event_seed = rng.integers(0, np.iinfo(np.int32).max)
     # conn_seed = rng.integers(0, np.iinfo(np.int32).max)
 
+    # turn off cross-laminar inhib to L2/3 completely if undef. ipsirepr_inhib
+    layer_6_fb = True
+    if ipsirepr_inhib is None:
+        ipsirepr_inhib = 1.0  # set to arbitrary float to avoid TypeError
+        layer_6_fb = 'layer_5_only'
+
     ###########################################################################
     # Let us first create our network
     net = L6_model(layer_6_fb=True, rng=rng, grid_shape=grid_shape,
-                   ipsirepr_inhib=ipsirepr_inhib)
+                   ipsirepr_inhib=ipsirepr_inhib, layer_6_fb=layer_6_fb)
     net.set_cell_positions(inplane_distance=300.0)
 
     # before we continue, sample a random integer to serve as seed for the
