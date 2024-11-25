@@ -444,7 +444,7 @@ def opt_baseline_spike_rates_1(opt_params, net, sim_params,
     # convert weight param back from log_10 scale
     #poiss_params = np.append(10 ** np.array(opt_params), poiss_rate)
     poiss_params = np.append(opt_params, poiss_rate)
-    net_disconn, _ = simulate_network(net.copy(),
+    net_disconn, _ = sim_net_baseline(net.copy(),
                                       sim_time=sim_time,
                                       burn_in_time=burn_in_time,
                                       n_procs=n_procs,
@@ -474,7 +474,7 @@ def opt_baseline_spike_rates_2(opt_params, net, sim_params,
     scaling_fctrs = [10.0 ** exp for exp in opt_params]
     scale_conn_weights(net_scaled, scaling_factors=scaling_fctrs,
                        which_conn_idxs=which_conn_idxs)
-    net_connected, _ = simulate_network(net_scaled.copy(),
+    net_connected, _ = sim_net_baseline(net_scaled.copy(),
                                         sim_time=sim_time,
                                         burn_in_time=burn_in_time,
                                         n_procs=n_procs,
