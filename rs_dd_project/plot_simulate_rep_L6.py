@@ -87,8 +87,8 @@ def sim_dev_spiking(dev_magnitude=-1, reps=4, ipsirepr_inhib=1.0, n_trials=1,
 
     ###########################################################################
     # Let us first create our network
-    net = L6_model(layer_6_fb=True, rng=rng, grid_shape=grid_shape,
-                   ipsirepr_inhib=ipsirepr_inhib, layer_6_fb=layer_6_fb)
+    net = L6_model(layer_6_fb=layer_6_fb, rng=rng, grid_shape=grid_shape,
+                   ipsirepr_inhib=ipsirepr_inhib)
     net.set_cell_positions(inplane_distance=300.0)
 
     # before we continue, sample a random integer to serve as seed for the
